@@ -5,7 +5,6 @@ import {
   Download,
   Printer,
   Maximize2,
-  Minimize2,
   ZoomIn,
   ZoomOut,
   Sparkles,
@@ -15,17 +14,10 @@ import {
   Send,
   Loader2,
   FileQuestion,
-  Star,
   ExternalLink,
-  RotateCcw,
   Zap,
-  FileText,
-  Target,
-  Trophy,
   BarChart3,
-  Lightbulb,
   PenTool,
-  Search,
   Calendar,
   FileCheck2,
   Copy,
@@ -34,7 +26,6 @@ import {
   X,
   Type,
   Trash2,
-  MessageSquare,
 } from 'lucide-react';
 import { publicApi, aiApi } from '../lib/api';
 import useAppStore from '../store/appStore';
@@ -65,22 +56,24 @@ export default function PdfViewerPage() {
   const [customQuestionInput, setCustomQuestionInput] = useState('');
   const [zoomLevel, setZoomLevel] = useState(100);
 
-  // Dedicated Document Chat messages state (Isolated to this opened PDF)
-  const [docMessages, setDocMessages] = useState(() => {
+  // Dedicated Answer Store for this opened PDF
+  const [answers, setAnswers] = useState(() => {
     if (typeof window !== 'undefined' && fileId) {
       try {
-        const saved = sessionStorage.getItem(`sankalp_doc_chat_${fileId}`);
+        const saved = sessionStorage.getItem(`sankalp_doc_answers_${fileId}`);
         if (saved) return JSON.parse(saved);
       } catch (_) {}
     }
     return [];
   });
+  const [activeAnswerIndex, setActiveAnswerIndex] = useState(0);
 
   // Font sizing & study reader modes
   const [aiFontSize, setAiFontSize] = useState('base');
   const [panelWidthMode, setPanelWidthMode] = useState('normal'); // 'normal' | 'wide'
   const [studyModalOpen, setStudyModalOpen] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
+  const [copied, setCopied] = useState(false);
 
   // Master Final Paper Modal state
   const [masterPaper, setMasterPaper] = useState(null);
@@ -88,23 +81,19 @@ export default function PdfViewerPage() {
   const [generatingMasterPaper, setGeneratingMasterPaper] = useState(false);
 
   const iframeRef = useRef(null);
-  const chatEndRef = useRef(null);
+  const answerBoxRef = useRef(null);
 
-  // Sync document chat to sessionStorage
+  // Current active answer object
+  const currentAnswer = answers[activeAnswerIndex] || null;
+
+  // Sync document answers to sessionStorage
   useEffect(() => {
-    if (fileId && docMessages.length > 0) {
+    if (fileId && answers.length > 0) {
       try {
-        sessionStorage.setItem(`sankalp_doc_chat_${fileId}`, JSON.stringify(docMessages));
+        sessionStorage.setItem(`sankalp_doc_answers_${fileId}`, JSON.stringify(answers));
       } catch (_) {}
     }
-  }, [fileId, docMessages]);
-
-  // Scroll to bottom of chat when new message arrives
-  useEffect(() => {
-    if (chatEndRef.current) {
-      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [docMessages, aiLoading]);
+  }, [fileId, answers]);
 
   // Escape key closes study modal
   useEffect(() => {
@@ -117,6 +106,7 @@ export default function PdfViewerPage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [studyModalOpen]);
 
+  // Load document metadata
   useEffect(() => {
     async function loadFileInfo() {
       try {
@@ -156,21 +146,22 @@ export default function PdfViewerPage() {
     const el = document.getElementById('pdf-viewer-container');
     if (el) {
       if (!document.fullscreenElement) {
-        el.requestFullscreen().catch(() => { });
+        el.requestFullscreen().catch(() => {});
       } else {
-        document.exitFullscreen().catch(() => { });
+        document.exitFullscreen().catch(() => {});
       }
     }
   };
 
   const handleClearDocChat = () => {
-    setDocMessages([]);
+    setAnswers([]);
+    setActiveAnswerIndex(0);
     setAiOutput('');
     setSelectedActionTitle('');
     if (fileId) {
-      sessionStorage.removeItem(`sankalp_doc_chat_${fileId}`);
+      sessionStorage.removeItem(`sankalp_doc_answers_${fileId}`);
     }
-    toast.success('Document chat reset');
+    toast.success('Document answer history reset');
   };
 
   const handleAiAction = async (actionType, marks = null) => {
@@ -191,38 +182,21 @@ Structure the answer strictly for ${marks} marks according to university grading
 - Equations / Diagram description if applicable
 - Easy everyday real-world example
 - Exam scoring conclusion`;
-    } else if (actionType === 'Explain This Paper') {
+    } else if (actionType === 'Explain Textbook' || actionType === 'Explain Paper') {
       prompt = file?.type === 'book'
         ? `Explain the core curriculum and conceptual structure from this prescribed university textbook: "${docName}" by ${file.author || 'Author'}. Provide sharp explanations and simple real-world analogies that any student can understand.`
         : `Summarize and explain the complete examination pattern, difficulty, unit distribution, and core topics represented in this university paper: "${docName}".`;
-    } else if (actionType === 'Explain Question') {
-      prompt = queryText
-        ? `Explain this specific examination question in simple, conceptual terms with an everyday analogy: "${queryText}" from ${file?.type === 'book' ? 'textbook' : 'paper'}: "${docName}".`
-        : `Explain the most important question and core concept tested in "${docName}" from fundamental to advanced level with a simple real-world example.`;
     } else if (actionType === 'Solve This Question') {
       prompt = queryText
         ? `Provide a complete, step-by-step model solution with full working, diagrams outline and clear explanation for: "${queryText}".`
         : `Identify and provide a complete model solution with step-by-step working for the primary question in "${docName}".`;
-    } else if (actionType === 'Find Similar Questions') {
-      prompt = `List 5 closely related previous-year questions from other semesters or university examinations for the concepts tested in "${docName}". Include marks and suggested approach for each.`;
     } else if (actionType === 'Find This Topic in Other Years') {
       prompt = `Analyze the recurring pattern of the core topic tested in "${docName}". Mention which years this concept typically appears, how question phrasing changes across years, and likely future variations.`;
-    } else if (actionType === 'Identify Related Syllabus Unit') {
-      prompt = `Identify the exact official syllabus unit, core topics, unit weightage, and key standard university textbooks corresponding to the academic concepts in "${docName}".`;
     } else {
       prompt = queryText || `Explain the core question and provide a complete model solution with marking breakdown for "${docName}".`;
     }
 
-    const userMsg = {
-      id: Date.now().toString(),
-      role: 'user',
-      content: queryText || actionType,
-      actionTitle: actionType,
-      marks,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    };
-
-    setDocMessages((prev) => [...prev, userMsg]);
+    const displayQuestion = queryText || actionType;
     setCustomQuestionInput('');
     setAiLoading(true);
     setSelectedActionTitle(actionType);
@@ -243,24 +217,36 @@ Structure the answer strictly for ${marks} marks according to university grading
         bookId: file?.type === 'book' ? file._id : null,
         marksFormat: marks,
         messages: [
-          // Feed last 2 messages for conversational context
-          ...docMessages.slice(-2).map((m) => ({ role: m.role, content: m.content })),
+          // Keep conversational context limited to last answer if present
+          ...(currentAnswer ? [{ role: 'assistant', content: currentAnswer.content }] : []),
           { role: 'user', content: prompt },
         ],
       });
 
       if (res.data?.success && res.data.data?.message?.content) {
         const assistantContent = res.data.data.message.content;
-        const assistantMsg = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: assistantContent,
+        const newAnswer = {
+          id: Date.now().toString(),
           actionTitle: actionType,
           marks,
+          prompt: displayQuestion,
+          content: assistantContent,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         };
-        setDocMessages((prev) => [...prev, assistantMsg]);
+
+        setAnswers((prev) => {
+          const updated = [...prev, newAnswer];
+          setActiveAnswerIndex(updated.length - 1);
+          return updated;
+        });
         setAiOutput(assistantContent);
+
+        // Reset scroll position of the internal answer box to top so top line is immediately visible
+        setTimeout(() => {
+          if (answerBoxRef.current) {
+            answerBoxRef.current.scrollTop = 0;
+          }
+        }, 50);
       }
     } catch (err) {
       toast.error(err.response?.data?.message || err.message || 'AI generation failed');
@@ -421,10 +407,11 @@ Structure the answer strictly for ${marks} marks according to university grading
 
           <button
             onClick={() => setAiPanelOpen(!aiPanelOpen)}
-            className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${aiPanelOpen
+            className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+              aiPanelOpen
                 ? 'bg-indigo-600 text-white shadow-xs'
                 : 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800'
-              }`}
+            }`}
           >
             <Sparkles className="w-3.5 h-3.5" />
             <span>{aiPanelOpen ? 'AI Tutor Active' : 'AI Assistant'}</span>
@@ -432,25 +419,31 @@ Structure the answer strictly for ${marks} marks according to university grading
         </div>
       </div>
 
-      {/* Main Split Layout: PDF on Left, Document AI Tutor on Right */}
+      {/* Main Split Layout: PDF on Left, Dedicated Document AI Tutor on Right */}
       <div className="flex-1 min-h-0 w-full flex overflow-hidden relative">
-        {/* PDF Frame */}
-        <div className="flex-1 min-h-0 h-full bg-gray-200 dark:bg-gray-900/80 relative flex flex-col p-2 sm:p-4 overflow-hidden">
+        {/* Left PDF Frame (Full 100% height without flex collapse) */}
+        <div className="flex-1 min-h-0 h-full bg-gray-200 dark:bg-gray-900/80 relative flex flex-col p-2 sm:p-3 overflow-hidden">
           {pdfViewUrl ? (
-            <div
-              className="w-full h-full min-h-0 flex-1 relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-lg"
-              style={{ transform: zoomLevel !== 100 ? `scale(${zoomLevel / 100})` : undefined, transformOrigin: 'top center' }}
-            >
+            <div className="relative w-full h-full flex-1 min-h-0 rounded-2xl overflow-hidden shadow-lg bg-white">
               <iframe
                 ref={iframeRef}
-                src={`${pdfViewUrl}#toolbar=1`}
-                className="w-full h-full flex-1 border-none rounded-2xl bg-white"
-                style={{ width: '100%', height: '100%', minHeight: '100%', display: 'block' }}
+                src={`${pdfViewUrl}#toolbar=1&zoom=${zoomLevel}`}
+                className="absolute inset-0 w-full h-full border-0 rounded-2xl bg-white"
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  width: '100%',
+                  height: '100%',
+                  border: 'none',
+                }}
                 title={file?.title || file?.original_filename || 'Academic Document'}
               />
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center p-8 text-center text-gray-400">
+            <div className="flex flex-col items-center justify-center h-full p-8 text-center text-gray-400">
               <FileQuestion className="w-12 h-12 text-gray-300 dark:text-gray-700 mb-3" />
               <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                 {loadError || 'PDF file not available for display'}
@@ -471,13 +464,14 @@ Structure the answer strictly for ${marks} marks according to university grading
         {/* Right Dedicated Document AI Assistance Panel */}
         {aiPanelOpen && (
           <aside
-            className={`${panelWidthMode === 'wide'
+            className={`${
+              panelWidthMode === 'wide'
                 ? 'w-full md:w-[580px] lg:w-[680px] xl:w-[780px]'
                 : 'w-full sm:w-96 lg:w-[440px]'
-              } bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 flex flex-col shrink-0 h-full max-h-full min-h-0 shadow-lg transition-all duration-200 absolute sm:relative inset-0 sm:inset-auto z-20 sm:z-auto overflow-hidden`}
+            } bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 flex flex-col shrink-0 h-full max-h-full min-h-0 shadow-lg transition-all duration-200 absolute sm:relative inset-0 sm:inset-auto z-20 sm:z-auto overflow-hidden`}
           >
-            {/* Dedicated Document Tutor Header */}
-            <div className="p-3.5 px-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between shrink-0">
+            {/* 1. Header (shrink-0) */}
+            <div className="p-3 px-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2 min-w-0">
                 <div className="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
                   <Sparkles className="w-3.5 h-3.5" />
@@ -488,309 +482,287 @@ Structure the answer strictly for ${marks} marks according to university grading
                   </h3>
                   <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold truncate flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    <span>Scoped to this PDF ({file?.subject?.code || file?.subject?.name || 'Document Context'})</span>
+                    <span>Scoped to this PDF ({file?.subject?.code || file?.subject?.name || 'Document'})</span>
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-1.5 shrink-0">
-                {/* Reset Document Chat */}
-                {docMessages.length > 0 && (
+
+              <div className="flex items-center gap-1 shrink-0">
+                {/* Reset / Clear Answers */}
+                {answers.length > 0 && (
                   <button
                     onClick={handleClearDocChat}
                     className="p-1.5 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
-                    title="Clear Document Chat History"
+                    title="Clear All Answers"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 )}
 
-                {/* Expand / Wide Panel Toggle */}
+                {/* Normal / Wide Mode Toggle */}
                 <button
                   onClick={() => setPanelWidthMode((prev) => (prev === 'normal' ? 'wide' : 'normal'))}
-                  className={`p-1.5 rounded-lg border text-xs font-semibold flex items-center gap-1 transition-all ${panelWidthMode === 'wide'
+                  className={`p-1.5 rounded-lg border text-xs font-semibold flex items-center gap-1 transition-all ${
+                    panelWidthMode === 'wide'
                       ? 'bg-indigo-50 border-indigo-200 text-indigo-600 dark:bg-indigo-950/50 dark:border-indigo-800 dark:text-indigo-400'
                       : 'border-gray-200 dark:border-gray-700 text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800'
-                    }`}
-                  title={panelWidthMode === 'wide' ? 'Reset to normal sidebar width' : 'Expand sidebar to wide split view'}
+                  }`}
+                  title={panelWidthMode === 'wide' ? 'Normal width' : 'Expand width'}
                 >
                   <Columns className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline text-[11px]">{panelWidthMode === 'wide' ? 'Normal' : 'Wide'}</span>
                 </button>
 
-                {/* Full Study Preview Button */}
-                <button
-                  onClick={() => setStudyModalOpen(true)}
-                  disabled={!aiOutput}
-                  className={`px-2 py-1 rounded-lg border text-xs font-semibold flex items-center gap-1 transition-all ${aiOutput
-                      ? 'bg-indigo-600 text-white hover:bg-indigo-700 border-transparent shadow-2xs'
-                      : 'border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50'
-                    }`}
-                  title="Open Fullscreen Study Preview (Bada View for reading)"
-                >
-                  <Maximize2 className="w-3.5 h-3.5" />
-                  <span className="text-[11px] font-bold">Full Preview</span>
-                </button>
-
-                {/* Close Button to return to full document view */}
+                {/* Close Panel */}
                 <button
                   onClick={() => setAiPanelOpen(false)}
                   className="p-1.5 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                  title="Close AI Assistant Panel"
+                  title="Close AI Panel"
                 >
-                  <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <X className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>
 
-            {/* Cross-Paper Master Button in AI Panel */}
-            <div className="p-2.5 bg-gray-50 dark:bg-gray-900/60 border-b border-gray-200 dark:border-gray-800 shrink-0">
-              <button
-                onClick={handleGenerateMasterFinalPaper}
-                disabled={generatingMasterPaper}
-                className="w-full py-2 px-3 rounded-xl text-xs font-bold bg-gray-900 hover:bg-black dark:bg-white dark:hover:bg-gray-100 text-white dark:text-gray-900 flex items-center justify-center gap-2 shadow-xs transition-all disabled:opacity-50"
-              >
-                {generatingMasterPaper ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                ) : (
-                  <FileCheck2 className="w-3.5 h-3.5" />
-                )}
-                <span>{generatingMasterPaper ? 'Analyzing 5-Yr Papers...' : 'Generate 5-Yr Final Master Paper'}</span>
-              </button>
-            </div>
-
-            {/* Mark-Specific & 1-Click Operations */}
-            <div className="p-3 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/40 space-y-2 shrink-0">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 px-0.5">
-                Mark-Specific Answer Generators
-              </p>
-              <div className="grid grid-cols-4 gap-1.5">
-                <button
-                  onClick={() => handleAiAction('Generate 2-Mark Answer', 2)}
-                  className="py-1.5 px-1 rounded-lg text-xs font-semibold bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-indigo-500 text-gray-700 dark:text-gray-300 flex items-center justify-center gap-1 transition-colors"
-                >
-                  <Zap className="w-3 h-3 text-indigo-500" />
-                  <span>2-Mark</span>
-                </button>
-                <button
-                  onClick={() => handleAiAction('Generate 5-Mark Answer', 5)}
-                  className="py-1.5 px-1 rounded-lg text-xs font-semibold bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-indigo-500 text-gray-700 dark:text-gray-300 flex items-center justify-center gap-1 transition-colors"
-                >
-                  <FileText className="w-3 h-3 text-indigo-500" />
-                  <span>5-Mark</span>
-                </button>
-                <button
-                  onClick={() => handleAiAction('Generate 10-Mark Answer', 10)}
-                  className="py-1.5 px-1 rounded-lg text-xs font-semibold bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-indigo-500 text-gray-700 dark:text-gray-300 flex items-center justify-center gap-1 transition-colors"
-                >
-                  <Target className="w-3 h-3 text-indigo-500" />
-                  <span>10-Mark</span>
-                </button>
-                <button
-                  onClick={() => handleAiAction('Generate 15-Mark Answer', 15)}
-                  className="py-1.5 px-1 rounded-lg text-xs font-semibold bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-indigo-500 text-gray-700 dark:text-gray-300 flex items-center justify-center gap-1 transition-colors"
-                >
-                  <Trophy className="w-3 h-3 text-indigo-500" />
-                  <span>15-Mark</span>
-                </button>
+            {/* 2. Quick Action Toolbar (shrink-0) */}
+            <div className="p-2.5 px-3 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/40 space-y-2 shrink-0">
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 px-0.5">
+                  Exam Mark Solutions
+                </p>
+                <div className="grid grid-cols-4 gap-1">
+                  {[2, 5, 10, 15].map((m) => (
+                    <button
+                      key={m}
+                      onClick={() => handleAiAction(`Generate ${m}-Mark Answer`, m)}
+                      disabled={aiLoading}
+                      className="py-1 px-2 rounded-lg text-xs font-bold bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-indigo-500 text-gray-700 dark:text-gray-200 hover:text-indigo-600 dark:hover:text-indigo-400 flex items-center justify-center gap-1 transition-all disabled:opacity-50 shadow-2xs"
+                    >
+                      <Zap className="w-2.5 h-2.5 text-indigo-500" />
+                      <span>{m}M</span>
+                    </button>
+                  ))}
+                </div>
               </div>
 
-              <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 px-0.5 pt-1">
-                Document Operations
-              </p>
-              <div className="grid grid-cols-2 gap-1.5">
+              {/* Document Operations Grid */}
+              <div className="grid grid-cols-3 gap-1 pt-1">
                 <button
-                  onClick={() => handleAiAction('Explain This Paper')}
-                  className="py-1.5 px-2 rounded-lg text-[11px] font-medium bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-indigo-500 text-gray-700 dark:text-gray-300 flex items-center gap-1.5 truncate"
+                  onClick={() => handleAiAction(file?.type === 'book' ? 'Explain Textbook' : 'Explain Paper')}
+                  disabled={aiLoading}
+                  className="py-1 px-1.5 rounded-lg text-[10px] font-medium bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-indigo-500 text-gray-700 dark:text-gray-300 flex items-center justify-center gap-1 truncate disabled:opacity-50"
+                  title="Explain Document"
                 >
-                  <BarChart3 className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
-                  <span className="truncate">{file?.type === 'book' ? '1. Explain Textbook' : '1. Explain Paper'}</span>
+                  <BarChart3 className="w-3 h-3 text-indigo-500 shrink-0" />
+                  <span className="truncate">Explain</span>
                 </button>
-                <button
-                  onClick={() => handleAiAction('Explain Question')}
-                  className="py-1.5 px-2 rounded-lg text-[11px] font-medium bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-indigo-500 text-gray-700 dark:text-gray-300 flex items-center gap-1.5 truncate"
-                >
-                  <Lightbulb className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                  <span className="truncate">2. Explain Question</span>
-                </button>
+
                 <button
                   onClick={() => handleAiAction('Solve This Question')}
-                  className="py-1.5 px-2 rounded-lg text-[11px] font-medium bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-indigo-500 text-gray-700 dark:text-gray-300 flex items-center gap-1.5 truncate"
+                  disabled={aiLoading}
+                  className="py-1 px-1.5 rounded-lg text-[10px] font-medium bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-indigo-500 text-gray-700 dark:text-gray-300 flex items-center justify-center gap-1 truncate disabled:opacity-50"
+                  title="Solve Question with Model Answer"
                 >
-                  <PenTool className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
-                  <span className="truncate">3. Solve Question</span>
+                  <PenTool className="w-3 h-3 text-indigo-500 shrink-0" />
+                  <span className="truncate">Solve</span>
                 </button>
-                <button
-                  onClick={() => handleAiAction('Find Similar Questions')}
-                  className="py-1.5 px-2 rounded-lg text-[11px] font-medium bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-indigo-500 text-gray-700 dark:text-gray-300 flex items-center gap-1.5 truncate"
-                >
-                  <Search className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
-                  <span className="truncate">4. Similar Questions</span>
-                </button>
+
                 <button
                   onClick={() => handleAiAction('Find This Topic in Other Years')}
-                  className="py-1.5 px-2 rounded-lg text-[11px] font-medium bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-indigo-500 text-gray-700 dark:text-gray-300 flex items-center gap-1.5 truncate"
+                  disabled={aiLoading}
+                  className="py-1 px-1.5 rounded-lg text-[10px] font-medium bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-indigo-500 text-gray-700 dark:text-gray-300 flex items-center justify-center gap-1 truncate disabled:opacity-50"
+                  title="Analyze recurring topic across other 5-year papers"
                 >
-                  <Calendar className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
-                  <span className="truncate">5. Topic in Other Years</span>
-                </button>
-                <button
-                  onClick={() => handleAiAction('Identify Related Syllabus Unit')}
-                  className="py-1.5 px-2 rounded-lg text-[11px] font-medium bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-indigo-500 text-gray-700 dark:text-gray-300 flex items-center gap-1.5 truncate"
-                >
-                  <BookOpen className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
-                  <span className="truncate">6. Related Syllabus Unit</span>
+                  <Calendar className="w-3 h-3 text-indigo-500 shrink-0" />
+                  <span className="truncate">Other Yrs</span>
                 </button>
               </div>
             </div>
 
-            {/* Document-Scoped Interactive Chat Thread */}
-            <div className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-4 space-y-4 overscroll-contain">
-              {docMessages.length === 0 ? (
-                <div className="text-center py-10 px-3 bg-gray-50/60 dark:bg-gray-800/30 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700">
-                  <div className="w-10 h-10 rounded-2xl bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 mx-auto mb-3 flex items-center justify-center">
-                    <Sparkles className="w-5 h-5" />
-                  </div>
-                  <h4 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-gray-100 mb-1">
-                    Dedicated Tutor for this PDF
-                  </h4>
-                  <p className="text-[11px] text-gray-500 dark:text-gray-400 max-w-xs mx-auto leading-relaxed">
-                    This AI tutor answers strictly from{' '}
-                    <span className="font-semibold text-gray-700 dark:text-gray-300">
-                      &quot;{file?.title || file?.original_filename || 'this document'}&quot;
-                    </span>{' '}
-                    using clear explanations, real-world examples, and university exam mark structures.
-                  </p>
-                  <p className="text-[10px] text-indigo-500 font-semibold mt-3">
-                    Click any action above or type any query below to begin!
-                  </p>
+            {/* 3. DEDICATED ANSWER WINDOW (BOX) - Strictly internal scroll, no whole page scroll */}
+            <div className="flex-1 min-h-0 flex flex-col mx-2 sm:mx-3 my-2 border border-gray-200 dark:border-gray-700/80 rounded-2xl bg-white dark:bg-gray-900/60 overflow-hidden shadow-xs">
+              {/* Answer Window Header */}
+              <div className="px-3 py-2 bg-gray-50/90 dark:bg-gray-800/90 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between shrink-0 gap-2">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <div className="w-2 h-2 rounded-full bg-indigo-500 shrink-0" />
+                  <span className="text-xs font-bold text-gray-900 dark:text-gray-100 truncate">
+                    {currentAnswer ? currentAnswer.actionTitle : 'Answer Box'}
+                  </span>
+                  {currentAnswer?.marks && (
+                    <span className="px-1.5 py-0.2 rounded-md bg-indigo-100 dark:bg-indigo-950 text-[10px] font-bold text-indigo-700 dark:text-indigo-300 shrink-0">
+                      {currentAnswer.marks}M
+                    </span>
+                  )}
                 </div>
-              ) : (
-                docMessages.map((msg) => (
-                  <div key={msg.id} className="space-y-1.5">
-                    {msg.role === 'user' ? (
-                      <div className="flex justify-end">
-                        <div className="max-w-[85%] bg-indigo-600 text-white rounded-2xl rounded-tr-xs px-3.5 py-2 text-xs shadow-xs">
-                          {msg.actionTitle && msg.actionTitle !== 'Custom Query' && (
-                            <span className="inline-block text-[10px] uppercase font-bold tracking-wider bg-white/20 text-white px-1.5 py-0.5 rounded mb-1">
-                              {msg.actionTitle} {msg.marks ? `(${msg.marks}M)` : ''}
-                            </span>
-                          )}
-                          <p className="whitespace-pre-wrap">{msg.content}</p>
-                          <span className="text-[9px] text-indigo-200 mt-1 block text-right">
-                            {msg.timestamp}
-                          </span>
-                        </div>
-                      </div>
+
+                {/* Right controls: Answer Switcher (< 2 / 5 >) + Font Size + Bada View + Copy */}
+                <div className="flex items-center gap-1 shrink-0">
+                  {answers.length > 1 && (
+                    <div className="flex items-center bg-white dark:bg-gray-700 rounded-lg p-0.5 border border-gray-200 dark:border-gray-600 shadow-2xs">
+                      <button
+                        onClick={() => {
+                          setActiveAnswerIndex((idx) => Math.max(0, idx - 1));
+                          if (answerBoxRef.current) answerBoxRef.current.scrollTop = 0;
+                        }}
+                        disabled={activeAnswerIndex === 0}
+                        className="p-1 rounded text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                        title="Previous Answer"
+                      >
+                        <ChevronLeft className="w-3.5 h-3.5" />
+                      </button>
+                      <span className="px-1 text-[10px] font-bold font-mono text-gray-700 dark:text-gray-200">
+                        {activeAnswerIndex + 1}/{answers.length}
+                      </span>
+                      <button
+                        onClick={() => {
+                          setActiveAnswerIndex((idx) => Math.min(answers.length - 1, idx + 1));
+                          if (answerBoxRef.current) answerBoxRef.current.scrollTop = 0;
+                        }}
+                        disabled={activeAnswerIndex === answers.length - 1}
+                        className="p-1 rounded text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                        title="Next Answer"
+                      >
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Font Size Pills */}
+                  <div className="hidden sm:flex items-center bg-white dark:bg-gray-700 rounded-md p-0.5 border border-gray-200 dark:border-gray-600">
+                    {['sm', 'base', 'lg'].map((sz) => (
+                      <button
+                        key={sz}
+                        onClick={() => setAiFontSize(sz)}
+                        className={`px-1.5 py-0.5 text-[9px] font-bold rounded ${
+                          aiFontSize === sz
+                            ? 'bg-indigo-600 text-white'
+                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-900'
+                        }`}
+                      >
+                        {sz === 'sm' ? 'S' : sz === 'base' ? 'M' : 'L'}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Full Preview (Bada View) */}
+                  <button
+                    onClick={() => {
+                      if (currentAnswer) {
+                        setAiOutput(currentAnswer.content);
+                        setSelectedActionTitle(currentAnswer.actionTitle);
+                        setStudyModalOpen(true);
+                      }
+                    }}
+                    disabled={!currentAnswer}
+                    className="p-1 rounded-md text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed"
+                    title="Fullscreen Preview (Bada View)"
+                  >
+                    <Maximize2 className="w-3.5 h-3.5" />
+                  </button>
+
+                  {/* Copy Button */}
+                  <button
+                    onClick={() => {
+                      if (currentAnswer) {
+                        navigator.clipboard.writeText(currentAnswer.content);
+                        setCopiedId(currentAnswer.id);
+                        setTimeout(() => setCopiedId(null), 2000);
+                        toast.success('Answer copied!');
+                      }
+                    }}
+                    disabled={!currentAnswer}
+                    className="p-1 rounded-md text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed"
+                    title="Copy Answer"
+                  >
+                    {copiedId === currentAnswer?.id ? (
+                      <Check className="w-3.5 h-3.5 text-emerald-500" />
                     ) : (
-                      <div className="bg-white dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 rounded-2xl rounded-tl-xs p-3.5 shadow-2xs space-y-2">
-                        {/* Header bar of Assistant message */}
-                        <div className="flex items-center justify-between pb-2 border-b border-gray-100 dark:border-gray-700/60 gap-2 flex-wrap">
-                          <span className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-1">
-                            <Sparkles className="w-3 h-3" />
-                            <span>{msg.actionTitle || 'Study Solution'}</span>
-                            {msg.marks && (
-                              <span className="px-1.5 py-0.2 rounded bg-indigo-100 dark:bg-indigo-950 text-[10px] text-indigo-700 dark:text-indigo-300">
-                                {msg.marks}M
-                              </span>
-                            )}
-                          </span>
+                      <Copy className="w-3.5 h-3.5" />
+                    )}
+                  </button>
+                </div>
+              </div>
 
-                          <div className="flex items-center gap-1 ml-auto">
-                            {/* Font Size Pills */}
-                            <div className="flex items-center bg-gray-100 dark:bg-gray-700 rounded-md p-0.5">
-                              {['sm', 'base', 'lg'].map((sz) => (
-                                <button
-                                  key={sz}
-                                  onClick={() => setAiFontSize(sz)}
-                                  className={`px-1 py-0.5 text-[9px] font-bold rounded ${
-                                    aiFontSize === sz
-                                      ? 'bg-white dark:bg-gray-600 text-indigo-600 dark:text-indigo-300 shadow-2xs'
-                                      : 'text-gray-500 dark:text-gray-400'
-                                  }`}
-                                >
-                                  {sz === 'sm' ? 'S' : sz === 'base' ? 'M' : 'L'}
-                                </button>
-                              ))}
-                            </div>
-
-                            {/* Full Preview Button */}
-                            <button
-                              onClick={() => {
-                                setAiOutput(msg.content);
-                                setSelectedActionTitle(msg.actionTitle || 'Study Solution');
-                                setStudyModalOpen(true);
-                              }}
-                              className="p-1 rounded-md text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100 dark:hover:bg-gray-700"
-                              title="Open Fullscreen Study Preview (Bada View)"
-                            >
-                              <Maximize2 className="w-3 h-3" />
-                            </button>
-
-                            {/* Copy Button */}
-                            <button
-                              onClick={() => {
-                                navigator.clipboard.writeText(msg.content);
-                                setCopiedId(msg.id);
-                                setTimeout(() => setCopiedId(null), 2000);
-                                toast.success('Copied to clipboard!');
-                              }}
-                              className="p-1 rounded-md text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100 dark:hover:bg-gray-700"
-                              title="Copy Answer"
-                            >
-                              {copiedId === msg.id ? (
-                                <Check className="w-3 h-3 text-emerald-500" />
-                              ) : (
-                                <Copy className="w-3 h-3" />
-                              )}
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Rendered Markdown Content */}
-                        <MarkdownRenderer
-                          content={msg.content}
-                          className={`${FONT_SIZE_MAP[aiFontSize].class} leading-relaxed`}
-                        />
-
-                        <span className="text-[9px] text-gray-400 block text-right pt-1">
-                          {msg.timestamp}
-                        </span>
+              {/* Scrollable Answer Window Body (overscroll-contain, STRICTLY internal scroll) */}
+              <div
+                ref={answerBoxRef}
+                className="flex-1 min-h-0 overflow-y-auto p-3.5 sm:p-4 overscroll-contain bg-white dark:bg-gray-900/40 select-text"
+              >
+                {aiLoading ? (
+                  <div className="flex flex-col items-center justify-center py-12 px-4 text-center space-y-3">
+                    <div className="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    </div>
+                    <p className="text-xs font-bold text-gray-900 dark:text-gray-100">
+                      Document se answer generate ho raha hai...
+                    </p>
+                    <p className="text-[11px] text-gray-500 dark:text-gray-400 max-w-xs leading-relaxed">
+                      Real-world examples aur university marks format ke anusar answer tayar ho raha hai.
+                    </p>
+                  </div>
+                ) : currentAnswer ? (
+                  <div className="space-y-3">
+                    {/* User Prompt / Question Preview */}
+                    {currentAnswer.prompt && (
+                      <div className="p-2.5 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/50 text-indigo-950 dark:text-indigo-200 text-xs flex items-start gap-2">
+                        <span className="font-bold text-indigo-600 dark:text-indigo-400 shrink-0">Question:</span>
+                        <span className="font-medium leading-relaxed">{currentAnswer.prompt}</span>
                       </div>
                     )}
+
+                    {/* Markdown Content */}
+                    <div className="prose prose-sm dark:prose-invert max-w-none">
+                      <MarkdownRenderer
+                        content={currentAnswer.content}
+                        className={`${FONT_SIZE_MAP[aiFontSize].class} leading-relaxed`}
+                      />
+                    </div>
+
+                    <div className="pt-2 text-[10px] text-gray-400 flex items-center justify-between border-t border-gray-100 dark:border-gray-800">
+                      <span>Saved at {currentAnswer.timestamp}</span>
+                      <span>Answer {activeAnswerIndex + 1} of {answers.length}</span>
+                    </div>
                   </div>
-                ))
-              )}
-
-              {aiLoading && (
-                <div className="flex items-center gap-2.5 p-3 rounded-2xl bg-indigo-50/50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/50 text-indigo-600 dark:text-indigo-400 text-xs">
-                  <Loader2 className="w-4 h-4 animate-spin shrink-0" />
-                  <span className="font-medium">
-                    Analyzing document & formulating student-friendly explanation...
-                  </span>
-                </div>
-              )}
-
-              <div ref={chatEndRef} />
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
+                    <div className="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 flex items-center justify-center text-indigo-600 dark:text-indigo-400 mb-3">
+                      <Sparkles className="w-5 h-5" />
+                    </div>
+                    <h4 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-gray-100 mb-1">
+                      Dedicated Answer Window
+                    </h4>
+                    <p className="text-[11px] text-gray-500 dark:text-gray-400 max-w-xs leading-relaxed">
+                      Is window me har answer alag store hoga. Niche question likhein ya upar diye gaye mark buttons par click karein!
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
 
-            {/* Custom Question Input at Bottom */}
-            <div className="p-3 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shrink-0">
+            {/* 4. Bottom Input Bar (shrink-0) */}
+            <div className="p-2.5 px-3 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shrink-0">
               <div className="flex items-center gap-2">
                 <input
                   type="text"
-                  placeholder={`Ask or paste any question from this ${file?.type === 'book' ? 'textbook' : 'paper'}...`}
                   value={customQuestionInput}
                   onChange={(e) => setCustomQuestionInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && !aiLoading && handleAiAction('Custom Query')}
-                  className="flex-1 px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-xs focus:outline-none focus:border-indigo-500"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleAiAction('Custom Query');
+                    }
+                  }}
+                  placeholder="Ask any question from this document..."
+                  className="flex-1 px-3 py-2 text-xs bg-gray-50 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  disabled={aiLoading}
                 />
                 <button
                   onClick={() => handleAiAction('Custom Query')}
-                  disabled={aiLoading}
-                  className="p-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shrink-0 shadow-xs transition-colors disabled:opacity-50"
-                  title="Ask AI Tutor"
+                  disabled={aiLoading || !customQuestionInput.trim()}
+                  className="p-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white transition-all shrink-0"
+                  title="Send Question"
                 >
-                  <Send className="w-4 h-4" />
+                  {aiLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
                 </button>
               </div>
             </div>
@@ -838,10 +810,11 @@ Structure the answer strictly for ${marks} marks according to university grading
                     <button
                       key={sz}
                       onClick={() => setAiFontSize(sz)}
-                      className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all ${aiFontSize === sz
+                      className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all ${
+                        aiFontSize === sz
                           ? 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-300 shadow-xs'
                           : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-100'
-                        }`}
+                      }`}
                     >
                       {FONT_SIZE_MAP[sz].label}
                     </button>
@@ -890,8 +863,9 @@ Structure the answer strictly for ${marks} marks according to university grading
                   <button
                     key={sz}
                     onClick={() => setAiFontSize(sz)}
-                    className={`px-2 py-0.5 text-xs font-bold rounded ${aiFontSize === sz ? 'bg-indigo-600 text-white' : 'text-gray-600 dark:text-gray-300'
-                      }`}
+                    className={`px-2 py-0.5 text-xs font-bold rounded ${
+                      aiFontSize === sz ? 'bg-indigo-600 text-white' : 'text-gray-600 dark:text-gray-300'
+                    }`}
                   >
                     {sz.toUpperCase()}
                   </button>

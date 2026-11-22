@@ -26,16 +26,16 @@ export default function AppLayout() {
 
       {/* Main Content Area */}
       <main
-        className={`flex-1 transition-all duration-300 pt-16 ${
+        className={`flex-1 transition-all duration-300 ${
           isPdfPage
-            ? 'h-screen flex flex-col overflow-hidden'
-            : 'min-h-[calc(100vh-4rem)] flex flex-col justify-between'
+            ? 'h-[calc(100vh-4rem)] max-h-[calc(100vh-4rem)] mt-16 flex flex-col overflow-hidden'
+            : 'min-h-[calc(100vh-4rem)] pt-16 flex flex-col justify-between'
         } ${sidebarCollapsed ? 'pl-0 md:pl-20' : 'pl-0 md:pl-64'}`}
       >
         <div
           className={
             isPdfPage
-              ? 'w-full h-full p-0 flex-1 min-h-0 flex flex-col overflow-hidden'
+              ? 'w-full h-full p-0 flex-1 min-h-0 flex flex-col overflow-hidden relative'
               : 'max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 flex-1 w-full'
           }
         >
