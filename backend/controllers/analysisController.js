@@ -14,7 +14,15 @@ const getAnalyses = async (req, res, next) => {
     if (req.query.subject_id) filter.subject_id = req.query.subject_id;
 
     const list = await SubjectAnalysis.find(filter)
-      .populate('subject_id', 'name code')
+      .populate({
+        path: 'subject_id',
+        select: 'name code semester_id',
+        populate: {
+          path: 'semester_id',
+          select: 'name number course_id',
+          populate: { path: 'course_id', select: 'name code' }
+        }
+      })
       .sort({ createdAt: -1 });
 
     return successResponse(res, list, 'Analyses fetched', 200, list.length);
