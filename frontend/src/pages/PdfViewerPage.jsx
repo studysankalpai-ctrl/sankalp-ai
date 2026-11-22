@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useParams, Link } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -426,21 +427,32 @@ Structure the answer strictly for ${marks} marks according to university grading
         {/* Left PDF Frame (Full 100% height) */}
         <div className="flex-1 min-h-0 h-full bg-gray-200 dark:bg-gray-900/80 p-2 sm:p-3 flex flex-col overflow-hidden">
           {pdfViewUrl ? (
-            <div className="w-full h-full flex-1 min-h-0 rounded-2xl overflow-hidden shadow-md bg-white border border-gray-300 dark:border-gray-700 relative">
-              <object
-                data={`${pdfViewUrl}#toolbar=1`}
-                type="application/pdf"
-                className="w-full h-full block rounded-2xl border-0 bg-white"
-                style={{ width: '100%', height: '100%', minHeight: '100%', border: 'none' }}
+            <div className="w-full h-full flex-1 min-h-0 rounded-2xl overflow-auto shadow-md bg-white border border-gray-300 dark:border-gray-700 relative">
+              <div
+                style={{
+                  width: `${zoomLevel}%`,
+                  height: '100%',
+                  minWidth: '100%',
+                  margin: '0 auto',
+                  transition: 'width 0.15s ease',
+                }}
+                className="h-full flex items-center justify-center"
               >
-                <iframe
-                  ref={iframeRef}
-                  src={`${pdfViewUrl}#toolbar=1`}
+                <object
+                  data={`${pdfViewUrl}#toolbar=1`}
+                  type="application/pdf"
                   className="w-full h-full block rounded-2xl border-0 bg-white"
                   style={{ width: '100%', height: '100%', minHeight: '100%', border: 'none' }}
-                  title={file?.title || file?.original_filename || 'Academic Document'}
-                />
-              </object>
+                >
+                  <iframe
+                    ref={iframeRef}
+                    src={`${pdfViewUrl}#toolbar=1`}
+                    className="w-full h-full block rounded-2xl border-0 bg-white"
+                    style={{ width: '100%', height: '100%', minHeight: '100%', border: 'none' }}
+                    title={file?.title || file?.original_filename || 'Academic Document'}
+                  />
+                </object>
+              </div>
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center h-full p-8 text-center text-gray-400">
@@ -771,17 +783,18 @@ Structure the answer strictly for ${marks} marks according to university grading
       </div>
 
       {/* 5-Year Cross-Paper Master Preparation Paper Modal */}
-      {masterPaperModalOpen && (
+      {masterPaperModalOpen && typeof document !== 'undefined' && createPortal(
         <MasterPaperModal
           paper={masterPaper}
           onClose={() => setMasterPaperModalOpen(false)}
-        />
+        />,
+        document.body
       )}
 
       {/* Fullscreen Study Preview Modal (Bada View for detailed reading and exam prep) */}
-      {studyModalOpen && aiOutput && (
-        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 md:p-6 animate-fade-in">
-          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-3xl w-full max-w-5xl h-[92vh] max-h-[95vh] flex flex-col shadow-2xl overflow-hidden">
+      {studyModalOpen && aiOutput && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[100] bg-black/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 md:p-8 animate-fade-in">
+          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-3xl w-full max-w-5xl h-[86vh] max-h-[88vh] flex flex-col shadow-2xl overflow-hidden my-auto">
             {/* Modal Header */}
             <div className="h-16 px-4 sm:px-6 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-3 min-w-0">
@@ -874,7 +887,7 @@ Structure the answer strictly for ${marks} marks according to university grading
             </div>
 
             {/* Modal Scrollable Content Area with Generous Padding */}
-            <div className="flex-1 overflow-y-auto p-4 sm:p-8 md:p-10 bg-gray-50/50 dark:bg-gray-950/40">
+            <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-8 md:p-10 bg-gray-50/50 dark:bg-gray-950/40">
               <div className="max-w-4xl mx-auto bg-white dark:bg-gray-900 p-6 sm:p-10 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800">
                 <MarkdownRenderer
                   content={aiOutput}
@@ -897,7 +910,8 @@ Structure the answer strictly for ${marks} marks according to university grading
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
