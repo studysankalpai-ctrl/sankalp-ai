@@ -1,3 +1,4 @@
+const fs = require('fs');
 const cloudinary = require('cloudinary').v2;
 
 const isCloudinaryConfigured = () => {
@@ -32,14 +33,35 @@ const uploadPdfToCloudinary = async (filePath, folder = 'sankalp_ai/documents', 
     throw new Error('Cloudinary credentials not configured in backend/.env');
   }
 
-  // Upload as raw resource type so PDFs retain native format and byte integrity
-  const result = await cloudinary.uploader.upload(filePath, {
+  const stats = fs.statSync(filePath);
+  const isLarge = stats.size > 9 * 1024 * 1024; // > 9MB
+
+  const options = {
     resource_type: 'raw',
     folder,
     use_filename: true,
     unique_filename: true,
     filename_override: filename || undefined,
-  });
+  };
+
+  let result;
+  if (isLarge) {
+    result = await new Promise((resolve, reject) => {
+      cloudinary.uploader.upload_large(
+        filePath,
+        {
+          ...options,
+          chunk_size: 6000000,
+        },
+        (error, res) => {
+          if (error) return reject(error);
+          resolve(res);
+        }
+      );
+    });
+  } else {
+    result = await cloudinary.uploader.upload(filePath, options);
+  }
 
   return {
     secure_url: result.secure_url,

@@ -1,6 +1,6 @@
 const fs = require('fs');
 const { chatCompletion, testConnection, getAvailableModels } = require('../services/groqService');
-const { getSubjectAcademicContext, buildMentorSystemPrompt } = require('../services/analysisService');
+const { getSubjectAcademicContext, buildMentorSystemPrompt, buildDocumentTutorPrompt } = require('../services/analysisService');
 const { extractPdfText, searchBookText } = require('../services/pdfService');
 const Subject = require('../models/Subject');
 const ExaminationPaper = require('../models/ExaminationPaper');
@@ -208,7 +208,7 @@ const fetchModels = async (req, res, next) => {
 };
 
 // POST /api/ai/chat
-// Main AI Mentor conversational endpoint with injected academic context
+// AI Mentor conversational endpoint with injected academic context or document-scoped tutoring
 const mentorChat = async (req, res, next) => {
   try {
     const {
@@ -221,6 +221,11 @@ const mentorChat = async (req, res, next) => {
       model = 'openai/gpt-oss-120b',
       learnByBook = false,
       bookId = null,
+      // Document Scoped parameters (used by PDF Viewer Page)
+      documentScoped = false,
+      documentId = null,
+      documentType = null,
+      documentTitle = null,
     } = req.body;
 
     if (!apiKey) {
@@ -231,14 +236,126 @@ const mentorChat = async (req, res, next) => {
       return errorResponse(res, 'Messages array is required', 400);
     }
 
-    // Retrieve academic context for this subject without RAG (simple DB injection)
+    const lastUserMsg = messages.filter((m) => m.role === 'user').slice(-1)[0]?.content || '';
+
+    // =========================================================
+    // CASE A: DOCUMENT-SCOPED MODE (Dedicated to the opened PDF in Academic Library)
+    // =========================================================
+    if (documentScoped || documentId) {
+      let docRecord = null;
+      let docText = '';
+      let targetSubjectId = subjectId;
+
+      // 1. Resolve Document & Extracted Text from DB
+      if (documentType === 'book' || bookId) {
+        docRecord = await Book.findById(documentId || bookId).populate('subject_id');
+      } else if (documentType === 'paper') {
+        docRecord = await ExaminationPaper.findById(documentId).populate('subject_id');
+        if (!docRecord) {
+          docRecord = await ExaminationPaper.findOne({ file_id: documentId }).populate('subject_id');
+        }
+      } else if (documentType === 'syllabus') {
+        docRecord = await SyllabusVersion.findById(documentId).populate('subject_id');
+        if (!docRecord) {
+          docRecord = await SyllabusVersion.findOne({ file_id: documentId }).populate('subject_id');
+        }
+      } else {
+        // Fallback: search across models
+        docRecord = await ExaminationPaper.findById(documentId).populate('subject_id')
+          || await ExaminationPaper.findOne({ file_id: documentId }).populate('subject_id')
+          || await Book.findById(documentId).populate('subject_id')
+          || await SyllabusVersion.findById(documentId).populate('subject_id')
+          || await SyllabusVersion.findOne({ file_id: documentId }).populate('subject_id');
+      }
+
+      if (docRecord) {
+        docText = docRecord.extracted_text || '';
+        if (!targetSubjectId && docRecord.subject_id) {
+          targetSubjectId = docRecord.subject_id._id || docRecord.subject_id;
+        }
+      }
+
+      // 2. Retrieve Subject Academic Context
+      let academicContext = null;
+      let resolvedSubject = docRecord?.subject_id && docRecord.subject_id.name ? docRecord.subject_id : null;
+      if (targetSubjectId) {
+        academicContext = await getSubjectAcademicContext(targetSubjectId);
+        if (!resolvedSubject && academicContext?.subject) {
+          resolvedSubject = academicContext.subject;
+        }
+      }
+
+      // 3. Extract relevant document passage matching student's prompt
+      let docExcerpt = '';
+      if (docText) {
+        docExcerpt = searchBookText(docText, lastUserMsg, 2500);
+      }
+
+      // 4. Build Document-Scoped Prompt
+      const systemPrompt = buildDocumentTutorPrompt({
+        docTitle: documentTitle || docRecord?.title || docRecord?.original_filename || 'Academic Document',
+        docType: documentType || (docRecord ? 'document' : 'academic'),
+        subjectName: resolvedSubject?.name || academicContext?.subject?.name || '',
+        subjectCode: resolvedSubject?.code || academicContext?.subject?.code || '',
+        courseName: academicContext?.course?.name || '',
+        semesterName: academicContext?.semester?.name || '',
+        units: resolvedSubject?.units || academicContext?.subject?.units || [],
+        docExcerpt: docExcerpt,
+        language,
+        marksFormat,
+        answerStyle,
+      });
+
+      // Trim messages to optimize TPM limits
+      const trimmedMessages = messages
+        .filter((m) => m.role === 'user' || m.role === 'assistant')
+        .slice(-4)
+        .map((m) => ({
+          role: m.role,
+          content: m.role === 'assistant' && m.content.length > 700
+            ? m.content.substring(0, 700) + '... [earlier answer truncated for token optimization]'
+            : m.content,
+        }));
+
+      const fullMessages = [
+        { role: 'system', content: systemPrompt },
+        ...trimmedMessages,
+      ];
+
+      const completion = await chatCompletion({
+        apiKey,
+        messages: fullMessages,
+        model,
+        temperature: 0.35,
+        max_tokens: 1600,
+      });
+
+      return successResponse(res, {
+        message: {
+          role: 'assistant',
+          content: completion.content,
+        },
+        model: completion.model,
+        usage: completion.usage,
+        document_context: {
+          document_id: documentId,
+          document_title: documentTitle || docRecord?.title || docRecord?.original_filename,
+          document_type: documentType,
+          subject_name: resolvedSubject?.name || academicContext?.subject?.name,
+          has_passage_grounding: Boolean(docExcerpt),
+        },
+      }, 'Document-scoped assistant response generated');
+    }
+
+    // =========================================================
+    // CASE B: UNIVERSAL AI MENTOR (Cross-Subject, General University Preparation)
+    // =========================================================
     let academicContext = null;
     if (subjectId) {
       academicContext = await getSubjectAcademicContext(subjectId);
     }
 
-    // Dynamic textbook passage retrieval (Intelligent chunk keyword scan)
-    const lastUserMsg = messages.filter((m) => m.role === 'user').slice(-1)[0]?.content || '';
+    // Dynamic textbook passage retrieval
     let targetBook = null;
     let bookExcerpt = '';
 

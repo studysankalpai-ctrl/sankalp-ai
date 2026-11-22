@@ -392,6 +392,28 @@ const resolveFileRecord = async (fileId) => {
   try {
     let file = await AcademicFile.findById(fileId).populate('folder_id');
     if (file) {
+      let subject = null;
+      let extractedText = '';
+      let fileType = 'academic_file';
+
+      // Check if an ExaminationPaper is linked to this file
+      const linkedPaper = await ExaminationPaper.findOne({ file_id: file._id }).populate('subject_id', 'name code units course_id semester_id');
+      if (linkedPaper) {
+        fileType = 'paper';
+        extractedText = linkedPaper.extracted_text || '';
+        subject = linkedPaper.subject_id;
+      } else {
+        // Check if a SyllabusVersion is linked
+        const linkedSyllabus = await SyllabusVersion.findOne({ file_id: file._id }).populate('subject_id', 'name code units course_id semester_id');
+        if (linkedSyllabus) {
+          fileType = 'syllabus';
+          extractedText = linkedSyllabus.extracted_text || '';
+          subject = linkedSyllabus.subject_id;
+        } else if (file.folder_id && file.folder_id.subject_id) {
+          subject = await Subject.findById(file.folder_id.subject_id).select('name code units course_id semester_id');
+        }
+      }
+
       return {
         _id: file._id,
         original_filename: file.original_filename,
@@ -404,11 +426,14 @@ const resolveFileRecord = async (fileId) => {
         cloudinary_url: file.cloudinary_url,
         public_url: file.public_url,
         folder_id: file.folder_id,
-        type: 'academic_file',
+        subject_id: subject?._id || file.folder_id?.subject_id,
+        subject: subject,
+        extracted_text: extractedText,
+        type: fileType,
       };
     }
 
-    const syllabus = await SyllabusVersion.findById(fileId).populate('file_id');
+    const syllabus = await SyllabusVersion.findById(fileId).populate('file_id').populate('subject_id', 'name code units course_id semester_id');
     if (syllabus) {
       return {
         _id: syllabus._id,
@@ -421,11 +446,14 @@ const resolveFileRecord = async (fileId) => {
         gridfs_id: syllabus.gridfs_id || syllabus.file_id?.gridfs_id,
         cloudinary_url: syllabus.cloudinary_url || syllabus.file_id?.cloudinary_url,
         public_url: syllabus.file_url,
+        subject_id: syllabus.subject_id?._id || syllabus.subject_id,
+        subject: syllabus.subject_id,
+        extracted_text: syllabus.extracted_text,
         type: 'syllabus',
       };
     }
 
-    const paper = await ExaminationPaper.findById(fileId).populate('file_id');
+    const paper = await ExaminationPaper.findById(fileId).populate('file_id').populate('subject_id', 'name code units course_id semester_id');
     if (paper) {
       return {
         _id: paper._id,
@@ -438,12 +466,16 @@ const resolveFileRecord = async (fileId) => {
         gridfs_id: paper.gridfs_id || paper.file_id?.gridfs_id,
         cloudinary_url: paper.cloudinary_url || paper.file_id?.cloudinary_url,
         public_url: paper.file_url,
+        subject_id: paper.subject_id?._id || paper.subject_id,
+        subject: paper.subject_id,
         extracted_text: paper.extracted_text,
+        year: paper.year,
+        exam_type: paper.exam_type,
         type: 'paper',
       };
     }
 
-    const book = await Book.findById(fileId);
+    const book = await Book.findById(fileId).populate('subject_id', 'name code units course_id semester_id');
     if (book) {
       return {
         _id: book._id,
@@ -456,6 +488,8 @@ const resolveFileRecord = async (fileId) => {
         gridfs_id: book.gridfs_id,
         cloudinary_url: book.cloudinary_url,
         public_url: book.public_url,
+        subject_id: book.subject_id?._id || book.subject_id,
+        subject: book.subject_id,
         type: 'book',
         title: book.title,
         author: book.author,
@@ -490,17 +524,18 @@ const viewFileInline = async (req, res, next) => {
     const file = await resolveFileRecord(req.params.id);
     if (!file) return errorResponse(res, 'File record not found', 404);
 
+    res.removeHeader('X-Frame-Options');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', '*');
+
     // 1. Direct Cloudinary redirect if available (fastest, CDN powered)
     if (file.cloudinary_url && file.cloudinary_url.startsWith('http')) {
       return res.redirect(file.cloudinary_url);
     }
 
-    res.removeHeader('X-Frame-Options');
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(file.original_filename || 'document.pdf')}"`);
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', '*');
 
     // 2. Stream from GridFS if available
     if (file.gridfs_id) {
