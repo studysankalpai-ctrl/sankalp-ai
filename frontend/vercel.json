@@ -3,11 +3,11 @@
     "rewrites": [
         {
             "source": "/api/:path*",
-            "destination": "https://sankalp-backend.onrender.com/api/:path*"
+            "destination": "https://sankalp-ai-sr0e.onrender.com/api/:path*"
         },
         {
             "source": "/uploads/:path*",
-            "destination": "https://sankalp-backend.onrender.com/uploads/:path*"
+            "destination": "https://sankalp-ai-sr0e.onrender.com/uploads/:path*"
         },
         {
             "source": "/(.*)",
