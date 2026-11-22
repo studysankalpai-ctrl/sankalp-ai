@@ -7,6 +7,7 @@ const Course = require('../models/Course');
 const { extractPdfText, extractBookMetadata } = require('../services/pdfService');
 const { successResponse, errorResponse } = require('../utils/apiResponse');
 const { logAudit } = require('../utils/auditLogger');
+const { uploadToGridFS, streamFromGridFS, resolveLocalFilePath } = require('../services/storageService');
 
 // GET /api/admin/books or /api/public/books
 const getBooks = async (req, res, next) => {
@@ -109,6 +110,14 @@ const uploadBook = async (req, res, next) => {
     const bookEdition = edition?.trim() || autoMeta.edition;
     const bookDescription = description?.trim() || autoMeta.description;
 
+    let gridfsId = null;
+    try {
+      const gfs = await uploadToGridFS(req.file.path, req.file.originalname);
+      gridfsId = gfs.gridfs_id;
+    } catch (gfsErr) {
+      console.warn('[GridFS Book Upload Warning]:', gfsErr.message);
+    }
+
     const book = await Book.create({
       title: bookTitle,
       author: bookAuthor,
@@ -118,6 +127,7 @@ const uploadBook = async (req, res, next) => {
       semester_id: resolvedSemesterId,
       subject_id: subject._id,
       storage_path: req.file.path,
+      gridfs_id: gridfsId,
       file_name: req.file.originalname,
       file_size: req.file.size,
       mime_type: req.file.mimetype || 'application/pdf',
@@ -251,17 +261,40 @@ const viewBookPdf = async (req, res, next) => {
     const book = await Book.findById(req.params.id);
     if (!book) return errorResponse(res, 'Book not found', 404);
 
-    if (!fs.existsSync(book.storage_path)) {
-      return errorResponse(res, 'Book PDF not found on disk', 404);
-    }
-
     res.removeHeader('X-Frame-Options');
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(book.file_name)}"`);
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', '*');
-    return fs.createReadStream(book.storage_path).pipe(res);
+
+    // 1. Stream from GridFS if available
+    if (book.gridfs_id) {
+      try {
+        const stream = streamFromGridFS(book.gridfs_id);
+        stream.on('error', (err) => {
+          console.warn('[GridFS Book Stream error]:', err.message);
+          if (!res.headersSent) {
+            const diskP = resolveLocalFilePath(book.storage_path, 'books');
+            if (diskP && fs.existsSync(diskP)) {
+              return fs.createReadStream(diskP).pipe(res);
+            }
+            return errorResponse(res, 'Book PDF not available on storage server', 404);
+          }
+        });
+        return stream.pipe(res);
+      } catch (e) {
+        console.warn('GridFS stream error, falling back to disk:', e.message);
+      }
+    }
+
+    // 2. Local disk fallback
+    const resolvedPath = resolveLocalFilePath(book.storage_path, 'books');
+    if (resolvedPath && fs.existsSync(resolvedPath)) {
+      return fs.createReadStream(resolvedPath).pipe(res);
+    }
+
+    return errorResponse(res, 'Book PDF not found on disk or storage server', 404);
   } catch (error) {
     next(error);
   }
@@ -273,11 +306,24 @@ const downloadBookPdf = async (req, res, next) => {
     const book = await Book.findById(req.params.id);
     if (!book) return errorResponse(res, 'Book not found', 404);
 
-    if (!fs.existsSync(book.storage_path)) {
-      return errorResponse(res, 'Book PDF not found on disk', 404);
+    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(book.file_name)}"`);
+    res.setHeader('Content-Type', 'application/pdf');
+
+    if (book.gridfs_id) {
+      try {
+        const stream = streamFromGridFS(book.gridfs_id);
+        return stream.pipe(res);
+      } catch (e) {
+        console.warn('GridFS download failed, trying disk:', e.message);
+      }
     }
 
-    return res.download(book.storage_path, book.file_name);
+    const resolvedPath = resolveLocalFilePath(book.storage_path, 'books');
+    if (resolvedPath && fs.existsSync(resolvedPath)) {
+      return res.download(resolvedPath, book.file_name);
+    }
+
+    return errorResponse(res, 'Book PDF not found on disk or storage server', 404);
   } catch (error) {
     next(error);
   }

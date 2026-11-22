@@ -914,68 +914,163 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Minimalist Black & White Footer (No Admin Button) */}
-      <footer className="py-12 border-t border-white/10 bg-black text-zinc-400 text-xs">
-        <div className="w-full max-w-[1560px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 flex flex-col md:flex-row items-center justify-between gap-5">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-white/10 p-1 flex items-center justify-center">
-              <img
-                src="/Logo.png"
-                alt="SANKALP AI"
-                width="32"
-                height="32"
-                loading="lazy"
-                decoding="async"
-                className="w-full h-full object-contain"
-              />
+      {/* Rich High-Impact Monochrome Footer */}
+      <footer className="relative z-10 border-t border-white/20 bg-zinc-950 text-zinc-400 text-xs pt-16 pb-12 shadow-2xl">
+        <div className="w-full max-w-[1560px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12">
+          {/* Main 4-Column Footer Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 pb-12 border-b border-white/10">
+            {/* Col 1: Brand & Academic Mission */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/20 p-1 flex items-center justify-center">
+                  <img
+                    src="/Logo.png"
+                    alt="SANKALP AI"
+                    width="36"
+                    height="36"
+                    loading="lazy"
+                    decoding="async"
+                    className="w-full h-full object-contain filter drop-shadow"
+                  />
+                </div>
+                <div>
+                  <span className="font-extrabold text-white text-base tracking-tight block">
+                    SANKALP AI
+                  </span>
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400">
+                    2.0 Academic Core
+                  </span>
+                </div>
+              </div>
+
+              <p className="text-xs text-zinc-400 leading-relaxed">
+                Autonomous University Exam Intelligence Engine. Grounded in prescribed textbooks and 5-year historical question papers to deliver mark-winning model answers.
+              </p>
+
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/15 text-xs text-zinc-300">
+                <GraduationCap className="w-3.5 h-3.5 text-white" />
+                <span>St. John's College, Agra</span>
+              </div>
             </div>
+
+            {/* Col 2: Core Platform Modules */}
             <div>
-              <span className="font-bold text-white text-sm">SANKALP AI</span>
-              <p className="text-[11px] text-zinc-400">Autonomous University Exam Intelligence</p>
+              <h4 className="text-xs font-mono uppercase tracking-widest text-white font-bold mb-4">
+                Platform Features
+              </h4>
+              <ul className="space-y-2.5 text-xs text-zinc-300 font-medium">
+                <li>
+                  <Link to="/mentor" className="hover:text-white transition-colors flex items-center gap-1.5">
+                    <Bot className="w-3.5 h-3.5 text-zinc-400" />
+                    <span>AI Exam Mentor</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/predictions" className="hover:text-white transition-colors flex items-center gap-1.5">
+                    <FileCheck2 className="w-3.5 h-3.5 text-zinc-400" />
+                    <span>5-Year Master Final Paper</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/library" className="hover:text-white transition-colors flex items-center gap-1.5">
+                    <BookOpen className="w-3.5 h-3.5 text-zinc-400" />
+                    <span>Academic Library & Textbooks</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/topics" className="hover:text-white transition-colors flex items-center gap-1.5">
+                    <Star className="w-3.5 h-3.5 text-zinc-400" />
+                    <span>Important Repeated Topics</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/guide" className="hover:text-white transition-colors flex items-center gap-1.5">
+                    <FileText className="w-3.5 h-3.5 text-zinc-400" />
+                    <span>Student User Manual & Guide</span>
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            {/* Col 3: Academic Programs & Syllabi */}
+            <div>
+              <h4 className="text-xs font-mono uppercase tracking-widest text-white font-bold mb-4">
+                Curriculum & Programs
+              </h4>
+              <ul className="space-y-2.5 text-xs text-zinc-300 font-medium">
+                <li className="flex items-center justify-between">
+                  <span>BMC • Master of Computer Applications</span>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950/80 text-emerald-400 border border-emerald-800/60">
+                    21 Papers
+                  </span>
+                </li>
+                <li className="flex items-center justify-between">
+                  <span>BMB • Master of Business Administration</span>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/10 text-zinc-300">
+                    7 Subjects
+                  </span>
+                </li>
+                <li>
+                  <Link to="/library" className="hover:text-white transition-colors">
+                    Official University Syllabus 2026-2027
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/library" className="hover:text-white transition-colors">
+                    5-Year Exam Question Archives
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            {/* Col 4: Creator Credit & Inquiries */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-mono uppercase tracking-widest text-white font-bold mb-2">
+                Creator & Inquiries
+              </h4>
+              <p className="text-xs text-zinc-300 font-semibold">
+                Designed & Built by Sameer Singh
+              </p>
+              <p className="text-xs text-zinc-400 leading-relaxed">
+                Student of St. John's College, Agra • Platform Architect & AI Full Stack Engineer.
+              </p>
+
+              <div className="pt-2">
+                <a
+                  href="mailto:study.sankalp.ai@gmail.com"
+                  className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs border border-white/20 transition-all hover:scale-[1.02]"
+                  title="Contact SANKALP AI"
+                >
+                  <Mail className="w-3.5 h-3.5 text-white" />
+                  <span>study.sankalp.ai@gmail.com</span>
+                </a>
+              </div>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-6 text-zinc-300 font-medium text-xs sm:text-sm">
-            <Link to="/dashboard" className="hover:text-white transition-colors">
-              Platform
-            </Link>
-            <Link to="/mentor" className="hover:text-white transition-colors">
-              AI Exam Mentor
-            </Link>
-            <Link to="/predictions" className="hover:text-white transition-colors">
-              5-Year Paper
-            </Link>
-            <Link to="/library" className="hover:text-white transition-colors">
-              Papers & Syllabus
-            </Link>
-            <Link to="/guide" className="hover:text-white transition-colors">
-              User Manual & Guide
-            </Link>
-            <a href="#creator" className="hover:text-white transition-colors">
-              Creator
-            </a>
-            <a
-              href="mailto:study.sankalp.ai@gmail.com"
-              className="inline-flex items-center gap-1.5 text-white hover:text-zinc-300 transition-colors"
-              title="Official Enquiry Email"
-            >
-              <Mail className="w-3.5 h-3.5" />
-              <span>study.sankalp.ai@gmail.com</span>
-            </a>
-          </div>
+          {/* Sub-Footer Bar */}
+          <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-400">
+            <p>
+              &copy; {new Date().getFullYear()} SANKALP AI. Developed for University Students of St. John's College, Agra.
+            </p>
 
-          <div className="text-center md:text-right text-xs text-zinc-400">
-            <p>Created by Sameer Singh • Student of St. John's College, Agra</p>
-            <p className="text-zinc-300 mt-0.5">
-              Enquiries & Feedback:{' '}
+            <div className="flex flex-wrap items-center gap-5 font-medium text-zinc-300">
+              <Link to="/dashboard" className="hover:text-white transition-colors">
+                Launch Platform
+              </Link>
+              <Link to="/guide" className="hover:text-white transition-colors">
+                User Guide
+              </Link>
+              <a href="#creator" className="hover:text-white transition-colors">
+                About Creator
+              </a>
               <a
                 href="mailto:study.sankalp.ai@gmail.com"
-                className="text-white hover:underline font-mono"
+                className="hover:text-white transition-colors text-white font-mono"
               >
                 study.sankalp.ai@gmail.com
               </a>
-            </p>
-            <p className="text-zinc-500 mt-0.5">Academic Excellence &copy; {new Date().getFullYear()} SANKALP AI</p>
+            </div>
           </div>
         </div>
       </footer>

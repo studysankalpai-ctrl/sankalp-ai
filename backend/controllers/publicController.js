@@ -12,6 +12,7 @@ const SubjectAnalysis = require('../models/SubjectAnalysis');
 const ExtractedQuestion = require('../models/ExtractedQuestion');
 const Book = require('../models/Book');
 const { successResponse, errorResponse } = require('../utils/apiResponse');
+const { streamFromGridFS, resolveLocalFilePath, existsInGridFS } = require('../services/storageService');
 
 // GET /api/public/courses
 const getPublishedCourses = async (req, res, next) => {
@@ -255,23 +256,97 @@ const getPracticeQuestions = async (req, res, next) => {
 // GET /api/public/stats
 const getPublicStats = async (req, res, next) => {
   try {
-    let [courses, subjects, papers, topics] = await Promise.all([
-      Course.countDocuments({ is_published: true, is_archived: { $ne: true } }),
-      Subject.countDocuments({ is_published: true, is_archived: { $ne: true } }),
-      ExaminationPaper.countDocuments(),
-      ImportantTopic.countDocuments({ is_published: true }),
+    const { course_id, semester_id } = req.query;
+
+    // Fetch all active curriculum records to compute accurate breakdowns
+    const [allCourses, allSemesters, allSubjects, allPapers, allTopics] = await Promise.all([
+      Course.find({ is_archived: { $ne: true } }).sort({ sort_order: 1, code: 1 }),
+      Semester.find({ is_archived: { $ne: true } }),
+      Subject.find({ is_archived: { $ne: true } }),
+      ExaminationPaper.find().select('subject_id exam_year'),
+      ImportantTopic.find({ is_published: true }).select('subject_id topic_name'),
     ]);
 
-    if (courses === 0) courses = await Course.countDocuments({ is_archived: { $ne: true } });
-    if (subjects === 0) subjects = await Subject.countDocuments({ is_archived: { $ne: true } });
-    if (topics === 0) topics = await ImportantTopic.countDocuments();
+    // Build per-course breakdown (BMC vs BMB, etc.)
+    const coursesBreakdown = allCourses.map((course) => {
+      const courseSemIds = allSemesters
+        .filter((s) => s.course_id && s.course_id.toString() === course._id.toString())
+        .map((s) => s._id.toString());
 
-    return successResponse(res, {
-      total_courses: courses,
-      total_subjects: subjects,
-      total_papers: papers,
-      total_topics: topics,
-    }, 'Public platform statistics');
+      const courseSubjects = allSubjects.filter(
+        (sub) => sub.semester_id && courseSemIds.includes(sub.semester_id.toString())
+      );
+      const courseSubjectIds = courseSubjects.map((s) => s._id.toString());
+
+      const coursePapers = allPapers.filter(
+        (p) => p.subject_id && courseSubjectIds.includes(p.subject_id.toString())
+      );
+      const courseTopics = allTopics.filter(
+        (t) => t.subject_id && courseSubjectIds.includes(t.subject_id.toString())
+      );
+
+      // Subject-wise details with individual past paper counts
+      const subjectsWithCount = courseSubjects.map((sub) => {
+        const subPapersCount = allPapers.filter(
+          (p) => p.subject_id && p.subject_id.toString() === sub._id.toString()
+        ).length;
+        const subTopicsCount = allTopics.filter(
+          (t) => t.subject_id && t.subject_id.toString() === sub._id.toString()
+        ).length;
+
+        return {
+          _id: sub._id,
+          code: sub.code,
+          name: sub.name,
+          papers_count: subPapersCount,
+          topics_count: subTopicsCount,
+        };
+      });
+
+      return {
+        course_id: course._id,
+        course_code: course.code,
+        course_name: course.name,
+        total_subjects: courseSubjects.length,
+        total_papers: coursePapers.length,
+        total_topics: courseTopics.length,
+        subjects: subjectsWithCount,
+      };
+    });
+
+    // Check if client asked for a specific course
+    let selectedBreakdown = null;
+    if (course_id) {
+      selectedBreakdown = coursesBreakdown.find(
+        (cb) =>
+          cb.course_id.toString() === course_id.toString() ||
+          cb.course_code.toLowerCase() === course_id.toLowerCase()
+      );
+    }
+
+    const totalCourses = allCourses.length;
+    const totalSubjects = selectedBreakdown ? selectedBreakdown.total_subjects : allSubjects.length;
+    const totalPapers = selectedBreakdown ? selectedBreakdown.total_papers : allPapers.length;
+    const totalTopics = selectedBreakdown ? selectedBreakdown.total_topics : allTopics.length;
+
+    return successResponse(
+      res,
+      {
+        total_courses: totalCourses,
+        total_subjects: totalSubjects,
+        total_papers: totalPapers,
+        total_topics: totalTopics,
+        is_filtered: !!selectedBreakdown,
+        filtered_course: selectedBreakdown
+          ? {
+              code: selectedBreakdown.course_code,
+              name: selectedBreakdown.course_name,
+            }
+          : null,
+        courses_breakdown: coursesBreakdown,
+      },
+      'Public platform statistics'
+    );
   } catch (error) {
     next(error);
   }
@@ -325,13 +400,14 @@ const resolveFileRecord = async (fileId) => {
         file_type: file.file_type || 'application/pdf',
         upload_date: file.upload_date,
         storage_path: file.storage_path,
+        gridfs_id: file.gridfs_id,
         public_url: file.public_url,
         folder_id: file.folder_id,
         type: 'academic_file',
       };
     }
 
-    const syllabus = await SyllabusVersion.findById(fileId);
+    const syllabus = await SyllabusVersion.findById(fileId).populate('file_id');
     if (syllabus) {
       return {
         _id: syllabus._id,
@@ -340,23 +416,26 @@ const resolveFileRecord = async (fileId) => {
         file_size: syllabus.file_size,
         file_type: 'application/pdf',
         upload_date: syllabus.upload_date,
-        storage_path: syllabus.storage_path,
+        storage_path: syllabus.storage_path || syllabus.file_id?.storage_path,
+        gridfs_id: syllabus.gridfs_id || syllabus.file_id?.gridfs_id,
         public_url: syllabus.file_url,
         type: 'syllabus',
       };
     }
 
-    const paper = await ExaminationPaper.findById(fileId);
+    const paper = await ExaminationPaper.findById(fileId).populate('file_id');
     if (paper) {
       return {
         _id: paper._id,
-        original_filename: paper.original_filename || paper.filename,
-        filename: paper.filename,
-        file_size: paper.file_size,
+        original_filename: paper.original_filename || paper.file_id?.original_filename || paper.filename,
+        filename: paper.filename || paper.file_id?.filename,
+        file_size: paper.file_size || paper.file_id?.file_size,
         file_type: 'application/pdf',
         upload_date: paper.upload_date,
-        storage_path: paper.storage_path,
+        storage_path: paper.storage_path || paper.file_id?.storage_path,
+        gridfs_id: paper.gridfs_id || paper.file_id?.gridfs_id,
         public_url: paper.file_url,
+        extracted_text: paper.extracted_text,
         type: 'paper',
       };
     }
@@ -371,6 +450,7 @@ const resolveFileRecord = async (fileId) => {
         file_type: 'application/pdf',
         upload_date: book.createdAt,
         storage_path: book.storage_path,
+        gridfs_id: book.gridfs_id,
         public_url: book.public_url,
         type: 'book',
         title: book.title,
@@ -378,6 +458,8 @@ const resolveFileRecord = async (fileId) => {
         edition: book.edition,
         description: book.description,
         total_pages: book.total_pages,
+        extracted_text: book.extracted_text,
+        summary_index: book.summary_index,
       };
     }
 
@@ -404,17 +486,43 @@ const viewFileInline = async (req, res, next) => {
     const file = await resolveFileRecord(req.params.id);
     if (!file) return errorResponse(res, 'File record not found', 404);
 
-    if (!file.storage_path || !fs.existsSync(file.storage_path)) {
-      return errorResponse(res, 'PDF file not available on storage server', 404);
-    }
-
     res.removeHeader('X-Frame-Options');
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(file.original_filename)}"`);
+    res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(file.original_filename || 'document.pdf')}"`);
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', '*');
-    return fs.createReadStream(file.storage_path).pipe(res);
+
+    // 1. Stream from GridFS if available
+    if (file.gridfs_id) {
+      try {
+        const stream = streamFromGridFS(file.gridfs_id);
+        stream.on('error', (err) => {
+          console.warn('[GridFS Stream warning]:', err.message);
+          // Try local fallback if headers not sent
+          if (!res.headersSent) {
+            const subfolder = file.type === 'book' ? 'books' : file.type === 'paper' ? 'papers' : file.type === 'syllabus' ? 'syllabus' : '';
+            const diskPath = resolveLocalFilePath(file.storage_path, subfolder);
+            if (diskPath && fs.existsSync(diskPath)) {
+              return fs.createReadStream(diskPath).pipe(res);
+            }
+            return errorResponse(res, 'PDF stream error from storage server', 500);
+          }
+        });
+        return stream.pipe(res);
+      } catch (gridFsErr) {
+        console.warn('[GridFS unavailable, trying local disk]:', gridFsErr.message);
+      }
+    }
+
+    // 2. Check flexible local disk path
+    const subfolder = file.type === 'book' ? 'books' : file.type === 'paper' ? 'papers' : file.type === 'syllabus' ? 'syllabus' : '';
+    const resolvedDiskPath = resolveLocalFilePath(file.storage_path, subfolder);
+    if (resolvedDiskPath && fs.existsSync(resolvedDiskPath)) {
+      return fs.createReadStream(resolvedDiskPath).pipe(res);
+    }
+
+    return errorResponse(res, 'PDF file not available on storage server', 404);
   } catch (error) {
     next(error);
   }
@@ -426,11 +534,27 @@ const downloadPublicFile = async (req, res, next) => {
     const file = await resolveFileRecord(req.params.id);
     if (!file) return errorResponse(res, 'File not found', 404);
 
-    if (!file.storage_path || !fs.existsSync(file.storage_path)) {
-      return errorResponse(res, 'File not found on storage server', 404);
+    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(file.original_filename || 'document.pdf')}"`);
+    res.setHeader('Content-Type', 'application/pdf');
+
+    // 1. Stream from GridFS if available
+    if (file.gridfs_id) {
+      try {
+        const stream = streamFromGridFS(file.gridfs_id);
+        return stream.pipe(res);
+      } catch (gridFsErr) {
+        console.warn('[GridFS download warning]:', gridFsErr.message);
+      }
     }
 
-    return res.download(file.storage_path, file.original_filename);
+    // 2. Check flexible local disk path
+    const subfolder = file.type === 'book' ? 'books' : file.type === 'paper' ? 'papers' : file.type === 'syllabus' ? 'syllabus' : '';
+    const resolvedDiskPath = resolveLocalFilePath(file.storage_path, subfolder);
+    if (resolvedDiskPath && fs.existsSync(resolvedDiskPath)) {
+      return res.download(resolvedDiskPath, file.original_filename);
+    }
+
+    return errorResponse(res, 'File not found on storage server', 404);
   } catch (error) {
     next(error);
   }

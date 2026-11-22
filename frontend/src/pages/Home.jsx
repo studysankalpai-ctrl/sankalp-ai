@@ -24,18 +24,27 @@ import useAppStore from '../store/appStore';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 
 export default function Home() {
-  const { selectedCourse, selectedSemester } = useAppStore();
+  const { selectedCourse, selectedSemester, setSelectedCourse } = useAppStore();
   const [stats, setStats] = useState(null);
   const [importantTopics, setImportantTopics] = useState([]);
   const [recentActivity, setRecentActivity] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeCourseTab, setActiveCourseTab] = useState(selectedCourse?.code || 'BMC');
+
+  useEffect(() => {
+    if (selectedCourse?.code) {
+      setActiveCourseTab(selectedCourse.code);
+    }
+  }, [selectedCourse]);
 
   useEffect(() => {
     async function loadData() {
       try {
         setLoading(true);
         const [statsRes, topicsRes] = await Promise.all([
-          publicApi.getStats(),
+          publicApi.getStats(
+            selectedCourse ? { course_id: selectedCourse._id || selectedCourse.code } : {}
+          ),
           publicApi.getTopics(),
         ]);
 
@@ -122,6 +131,7 @@ export default function Home() {
             <p className="text-xs sm:text-base font-bold text-gray-900 dark:text-gray-100 truncate">
               {selectedCourse ? `${selectedCourse.code} • ${selectedSemester?.name || 'Sem 1'}` : 'Select Course'}
             </p>
+            <p className="text-[10px] text-gray-400 truncate mt-0.5">Active Academic Scope</p>
           </div>
         </div>
 
@@ -130,8 +140,13 @@ export default function Home() {
             <BookOpen className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
           <div>
-            <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Subjects</p>
+            <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+              Subjects {selectedCourse ? `(${selectedCourse.code})` : ''}
+            </p>
             <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">{stats?.total_subjects || 0}</p>
+            <p className="text-[10px] text-gray-400 mt-0.5">
+              {stats?.filtered_course ? `in ${stats.filtered_course.code} curriculum` : 'Active Subjects'}
+            </p>
           </div>
         </div>
 
@@ -140,8 +155,13 @@ export default function Home() {
             <FileQuestion className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
           <div>
-            <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Past Papers</p>
+            <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+              Past Papers {selectedCourse ? `(${selectedCourse.code})` : ''}
+            </p>
             <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">{stats?.total_papers || 0}</p>
+            <p className="text-[10px] text-gray-400 mt-0.5">
+              {stats?.filtered_course ? `in ${stats.filtered_course.code} archives` : 'Available Papers'}
+            </p>
           </div>
         </div>
 
@@ -152,9 +172,133 @@ export default function Home() {
           <div>
             <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Topics</p>
             <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">{stats?.total_topics || 0}</p>
+            <p className="text-[10px] text-gray-400 mt-0.5">High Probability</p>
           </div>
         </div>
       </div>
+
+      {/* Subject-Wise Past Paper Distribution Breakdown (BMC vs BMB) */}
+      {stats?.courses_breakdown && stats.courses_breakdown.length > 0 && (
+        <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-800 shadow-xs space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-2">
+                <Layers className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                <h2 className="text-base sm:text-lg font-bold text-gray-900 dark:text-gray-100">
+                  Subject-Wise Question Paper Distribution
+                </h2>
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                Breakdown of past university examination papers available per subject.
+              </p>
+            </div>
+
+            {/* Course Selector Tabs: BMC vs BMB */}
+            <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-gray-100 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700/60 self-start sm:self-auto">
+              {stats.courses_breakdown.map((cb) => {
+                const isActive = activeCourseTab.toUpperCase() === cb.course_code.toUpperCase();
+                return (
+                  <button
+                    key={cb.course_code}
+                    onClick={() => setActiveCourseTab(cb.course_code)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                      isActive
+                        ? 'bg-white dark:bg-gray-900 text-indigo-600 dark:text-indigo-400 shadow-xs'
+                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                    }`}
+                  >
+                    <span>{cb.course_code}</span>
+                    <span
+                      className={`px-1.5 py-0.5 rounded-md text-[10px] ${
+                        cb.total_papers > 0
+                          ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 font-bold'
+                          : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
+                      }`}
+                    >
+                      {cb.total_papers} Papers
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Active Course Subject Cards Grid */}
+          {(() => {
+            const currentCourseData =
+              stats.courses_breakdown.find(
+                (cb) => cb.course_code.toUpperCase() === activeCourseTab.toUpperCase()
+              ) || stats.courses_breakdown[0];
+
+            if (!currentCourseData) return null;
+
+            return (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 px-1">
+                  <span>
+                    Showing <strong>{currentCourseData.subjects?.length || 0} subjects</strong> for{' '}
+                    <strong className="text-gray-900 dark:text-gray-100">
+                      {currentCourseData.course_name} ({currentCourseData.course_code})
+                    </strong>
+                  </span>
+                  <span className="font-semibold text-indigo-600 dark:text-indigo-400">
+                    Total: {currentCourseData.total_papers} Papers
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {currentCourseData.subjects?.map((sub) => {
+                    const hasPapers = sub.papers_count > 0;
+                    return (
+                      <div
+                        key={sub._id || sub.code}
+                        className="p-3.5 sm:p-4 rounded-2xl bg-gray-50 dark:bg-[#0c1222] border border-gray-200 dark:border-gray-800/80 hover:border-indigo-400 dark:hover:border-indigo-600 transition-all flex flex-col justify-between group"
+                      >
+                        <div className="space-y-1.5">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/60">
+                              {sub.code}
+                            </span>
+                            <span
+                              className={`text-[11px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1 ${
+                                hasPapers
+                                  ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50'
+                                  : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
+                              }`}
+                            >
+                              <FileQuestion className="w-3 h-3" />
+                              {sub.papers_count} {sub.papers_count === 1 ? 'Paper' : 'Papers'}
+                            </span>
+                          </div>
+                          <h4 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-gray-100 line-clamp-2 leading-snug">
+                            {sub.name}
+                          </h4>
+                        </div>
+
+                        <div className="pt-3 mt-2 border-t border-gray-200/60 dark:border-gray-800/60 flex items-center justify-between">
+                          <Link
+                            to={`/library?subject=${sub._id}`}
+                            className="inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
+                          >
+                            <span>Browse Papers</span>
+                            <ChevronRight className="w-3 h-3" />
+                          </Link>
+                          <Link
+                            to="/predictions"
+                            className="inline-flex items-center gap-1 text-[11px] font-semibold text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                          >
+                            <span>Synthesize Paper</span>
+                          </Link>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      )}
 
       {/* Main Study Actions (What do you want to study today?) */}
       <div>

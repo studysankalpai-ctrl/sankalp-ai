@@ -33,7 +33,7 @@ export const publicApi = {
   getQuestions: (params) => api.get('/public/questions', { params }),
   getBooks: (params) => api.get('/public/books', { params }),
   getSubjectBooks: (subjectId) => api.get(`/public/subjects/${subjectId}/books`),
-  getStats: () => api.get('/public/stats'),
+  getStats: (params) => api.get('/public/stats', { params }),
   search: (q) => api.get('/public/search', { params: { q } }),
 };
 

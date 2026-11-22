@@ -7,6 +7,7 @@ const academicFileSchema = new mongoose.Schema({
   file_type: { type: String, required: true, default: 'application/pdf' },
   file_size: { type: Number, required: true },
   storage_path: { type: String, required: true },
+  gridfs_id: { type: mongoose.Schema.Types.ObjectId },
   public_url: { type: String },
   metadata: { type: mongoose.Schema.Types.Mixed, default: {} },
   upload_date: { type: Date, default: Date.now },
