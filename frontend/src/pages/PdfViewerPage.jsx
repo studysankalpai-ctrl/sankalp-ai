@@ -474,10 +474,10 @@ Structure the answer strictly for ${marks} marks according to university grading
             className={`${panelWidthMode === 'wide'
                 ? 'w-full md:w-[580px] lg:w-[680px] xl:w-[780px]'
                 : 'w-full sm:w-96 lg:w-[440px]'
-              } bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 flex flex-col shrink-0 h-full shadow-lg transition-all duration-200 absolute sm:relative inset-0 sm:inset-auto z-20 sm:z-auto`}
+              } bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 flex flex-col shrink-0 h-full max-h-full min-h-0 shadow-lg transition-all duration-200 absolute sm:relative inset-0 sm:inset-auto z-20 sm:z-auto overflow-hidden`}
           >
             {/* Dedicated Document Tutor Header */}
-            <div className="p-3.5 px-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+            <div className="p-3.5 px-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2 min-w-0">
                 <div className="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
                   <Sparkles className="w-3.5 h-3.5" />
@@ -543,7 +543,7 @@ Structure the answer strictly for ${marks} marks according to university grading
             </div>
 
             {/* Cross-Paper Master Button in AI Panel */}
-            <div className="p-2.5 bg-gray-50 dark:bg-gray-900/60 border-b border-gray-200 dark:border-gray-800">
+            <div className="p-2.5 bg-gray-50 dark:bg-gray-900/60 border-b border-gray-200 dark:border-gray-800 shrink-0">
               <button
                 onClick={handleGenerateMasterFinalPaper}
                 disabled={generatingMasterPaper}
@@ -559,7 +559,7 @@ Structure the answer strictly for ${marks} marks according to university grading
             </div>
 
             {/* Mark-Specific & 1-Click Operations */}
-            <div className="p-3 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/40 space-y-2">
+            <div className="p-3 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/40 space-y-2 shrink-0">
               <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 px-0.5">
                 Mark-Specific Answer Generators
               </p>
@@ -644,7 +644,7 @@ Structure the answer strictly for ${marks} marks according to university grading
             </div>
 
             {/* Document-Scoped Interactive Chat Thread */}
-            <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-4">
+            <div className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-4 space-y-4 overscroll-contain">
               {docMessages.length === 0 ? (
                 <div className="text-center py-10 px-3 bg-gray-50/60 dark:bg-gray-800/30 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700">
                   <div className="w-10 h-10 rounded-2xl bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 mx-auto mb-3 flex items-center justify-center">
@@ -774,7 +774,7 @@ Structure the answer strictly for ${marks} marks according to university grading
             </div>
 
             {/* Custom Question Input at Bottom */}
-            <div className="p-3 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900">
+            <div className="p-3 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shrink-0">
               <div className="flex items-center gap-2">
                 <input
                   type="text"
