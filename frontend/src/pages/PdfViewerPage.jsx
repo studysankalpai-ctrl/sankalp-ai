@@ -43,7 +43,7 @@ const FONT_SIZE_MAP = {
 
 export default function PdfViewerPage() {
   const { fileId } = useParams();
-  const { groqApiKey, groqModel, isAiConnected, selectedSubject } = useAppStore();
+  const { groqApiKey, groqModel, isAiConnected, selectedSubject, sidebarCollapsed } = useAppStore();
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
@@ -297,7 +297,9 @@ Structure the answer strictly for ${marks} marks according to university grading
   return (
     <div
       id="pdf-viewer-container"
-      className="flex flex-col w-full h-full flex-1 min-h-0 bg-gray-100 dark:bg-gray-950 overflow-hidden relative"
+      className={`fixed top-16 bottom-0 right-0 ${
+        sidebarCollapsed ? 'left-0 md:left-20' : 'left-0 md:left-64'
+      } flex flex-col bg-gray-100 dark:bg-gray-950 overflow-hidden z-20 transition-all duration-300`}
     >
       {/* Top Toolbar */}
       <div className="h-12 sm:h-14 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-3 sm:px-4 flex items-center justify-between shrink-0 shadow-2xs z-10">
@@ -421,26 +423,24 @@ Structure the answer strictly for ${marks} marks according to university grading
 
       {/* Main Split Layout: PDF on Left, Dedicated Document AI Tutor on Right */}
       <div className="flex-1 min-h-0 w-full flex overflow-hidden relative">
-        {/* Left PDF Frame (Full 100% height without flex collapse) */}
-        <div className="flex-1 min-h-0 h-full bg-gray-200 dark:bg-gray-900/80 relative flex flex-col p-2 sm:p-3 overflow-hidden">
+        {/* Left PDF Frame (Full 100% height) */}
+        <div className="flex-1 min-h-0 h-full bg-gray-200 dark:bg-gray-900/80 p-2 sm:p-3 flex flex-col overflow-hidden">
           {pdfViewUrl ? (
-            <div className="relative w-full h-full flex-1 min-h-0 rounded-2xl overflow-hidden shadow-lg bg-white">
-              <iframe
-                ref={iframeRef}
-                src={`${pdfViewUrl}#toolbar=1&zoom=${zoomLevel}`}
-                className="absolute inset-0 w-full h-full border-0 rounded-2xl bg-white"
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  width: '100%',
-                  height: '100%',
-                  border: 'none',
-                }}
-                title={file?.title || file?.original_filename || 'Academic Document'}
-              />
+            <div className="w-full h-full flex-1 min-h-0 rounded-2xl overflow-hidden shadow-md bg-white border border-gray-300 dark:border-gray-700 relative">
+              <object
+                data={`${pdfViewUrl}#toolbar=1`}
+                type="application/pdf"
+                className="w-full h-full block rounded-2xl border-0 bg-white"
+                style={{ width: '100%', height: '100%', minHeight: '100%', border: 'none' }}
+              >
+                <iframe
+                  ref={iframeRef}
+                  src={`${pdfViewUrl}#toolbar=1`}
+                  className="w-full h-full block rounded-2xl border-0 bg-white"
+                  style={{ width: '100%', height: '100%', minHeight: '100%', border: 'none' }}
+                  title={file?.title || file?.original_filename || 'Academic Document'}
+                />
+              </object>
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center h-full p-8 text-center text-gray-400">
@@ -466,9 +466,9 @@ Structure the answer strictly for ${marks} marks according to university grading
           <aside
             className={`${
               panelWidthMode === 'wide'
-                ? 'w-full md:w-[580px] lg:w-[680px] xl:w-[780px]'
-                : 'w-full sm:w-96 lg:w-[440px]'
-            } bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 flex flex-col shrink-0 h-full max-h-full min-h-0 shadow-lg transition-all duration-200 absolute sm:relative inset-0 sm:inset-auto z-20 sm:z-auto overflow-hidden`}
+                ? 'w-full md:w-[540px] lg:w-[640px]'
+                : 'w-full sm:w-96 lg:w-[420px]'
+            } bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 flex flex-col shrink-0 h-full max-h-full min-h-0 shadow-lg z-20 overflow-hidden`}
           >
             {/* 1. Header (shrink-0) */}
             <div className="p-3 px-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between shrink-0">
@@ -683,10 +683,10 @@ Structure the answer strictly for ${marks} marks according to university grading
                 </div>
               </div>
 
-              {/* Scrollable Answer Window Body (overscroll-contain, STRICTLY internal scroll) */}
+              {/* Scrollable Answer Window Body - Internal Scroll Only */}
               <div
                 ref={answerBoxRef}
-                className="flex-1 min-h-0 overflow-y-auto p-3.5 sm:p-4 overscroll-contain bg-white dark:bg-gray-900/40 select-text"
+                className="flex-1 min-h-0 overflow-y-auto p-3.5 sm:p-4 select-text bg-white dark:bg-gray-900/40"
               >
                 {aiLoading ? (
                   <div className="flex flex-col items-center justify-center py-12 px-4 text-center space-y-3">
@@ -739,7 +739,7 @@ Structure the answer strictly for ${marks} marks according to university grading
               </div>
             </div>
 
-            {/* 4. Bottom Input Bar (shrink-0) */}
+            {/* 4. Bottom Input Bar (shrink-0) - Always pinned at bottom */}
             <div className="p-2.5 px-3 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shrink-0">
               <div className="flex items-center gap-2">
                 <input

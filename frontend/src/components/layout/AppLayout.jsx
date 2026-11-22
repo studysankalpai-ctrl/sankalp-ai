@@ -28,14 +28,14 @@ export default function AppLayout() {
       <main
         className={`flex-1 transition-all duration-300 ${
           isPdfPage
-            ? 'h-[calc(100vh-4rem)] max-h-[calc(100vh-4rem)] mt-16 flex flex-col overflow-hidden'
+            ? 'p-0 m-0'
             : 'min-h-[calc(100vh-4rem)] pt-16 flex flex-col justify-between'
         } ${sidebarCollapsed ? 'pl-0 md:pl-20' : 'pl-0 md:pl-64'}`}
       >
         <div
           className={
             isPdfPage
-              ? 'w-full h-full p-0 flex-1 min-h-0 flex flex-col overflow-hidden relative'
+              ? 'p-0 m-0 w-full'
               : 'max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 flex-1 w-full'
           }
         >
