@@ -3,7 +3,7 @@ import { FileText, Upload, CheckCircle2, RotateCcw, AlertTriangle, Eye, Loader2 
 import { adminApi } from '../../lib/api';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import toast from 'react-hot-toast';
-
+//fsdfsd
 export default function Syllabus() {
   const [courses, setCourses] = useState([]);
   const [selectedCourseId, setSelectedCourseId] = useState('');
@@ -250,13 +250,12 @@ export default function Syllabus() {
                   <td className="py-3 px-4 text-slate-400">{s.academic_session}</td>
                   <td className="py-3 px-4 text-slate-300 max-w-xs truncate">{s.file_id?.original_filename}</td>
                   <td className="py-3 px-4">
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
-                      s.processing_status === 'completed'
-                        ? 'bg-emerald-950/60 text-emerald-400'
-                        : s.processing_status === 'failed'
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${s.processing_status === 'completed'
+                      ? 'bg-emerald-950/60 text-emerald-400'
+                      : s.processing_status === 'failed'
                         ? 'bg-red-950/60 text-red-400'
                         : 'bg-yellow-950/60 text-yellow-400'
-                    }`}>
+                      }`}>
                       {s.processing_status}
                     </span>
                   </td>
