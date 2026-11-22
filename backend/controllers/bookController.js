@@ -8,6 +8,7 @@ const { extractPdfText, extractBookMetadata } = require('../services/pdfService'
 const { successResponse, errorResponse } = require('../utils/apiResponse');
 const { logAudit } = require('../utils/auditLogger');
 const { uploadToGridFS, streamFromGridFS, resolveLocalFilePath } = require('../services/storageService');
+const { isCloudinaryConfigured, uploadPdfToCloudinary } = require('../config/cloudinary');
 
 // GET /api/admin/books or /api/public/books
 const getBooks = async (req, res, next) => {
@@ -118,6 +119,18 @@ const uploadBook = async (req, res, next) => {
       console.warn('[GridFS Book Upload Warning]:', gfsErr.message);
     }
 
+    let cloudinaryUrl = '';
+    let cloudinaryPublicId = '';
+    if (isCloudinaryConfigured()) {
+      try {
+        const cRes = await uploadPdfToCloudinary(req.file.path, 'sankalp_ai/books', req.file.originalname);
+        cloudinaryUrl = cRes.secure_url;
+        cloudinaryPublicId = cRes.public_id;
+      } catch (cErr) {
+        console.warn('[Cloudinary Book Upload Warning]:', cErr.message);
+      }
+    }
+
     const book = await Book.create({
       title: bookTitle,
       author: bookAuthor,
@@ -128,6 +141,8 @@ const uploadBook = async (req, res, next) => {
       subject_id: subject._id,
       storage_path: req.file.path,
       gridfs_id: gridfsId,
+      cloudinary_url: cloudinaryUrl,
+      cloudinary_public_id: cloudinaryPublicId,
       file_name: req.file.originalname,
       file_size: req.file.size,
       mime_type: req.file.mimetype || 'application/pdf',
@@ -261,6 +276,11 @@ const viewBookPdf = async (req, res, next) => {
     const book = await Book.findById(req.params.id);
     if (!book) return errorResponse(res, 'Book not found', 404);
 
+    // 1. Direct Cloudinary redirect if available (fastest, CDN powered)
+    if (book.cloudinary_url && book.cloudinary_url.startsWith('http')) {
+      return res.redirect(book.cloudinary_url);
+    }
+
     res.removeHeader('X-Frame-Options');
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(book.file_name)}"`);
@@ -268,7 +288,7 @@ const viewBookPdf = async (req, res, next) => {
     res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', '*');
 
-    // 1. Stream from GridFS if available
+    // 2. Stream from GridFS if available
     if (book.gridfs_id) {
       try {
         const stream = streamFromGridFS(book.gridfs_id);
@@ -288,7 +308,7 @@ const viewBookPdf = async (req, res, next) => {
       }
     }
 
-    // 2. Local disk fallback
+    // 3. Local disk fallback
     const resolvedPath = resolveLocalFilePath(book.storage_path, 'books');
     if (resolvedPath && fs.existsSync(resolvedPath)) {
       return fs.createReadStream(resolvedPath).pipe(res);
@@ -306,9 +326,15 @@ const downloadBookPdf = async (req, res, next) => {
     const book = await Book.findById(req.params.id);
     if (!book) return errorResponse(res, 'Book not found', 404);
 
+    // 1. Direct Cloudinary redirect if available
+    if (book.cloudinary_url && book.cloudinary_url.startsWith('http')) {
+      return res.redirect(book.cloudinary_url);
+    }
+
     res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(book.file_name)}"`);
     res.setHeader('Content-Type', 'application/pdf');
 
+    // 2. Stream from GridFS if available
     if (book.gridfs_id) {
       try {
         const stream = streamFromGridFS(book.gridfs_id);
@@ -318,6 +344,7 @@ const downloadBookPdf = async (req, res, next) => {
       }
     }
 
+    // 3. Local disk fallback
     const resolvedPath = resolveLocalFilePath(book.storage_path, 'books');
     if (resolvedPath && fs.existsSync(resolvedPath)) {
       return res.download(resolvedPath, book.file_name);

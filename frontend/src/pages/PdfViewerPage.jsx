@@ -231,9 +231,9 @@ Structure the answer strictly for ${marks} marks according to university grading
 
   if (loading) return <LoadingSpinner text="Opening academic document..." fullPage />;
 
-  // Same-origin relative URLs proxied through Vite
-  const pdfViewUrl = file ? `/api/public/files/${file._id}/view` : '';
-  const pdfDownloadUrl = file ? `/api/public/files/${file._id}/download` : '';
+  // Direct Cloudinary CDN URL if available, otherwise proxy through backend view endpoint
+  const pdfViewUrl = file?.cloudinary_url || (file ? `/api/public/files/${file._id}/view` : '');
+  const pdfDownloadUrl = file?.cloudinary_url || (file ? `/api/public/files/${file._id}/download` : '');
 
   return (
     <div

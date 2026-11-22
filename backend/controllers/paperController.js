@@ -8,6 +8,8 @@ const Folder = require('../models/Folder');
 const { extractPdfText, parseQuestionsFromText } = require('../services/pdfService');
 const { successResponse, errorResponse } = require('../utils/apiResponse');
 const { logAudit } = require('../utils/auditLogger');
+const { uploadToGridFS } = require('../services/storageService');
+const { isCloudinaryConfigured, uploadPdfToCloudinary } = require('../config/cloudinary');
 
 // GET /api/admin/papers
 const getPapers = async (req, res, next) => {
@@ -70,6 +72,27 @@ const uploadPaper = async (req, res, next) => {
       });
     }
 
+    // Upload to GridFS & Cloudinary
+    let gridfsId = null;
+    try {
+      const gfs = await uploadToGridFS(req.file.path, req.file.originalname);
+      gridfsId = gfs.gridfs_id;
+    } catch (gfsErr) {
+      console.warn('[GridFS Paper Warning]:', gfsErr.message);
+    }
+
+    let cloudinaryUrl = '';
+    let cloudinaryPublicId = '';
+    if (isCloudinaryConfigured()) {
+      try {
+        const cRes = await uploadPdfToCloudinary(req.file.path, 'sankalp_ai/papers', req.file.originalname);
+        cloudinaryUrl = cRes.secure_url;
+        cloudinaryPublicId = cRes.public_id;
+      } catch (cErr) {
+        console.warn('[Cloudinary Paper Warning]:', cErr.message);
+      }
+    }
+
     // Save AcademicFile
     const academicFile = await AcademicFile.create({
       folder_id: papersFolder._id,
@@ -78,6 +101,9 @@ const uploadPaper = async (req, res, next) => {
       file_type: 'application/pdf',
       file_size: req.file.size,
       storage_path: req.file.path,
+      gridfs_id: gridfsId,
+      cloudinary_url: cloudinaryUrl,
+      cloudinary_public_id: cloudinaryPublicId,
       public_url: `/uploads/papers/${req.file.filename}`,
       metadata: {
         category: 'paper',

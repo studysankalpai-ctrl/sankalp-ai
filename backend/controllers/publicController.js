@@ -401,6 +401,7 @@ const resolveFileRecord = async (fileId) => {
         upload_date: file.upload_date,
         storage_path: file.storage_path,
         gridfs_id: file.gridfs_id,
+        cloudinary_url: file.cloudinary_url,
         public_url: file.public_url,
         folder_id: file.folder_id,
         type: 'academic_file',
@@ -418,6 +419,7 @@ const resolveFileRecord = async (fileId) => {
         upload_date: syllabus.upload_date,
         storage_path: syllabus.storage_path || syllabus.file_id?.storage_path,
         gridfs_id: syllabus.gridfs_id || syllabus.file_id?.gridfs_id,
+        cloudinary_url: syllabus.cloudinary_url || syllabus.file_id?.cloudinary_url,
         public_url: syllabus.file_url,
         type: 'syllabus',
       };
@@ -434,6 +436,7 @@ const resolveFileRecord = async (fileId) => {
         upload_date: paper.upload_date,
         storage_path: paper.storage_path || paper.file_id?.storage_path,
         gridfs_id: paper.gridfs_id || paper.file_id?.gridfs_id,
+        cloudinary_url: paper.cloudinary_url || paper.file_id?.cloudinary_url,
         public_url: paper.file_url,
         extracted_text: paper.extracted_text,
         type: 'paper',
@@ -451,6 +454,7 @@ const resolveFileRecord = async (fileId) => {
         upload_date: book.createdAt,
         storage_path: book.storage_path,
         gridfs_id: book.gridfs_id,
+        cloudinary_url: book.cloudinary_url,
         public_url: book.public_url,
         type: 'book',
         title: book.title,
@@ -486,6 +490,11 @@ const viewFileInline = async (req, res, next) => {
     const file = await resolveFileRecord(req.params.id);
     if (!file) return errorResponse(res, 'File record not found', 404);
 
+    // 1. Direct Cloudinary redirect if available (fastest, CDN powered)
+    if (file.cloudinary_url && file.cloudinary_url.startsWith('http')) {
+      return res.redirect(file.cloudinary_url);
+    }
+
     res.removeHeader('X-Frame-Options');
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(file.original_filename || 'document.pdf')}"`);
@@ -493,13 +502,12 @@ const viewFileInline = async (req, res, next) => {
     res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', '*');
 
-    // 1. Stream from GridFS if available
+    // 2. Stream from GridFS if available
     if (file.gridfs_id) {
       try {
         const stream = streamFromGridFS(file.gridfs_id);
         stream.on('error', (err) => {
           console.warn('[GridFS Stream warning]:', err.message);
-          // Try local fallback if headers not sent
           if (!res.headersSent) {
             const subfolder = file.type === 'book' ? 'books' : file.type === 'paper' ? 'papers' : file.type === 'syllabus' ? 'syllabus' : '';
             const diskPath = resolveLocalFilePath(file.storage_path, subfolder);
@@ -515,7 +523,7 @@ const viewFileInline = async (req, res, next) => {
       }
     }
 
-    // 2. Check flexible local disk path
+    // 3. Check flexible local disk path
     const subfolder = file.type === 'book' ? 'books' : file.type === 'paper' ? 'papers' : file.type === 'syllabus' ? 'syllabus' : '';
     const resolvedDiskPath = resolveLocalFilePath(file.storage_path, subfolder);
     if (resolvedDiskPath && fs.existsSync(resolvedDiskPath)) {
@@ -534,10 +542,15 @@ const downloadPublicFile = async (req, res, next) => {
     const file = await resolveFileRecord(req.params.id);
     if (!file) return errorResponse(res, 'File not found', 404);
 
+    // 1. Direct Cloudinary redirect if available
+    if (file.cloudinary_url && file.cloudinary_url.startsWith('http')) {
+      return res.redirect(file.cloudinary_url);
+    }
+
     res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(file.original_filename || 'document.pdf')}"`);
     res.setHeader('Content-Type', 'application/pdf');
 
-    // 1. Stream from GridFS if available
+    // 2. Stream from GridFS if available
     if (file.gridfs_id) {
       try {
         const stream = streamFromGridFS(file.gridfs_id);
@@ -547,7 +560,7 @@ const downloadPublicFile = async (req, res, next) => {
       }
     }
 
-    // 2. Check flexible local disk path
+    // 3. Check flexible local disk path
     const subfolder = file.type === 'book' ? 'books' : file.type === 'paper' ? 'papers' : file.type === 'syllabus' ? 'syllabus' : '';
     const resolvedDiskPath = resolveLocalFilePath(file.storage_path, subfolder);
     if (resolvedDiskPath && fs.existsSync(resolvedDiskPath)) {

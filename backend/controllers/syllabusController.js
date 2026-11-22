@@ -7,6 +7,8 @@ const Folder = require('../models/Folder');
 const { extractPdfText } = require('../services/pdfService');
 const { successResponse, errorResponse } = require('../utils/apiResponse');
 const { logAudit } = require('../utils/auditLogger');
+const { uploadToGridFS } = require('../services/storageService');
+const { isCloudinaryConfigured, uploadPdfToCloudinary } = require('../config/cloudinary');
 
 // GET /api/admin/syllabus
 const getSyllabusList = async (req, res, next) => {
@@ -62,6 +64,26 @@ const uploadSyllabus = async (req, res, next) => {
     }
 
     // Create AcademicFile record
+    let gridfsId = null;
+    try {
+      const gfs = await uploadToGridFS(req.file.path, req.file.originalname);
+      gridfsId = gfs.gridfs_id;
+    } catch (gfsErr) {
+      console.warn('[GridFS Syllabus Warning]:', gfsErr.message);
+    }
+
+    let cloudinaryUrl = '';
+    let cloudinaryPublicId = '';
+    if (isCloudinaryConfigured()) {
+      try {
+        const cRes = await uploadPdfToCloudinary(req.file.path, 'sankalp_ai/syllabus', req.file.originalname);
+        cloudinaryUrl = cRes.secure_url;
+        cloudinaryPublicId = cRes.public_id;
+      } catch (cErr) {
+        console.warn('[Cloudinary Syllabus Warning]:', cErr.message);
+      }
+    }
+
     const academicFile = await AcademicFile.create({
       folder_id: syllabusFolder._id,
       filename: req.file.filename,
@@ -69,6 +91,9 @@ const uploadSyllabus = async (req, res, next) => {
       file_type: 'application/pdf',
       file_size: req.file.size,
       storage_path: req.file.path,
+      gridfs_id: gridfsId,
+      cloudinary_url: cloudinaryUrl,
+      cloudinary_public_id: cloudinaryPublicId,
       public_url: `/uploads/syllabus/${req.file.filename}`,
       metadata: {
         category: 'syllabus',
