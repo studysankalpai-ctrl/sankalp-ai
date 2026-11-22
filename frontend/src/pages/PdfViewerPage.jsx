@@ -311,7 +311,7 @@ Structure the answer strictly for ${marks} marks according to university grading
   return (
     <div
       id="pdf-viewer-container"
-      className="flex flex-col h-full w-full bg-gray-100 dark:bg-gray-950 overflow-hidden relative"
+      className="flex flex-col w-full h-full flex-1 min-h-0 bg-gray-100 dark:bg-gray-950 overflow-hidden relative"
     >
       {/* Top Toolbar */}
       <div className="h-12 sm:h-14 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-3 sm:px-4 flex items-center justify-between shrink-0 shadow-2xs z-10">
@@ -433,38 +433,21 @@ Structure the answer strictly for ${marks} marks according to university grading
       </div>
 
       {/* Main Split Layout: PDF on Left, Document AI Tutor on Right */}
-      <div className="flex-1 flex overflow-hidden relative">
+      <div className="flex-1 min-h-0 w-full flex overflow-hidden relative">
         {/* PDF Frame */}
-        <div className="flex-1 h-full bg-gray-200 dark:bg-gray-900/80 relative flex flex-col items-center justify-center overflow-auto p-2 sm:p-4">
+        <div className="flex-1 min-h-0 h-full bg-gray-200 dark:bg-gray-900/80 relative flex flex-col p-2 sm:p-4 overflow-hidden">
           {pdfViewUrl ? (
             <div
-              className="w-full h-full flex items-center justify-center transition-all duration-150"
-              style={{ transform: `scale(${zoomLevel / 100})`, transformOrigin: 'top center' }}
+              className="w-full h-full min-h-0 flex-1 relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-lg"
+              style={{ transform: zoomLevel !== 100 ? `scale(${zoomLevel / 100})` : undefined, transformOrigin: 'top center' }}
             >
-              <object
-                data={`${pdfViewUrl}#toolbar=1`}
-                type="application/pdf"
-                className="w-full h-full border-none bg-white shadow-lg rounded-2xl"
-              >
-                <iframe
-                  ref={iframeRef}
-                  src={`${pdfViewUrl}#toolbar=1`}
-                  className="w-full h-full border-none bg-white shadow-lg rounded-2xl"
-                  title={file?.original_filename || 'Academic Document'}
-                >
-                  <div className="flex flex-col items-center justify-center p-8 text-center text-gray-500">
-                    <p className="mb-3 text-sm">Your browser does not support inline PDF frames.</p>
-                    <a
-                      href={pdfViewUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold"
-                    >
-                      Open PDF in New Window
-                    </a>
-                  </div>
-                </iframe>
-              </object>
+              <iframe
+                ref={iframeRef}
+                src={`${pdfViewUrl}#toolbar=1`}
+                className="w-full h-full flex-1 border-none rounded-2xl bg-white"
+                style={{ width: '100%', height: '100%', minHeight: '100%', display: 'block' }}
+                title={file?.title || file?.original_filename || 'Academic Document'}
+              />
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center p-8 text-center text-gray-400">
