@@ -54,7 +54,9 @@ export default function PdfViewerPage() {
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
-  const [aiPanelOpen, setAiPanelOpen] = useState(true);
+  const [aiPanelOpen, setAiPanelOpen] = useState(
+    typeof window !== 'undefined' ? window.innerWidth >= 1024 : true
+  );
   const [aiLoading, setAiLoading] = useState(false);
   const [aiOutput, setAiOutput] = useState('');
   const [selectedActionTitle, setSelectedActionTitle] = useState('');
@@ -236,24 +238,24 @@ Structure the answer strictly for ${marks} marks according to university grading
   return (
     <div
       id="pdf-viewer-container"
-      className="flex flex-col h-[calc(100vh-5rem)] -m-4 sm:-m-6 lg:-m-8 bg-gray-100 dark:bg-gray-950 overflow-hidden"
+      className="flex flex-col h-[calc(100vh-5rem)] -m-4 sm:-m-6 lg:-m-8 bg-gray-100 dark:bg-gray-950 overflow-hidden relative"
     >
       {/* Top Toolbar */}
-      <div className="h-14 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 flex items-center justify-between shrink-0 shadow-2xs z-10">
+      <div className="h-12 sm:h-14 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-3 sm:px-4 flex items-center justify-between shrink-0 shadow-2xs z-10">
         {/* Left: Back & Filename */}
-        <div className="flex items-center gap-3 min-w-0">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <Link
             to="/library"
             className="p-1.5 rounded-lg text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors shrink-0"
             title="Back to Academic Library"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
           </Link>
           <div className="min-w-0">
-            <h2 className="text-sm font-bold text-gray-900 dark:text-gray-100 truncate max-w-xs sm:max-w-md">
+            <h2 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-gray-100 truncate max-w-[130px] sm:max-w-xs md:max-w-md">
               {file?.title || file?.original_filename || 'Academic PDF Document'}
             </h2>
-            <p className="text-[11px] text-gray-400">
+            <p className="text-[10px] sm:text-[11px] text-gray-400 truncate max-w-[140px] sm:max-w-xs hidden sm:block">
               {file?.type === 'book'
                 ? `Prescribed Textbook • By ${file.author || 'Author'} (${file.edition || 'Standard Edition'})`
                 : 'Integrated University Reader'}
@@ -262,7 +264,7 @@ Structure the answer strictly for ${marks} marks according to university grading
         </div>
 
         {/* Right: Master Paper Button, Zoom, Print, Download, Fullscreen & AI Toggle */}
-        <div className="flex items-center gap-1.5 sm:gap-2">
+        <div className="flex items-center gap-1 sm:gap-2">
           {file?.type === 'book' ? (
             <Link
               to={`/mentor?bookId=${file._id}&learnByBook=true`}
@@ -311,15 +313,15 @@ Structure the answer strictly for ${marks} marks according to university grading
             href={pdfViewUrl}
             target="_blank"
             rel="noreferrer"
-            className="p-2 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            className="p-1.5 sm:p-2 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             title="Open in Full Browser Tab"
           >
-            <ExternalLink className="w-4 h-4" />
+            <ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </a>
 
           <button
             onClick={handlePrint}
-            className="p-2 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            className="hidden sm:inline-flex p-2 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             title="Print Document"
           >
             <Printer className="w-4 h-4" />
@@ -328,15 +330,15 @@ Structure the answer strictly for ${marks} marks according to university grading
           <a
             href={pdfDownloadUrl}
             download={file?.original_filename || 'document.pdf'}
-            className="p-2 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            className="p-1.5 sm:p-2 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             title="Download PDF"
           >
-            <Download className="w-4 h-4" />
+            <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </a>
 
           <button
             onClick={handleFullscreen}
-            className="p-2 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            className="hidden sm:inline-flex p-2 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             title="Toggle Full Screen"
           >
             <Maximize2 className="w-4 h-4" />
@@ -344,20 +346,20 @@ Structure the answer strictly for ${marks} marks according to university grading
 
           <button
             onClick={() => setAiPanelOpen(!aiPanelOpen)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+            className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
               aiPanelOpen
                 ? 'bg-indigo-600 text-white shadow-xs'
                 : 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800'
             }`}
           >
             <Sparkles className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">AI Assistance</span>
+            <span>{aiPanelOpen ? 'AI Active' : 'AI Assistant'}</span>
           </button>
         </div>
       </div>
 
-      {/* Main Split Layout: PDF on Left, AI Assistance on Right */}
-      <div className="flex-1 flex overflow-hidden">
+      {/* Main Split Layout: PDF on Left, AI Assistance on Right (Relative container prevents mobile overlap) */}
+      <div className="flex-1 flex overflow-hidden relative">
         {/* PDF Frame */}
         <div className="flex-1 h-full bg-gray-200 dark:bg-gray-900/80 relative flex flex-col items-center justify-center overflow-auto p-2 sm:p-4">
           {pdfViewUrl ? (
@@ -459,6 +461,15 @@ Structure the answer strictly for ${marks} marks according to university grading
                   className={`w-2 h-2 rounded-full ${isAiConnected ? 'bg-emerald-500 animate-pulse' : 'bg-gray-400'}`}
                   title={isAiConnected ? 'SANKALP AI Active' : 'SANKALP AI Disconnected'}
                 />
+
+                {/* Close Button to return to full document view */}
+                <button
+                  onClick={() => setAiPanelOpen(false)}
+                  className="p-1.5 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  title="Close AI Assistant Panel"
+                >
+                  <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                </button>
               </div>
             </div>
 
