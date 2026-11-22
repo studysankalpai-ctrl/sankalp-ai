@@ -1,0 +1,24 @@
+# Environment Variables
+.env
+.env.local
+.env.*.local
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+
+# Uploaded runtime user files (do not commit uploaded files)
+uploads/*
+!uploads/.gitkeep
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

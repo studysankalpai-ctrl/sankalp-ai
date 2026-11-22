@@ -1,0 +1,155 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    color-scheme: light;
+    --bg-main: #F7F8FC;
+    --bg-surface: #FFFFFF;
+    --bg-secondary: #F1F4F9;
+    --text-main: #111827;
+    --text-muted: #6B7280;
+    --border-main: #E5E7EB;
+    --primary: #6366F1;
+    --primary-hover: #4F46E5;
+    --primary-light: #EEF2FF;
+    --secondary: #8B5CF6;
+    --accent: #3B82F6;
+  }
+
+  .dark {
+    color-scheme: dark;
+    --bg-main: #0B1020;
+    --bg-surface: #111827;
+    --bg-secondary: #172033;
+    --text-main: #F9FAFB;
+    --text-muted: #9CA3AF;
+    --border-main: #1F2937;
+    --primary: #818CF8;
+    --primary-hover: #6366F1;
+    --primary-light: rgba(99, 102, 241, 0.15);
+    --secondary: #A78BFA;
+    --accent: #60A5FA;
+  }
+
+  html {
+    color-scheme: light;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  overflow-x: hidden;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.4);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.7);
+}
+
+/* Markdown styling inside AI messages and syllabus */
+.prose-custom h1, .prose-custom h2, .prose-custom h3, .prose-custom h4 {
+  font-weight: 700;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+.prose-custom h2 {
+  font-size: 1.25rem;
+  border-bottom: 1px solid var(--border-main);
+  padding-bottom: 0.25rem;
+}
+.prose-custom h3 {
+  font-size: 1.1rem;
+}
+.prose-custom p {
+  margin-bottom: 0.75rem;
+  line-height: 1.6;
+}
+.prose-custom ul, .prose-custom ol {
+  margin-left: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+.prose-custom ul {
+  list-style-type: disc;
+}
+.prose-custom ol {
+  list-style-type: decimal;
+}
+.prose-custom li {
+  margin-bottom: 0.25rem;
+}
+.prose-custom blockquote {
+  border-left: 4px solid var(--primary);
+  padding-left: 1rem;
+  margin: 0.75rem 0;
+  background: var(--primary-light);
+  padding: 0.5rem 0.75rem;
+  border-radius: 0 0.5rem 0.5rem 0;
+}
+.prose-custom code {
+  font-family: 'JetBrains Mono', monospace;
+  background: rgba(156, 163, 175, 0.15);
+  padding: 0.15rem 0.35rem;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+}
+.prose-custom pre {
+  background: #0f172a;
+  color: #f8fafc;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  margin: 0.75rem 0;
+}
+.prose-custom pre code {
+  background: transparent;
+  padding: 0;
+  color: inherit;
+}
+.prose-custom table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+}
+.prose-custom th, .prose-custom td {
+  border: 1px solid var(--border-main);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+.prose-custom th {
+  background: var(--bg-secondary);
+  font-weight: 600;
+}
+.prose-custom strong {
+  font-weight: 700;
+  color: inherit;
+}
+.prose-custom em {
+  font-style: italic;
+}
+.prose-custom hr {
+  border: 0;
+  border-top: 1px solid var(--border-main);
+  margin: 1.25rem 0;
+}
+.prose-custom tr:nth-child(even) {
+  background-color: rgba(156, 163, 175, 0.04);
+}
