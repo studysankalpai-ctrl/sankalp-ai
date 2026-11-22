@@ -2,7 +2,12 @@ export const APP_NAME = 'SANKALP AI';
 export const APP_TAGLINE = 'Your Personal AI University Exam Mentor';
 export const APP_DESCRIPTION = 'Understand concepts, explore previous-year papers and prepare confidently with your personal AI examination mentor.';
 
-export const API_BASE = import.meta.env.VITE_API_URL || '/api';
+export const API_BASE =
+  import.meta.env.VITE_API_URL ||
+  (typeof window !== 'undefined' &&
+  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? 'http://localhost:5000/api'
+    : 'https://sankalp-ai-sr0e.onrender.com/api');
 
 export const STUDENT_NAV = [
   { label: 'Home', path: '/', icon: 'Home' },
