@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
 import useAppStore from '../store/appStore';
 import {
   Sparkles,
@@ -147,7 +146,7 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-black text-white selection:bg-white selection:text-black overflow-x-hidden font-sans">
-      {/* Background Dot Grid Pattern & Ambient Monochrome Glows */}
+      {/* Background Dot Grid Pattern & Ambient Monochrome Glows (Optimized for Mobile GPU) */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div
           className="absolute inset-0 opacity-[0.07]"
@@ -157,13 +156,13 @@ export default function Landing() {
             backgroundSize: '32px 32px',
           }}
         />
-        <div className="absolute top-0 left-1/4 w-[900px] h-[550px] bg-gradient-to-b from-white/10 via-white/[0.02] to-transparent blur-3xl pointer-events-none" />
-        <div className="absolute top-1/3 right-10 w-[700px] h-[450px] bg-gradient-to-b from-white/5 to-transparent blur-3xl pointer-events-none" />
-        <div className="absolute bottom-10 left-1/3 w-[800px] h-[400px] bg-gradient-to-t from-white/5 to-transparent blur-3xl pointer-events-none" />
+        <div className="hidden sm:block absolute top-0 left-1/4 w-[900px] h-[550px] bg-gradient-to-b from-white/10 via-white/[0.02] to-transparent blur-3xl pointer-events-none" />
+        <div className="hidden sm:block absolute top-1/3 right-10 w-[700px] h-[450px] bg-gradient-to-b from-white/5 to-transparent blur-3xl pointer-events-none" />
+        <div className="hidden sm:block absolute bottom-10 left-1/3 w-[800px] h-[400px] bg-gradient-to-t from-white/5 to-transparent blur-3xl pointer-events-none" />
       </div>
 
       {/* Top Navbar (Monochrome Black & White, 8XL Max Width, No Admin Button) */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-black/85 backdrop-blur-xl border-b border-white/10 transition-all">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-black/95 sm:bg-black/85 sm:backdrop-blur-xl border-b border-white/10 transition-all">
         <div className="w-full max-w-[1560px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 h-20 flex items-center justify-between">
           {/* Logo & Brand Identity */}
           <Link to="/" className="flex items-center gap-3.5 group shrink-0">
@@ -171,6 +170,11 @@ export default function Landing() {
               <img
                 src="/Logo.png"
                 alt="SANKALP AI"
+                width="44"
+                height="44"
+                loading="eager"
+                fetchPriority="high"
+                decoding="async"
                 className="w-full h-full object-contain filter drop-shadow"
               />
             </div>
@@ -230,78 +234,66 @@ export default function Landing() {
         </div>
 
         {/* Mobile Navigation Drawer */}
-        <AnimatePresence>
-          {mobileMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="lg:hidden bg-zinc-950 border-b border-white/15 px-6 py-6 space-y-4"
-            >
-              <nav className="flex flex-col gap-3 text-base font-semibold text-zinc-300">
-                <a
-                  href="#tour"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="py-2 hover:text-white transition-colors"
-                >
-                  Inside Software
-                </a>
-                <a
-                  href="#features"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="py-2 hover:text-white transition-colors"
-                >
-                  Features
-                </a>
-                <a
-                  href="#workflow"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="py-2 hover:text-white transition-colors"
-                >
-                  How It Works
-                </a>
-                <a
-                  href="#creator"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="py-2 hover:text-white transition-colors"
-                >
-                  Creator Spotlight
-                </a>
-                <Link
-                  to="/guide"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="py-2 hover:text-white transition-colors text-white"
-                >
-                  User Manual & Guide
-                </Link>
-              </nav>
+        {mobileMenuOpen && (
+          <div className="lg:hidden bg-zinc-950 border-b border-white/15 px-6 py-6 space-y-4 animate-in fade-in duration-200">
+            <nav className="flex flex-col gap-3 text-base font-semibold text-zinc-300">
+              <a
+                href="#tour"
+                onClick={() => setMobileMenuOpen(false)}
+                className="py-2 hover:text-white transition-colors"
+              >
+                Inside Software
+              </a>
+              <a
+                href="#features"
+                onClick={() => setMobileMenuOpen(false)}
+                className="py-2 hover:text-white transition-colors"
+              >
+                Features
+              </a>
+              <a
+                href="#workflow"
+                onClick={() => setMobileMenuOpen(false)}
+                className="py-2 hover:text-white transition-colors"
+              >
+                How It Works
+              </a>
+              <a
+                href="#creator"
+                onClick={() => setMobileMenuOpen(false)}
+                className="py-2 hover:text-white transition-colors"
+              >
+                Creator Spotlight
+              </a>
+              <Link
+                to="/guide"
+                onClick={() => setMobileMenuOpen(false)}
+                className="py-2 hover:text-white transition-colors text-white"
+              >
+                User Manual & Guide
+              </Link>
+            </nav>
 
-              <div className="pt-2 border-t border-white/10">
-                <Link
-                  to="/dashboard"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-white text-black text-sm font-extrabold shadow-md"
-                >
-                  <Bot className="w-4 h-4 text-black" />
-                  <span>Launch SANKALP AI</span>
-                </Link>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            <div className="pt-2 border-t border-white/10">
+              <Link
+                to="/dashboard"
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-white text-black text-sm font-extrabold shadow-md"
+              >
+                <Bot className="w-4 h-4 text-black" />
+                <span>Launch SANKALP AI</span>
+              </Link>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* 2-Column Hero Section: Left (Copy & CTAs) + Right (Live Software Frame) */}
       <section className="relative pt-28 pb-14 sm:pt-36 sm:pb-20 z-10">
         <div className="w-full max-w-[1560px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 xl:gap-16 items-center">
-            {/* Left Column (Headline, Natural Human-Centric Copy & CTAs - Centered on Mobile, Left on Desktop) */}
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6 }}
-              className="lg:col-span-6 xl:col-span-6 space-y-5 sm:space-y-6 text-center lg:text-left flex flex-col items-center lg:items-start"
-            >
+            {/* Left Column (Headline, Natural Human-Centric Copy & CTAs - Immediate Paint on Mobile) */}
+            <div className="lg:col-span-6 xl:col-span-6 space-y-5 sm:space-y-6 text-center lg:text-left flex flex-col items-center lg:items-start">
 
               {/* Bold Headline (Equal centered on mobile, responsive font) */}
               <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight text-white leading-[1.2] text-center lg:text-left">
@@ -362,15 +354,10 @@ export default function Landing() {
                   <p className="text-[10px] sm:text-xs text-zinc-400 mt-0.5 font-medium leading-tight">Syllabus Grounded</p>
                 </div>
               </div>
-            </motion.div>
+            </div>
 
-            {/* Right Column (Hero Visual: Sleek Software Showcase Window) */}
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.7, delay: 0.1 }}
-              className="lg:col-span-6 xl:col-span-6"
-            >
+            {/* Right Column (Hero Visual: Sleek Software Showcase Window - Instant Render) */}
+            <div className="lg:col-span-6 xl:col-span-6">
               <div className="relative rounded-3xl bg-zinc-950 border border-white/20 p-3 sm:p-4 shadow-2xl overflow-hidden group">
                 {/* Window Frame Top Header */}
                 <div className="h-10 px-4 bg-zinc-900/90 rounded-2xl border border-white/10 flex items-center justify-between mb-2.5">
@@ -393,6 +380,11 @@ export default function Landing() {
                   <img
                     src="/screenshots/mentor.png"
                     alt="SANKALP AI Exam Mentor Interface"
+                    width="800"
+                    height="500"
+                    loading="eager"
+                    fetchPriority="high"
+                    decoding="async"
                     className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-102"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
@@ -419,7 +411,7 @@ export default function Landing() {
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </div>
           </div>
         </div>
       </section>
@@ -447,7 +439,7 @@ export default function Landing() {
       </section>
 
       {/* CORE PRODUCT TOUR SECTION: Inside the Software with Real Screenshots & Deep Descriptions */}
-      <section id="tour" className="py-14 sm:py-20 z-10 relative">
+      <section id="tour" className="py-14 sm:py-20 z-10 relative" style={{ contentVisibility: 'auto', containIntrinsicSize: '1px 700px' }}>
         <div className="w-full max-w-[1560px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-3 text-center md:text-left items-center md:items-end">
             <div>
@@ -554,6 +546,10 @@ export default function Landing() {
                     <img
                       src={activeModule.image}
                       alt={activeModule.title}
+                      width="800"
+                      height="500"
+                      loading="lazy"
+                      decoding="async"
                       className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-102"
                     />
                   </div>
@@ -565,7 +561,7 @@ export default function Landing() {
       </section>
 
       {/* 6 Core Architectural Capabilities Grid (8XL Width, Centered on Mobile) */}
-      <section id="features" className="py-14 sm:py-20 border-t border-white/10 z-10 relative">
+      <section id="features" className="py-14 sm:py-20 border-t border-white/10 z-10 relative" style={{ contentVisibility: 'auto', containIntrinsicSize: '1px 600px' }}>
         <div className="w-full max-w-[1560px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16">
           <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-12">
             <span className="text-xs font-mono uppercase tracking-widest text-zinc-400 mb-1.5 block">
@@ -692,7 +688,7 @@ export default function Landing() {
       </section>
 
       {/* 4-Step University Exam Master Workflow (8XL Width, Centered on Mobile) */}
-      <section id="workflow" className="py-14 sm:py-20 bg-zinc-950/70 border-t border-white/10 z-10 relative">
+      <section id="workflow" className="py-14 sm:py-20 bg-zinc-950/70 border-t border-white/10 z-10 relative" style={{ contentVisibility: 'auto', containIntrinsicSize: '1px 500px' }}>
         <div className="w-full max-w-[1560px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16">
           <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-12">
             <span className="text-xs font-mono uppercase tracking-widest text-zinc-400 mb-1.5 block">
@@ -768,7 +764,7 @@ export default function Landing() {
       </section>
 
       {/* CREATOR SPOTLIGHT SECTION (Sameer Singh • St. John's College Agra, Centered on Mobile) */}
-      <section id="creator" className="py-14 sm:py-20 border-t border-white/10 z-10 relative">
+      <section id="creator" className="py-14 sm:py-20 border-t border-white/10 z-10 relative" style={{ contentVisibility: 'auto', containIntrinsicSize: '1px 600px' }}>
         <div className="w-full max-w-[1560px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16">
           <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-12">
             <span className="text-xs font-mono uppercase tracking-widest text-zinc-400 mb-1.5 block">
@@ -790,6 +786,10 @@ export default function Landing() {
                   <img
                     src="/sameer.jpg"
                     alt="Sameer Singh - Creator of SANKALP AI"
+                    width="176"
+                    height="176"
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover rounded-xl sm:rounded-2xl filter grayscale contrast-110 hover:grayscale-0 transition-all duration-500"
                   />
                   <div className="absolute inset-0 rounded-xl sm:rounded-2xl ring-1 ring-white/20 pointer-events-none" />
@@ -866,7 +866,7 @@ export default function Landing() {
       </section>
 
       {/* High-Impact Final Call to Action */}
-      <section className="py-14 sm:py-20 border-t border-white/10 z-10 relative">
+      <section className="py-14 sm:py-20 border-t border-white/10 z-10 relative" style={{ contentVisibility: 'auto', containIntrinsicSize: '1px 400px' }}>
         <div className="w-full max-w-[1560px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 text-center">
           <div className="p-6 sm:p-12 lg:p-16 rounded-3xl bg-gradient-to-b from-zinc-900 via-zinc-950 to-black border border-white/20 shadow-2xl relative overflow-hidden">
             <div className="relative z-10 max-w-xl mx-auto">
@@ -905,7 +905,15 @@ export default function Landing() {
         <div className="w-full max-w-[1560px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 flex flex-col md:flex-row items-center justify-between gap-5">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-xl bg-white/10 p-1 flex items-center justify-center">
-              <img src="/Logo.png" alt="SANKALP AI" className="w-full h-full object-contain" />
+              <img
+                src="/Logo.png"
+                alt="SANKALP AI"
+                width="32"
+                height="32"
+                loading="lazy"
+                decoding="async"
+                className="w-full h-full object-contain"
+              />
             </div>
             <div>
               <span className="font-bold text-white text-sm">SANKALP AI</span>

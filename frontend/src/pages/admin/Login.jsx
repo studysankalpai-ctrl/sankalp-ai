@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Lock, Mail, Loader2, ArrowLeft, ShieldCheck, Eye, EyeOff } from 'lucide-react';
 import { adminApi } from '../../lib/api';
@@ -10,8 +10,17 @@ export default function AdminLogin() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isReady, setIsReady] = useState(false);
   const { login } = useAdminStore();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Strictly clear any cached or auto-injected values on initial mount
+    setEmail('');
+    setPassword('');
+    const t = setTimeout(() => setIsReady(true), 150);
+    return () => clearTimeout(t);
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -52,6 +61,7 @@ export default function AdminLogin() {
               src="/Logo.png"
               alt="SANKALP"
               className="w-full h-full object-contain"
+              loading="eager"
             />
           </div>
           <h1 className="text-xl font-bold tracking-tight text-white">
@@ -63,16 +73,39 @@ export default function AdminLogin() {
         </div>
 
         <form onSubmit={handleLogin} className="space-y-4" autoComplete="off">
+          {/* Hidden Anti-Autofill Traps */}
+          <input
+            type="text"
+            name="fake_username_trap"
+            style={{ position: 'absolute', opacity: 0, height: 0, width: 0, zIndex: -1 }}
+            tabIndex={-1}
+            readOnly
+            autoComplete="off"
+            aria-hidden="true"
+          />
+          <input
+            type="password"
+            name="fake_password_trap"
+            style={{ position: 'absolute', opacity: 0, height: 0, width: 0, zIndex: -1 }}
+            tabIndex={-1}
+            readOnly
+            autoComplete="off"
+            aria-hidden="true"
+          />
+
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-slate-300">Admin Email</label>
             <div className="relative">
               <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
               <input
                 type="email"
+                name="sankalp_auth_identity"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@organization.com"
-                autoComplete="off"
+                autoComplete="one-time-code"
+                readOnly={!isReady}
+                onFocus={(e) => e.target.removeAttribute('readonly')}
                 required
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
               />
@@ -85,10 +118,13 @@ export default function AdminLogin() {
               <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
               <input
                 type={showPassword ? 'text' : 'password'}
+                name="sankalp_auth_secret"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter admin password"
                 autoComplete="new-password"
+                readOnly={!isReady}
+                onFocus={(e) => e.target.removeAttribute('readonly')}
                 required
                 className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 font-sans"
               />
