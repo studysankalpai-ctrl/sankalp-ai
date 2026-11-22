@@ -1,10 +1,11 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/Logo.png" />
     <link rel="apple-touch-icon" href="/Logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#000000" />
     <title>SANKALP AI Your Personal AI University Exam Mentor</title>
     <meta name="description" content="AI-Powered University Examination Preparation Platform. Understand syllabus, explore previous-year question papers, practice exam questions, and prepare with your AI exam mentor." />
     <!-- Google Fonts: Inter -->
@@ -15,16 +16,16 @@
       (function() {
         try {
           const theme = localStorage.getItem('sankalp_theme');
-          if (theme === 'dark') {
-            document.documentElement.classList.add('dark');
-          } else {
+          if (theme === 'light') {
             document.documentElement.classList.remove('dark');
+          } else {
+            document.documentElement.classList.add('dark');
           }
         } catch (_) {}
       })();
     </script>
   </head>
-  <body class="bg-[#F7F8FC] dark:bg-[#0B1020] text-[#111827] dark:text-[#F9FAFB] font-sans antialiased min-h-screen">
+  <body class="bg-black dark:bg-black text-[#111827] dark:text-[#F9FAFB] font-sans antialiased min-h-screen">
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
