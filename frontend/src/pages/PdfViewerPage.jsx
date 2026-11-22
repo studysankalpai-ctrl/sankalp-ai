@@ -126,9 +126,9 @@ export default function PdfViewerPage() {
     const el = document.getElementById('pdf-viewer-container');
     if (el) {
       if (!document.fullscreenElement) {
-        el.requestFullscreen().catch(() => {});
+        el.requestFullscreen().catch(() => { });
       } else {
-        document.exitFullscreen().catch(() => {});
+        document.exitFullscreen().catch(() => { });
       }
     }
   };
@@ -146,7 +146,7 @@ export default function PdfViewerPage() {
     try {
       let prompt = '';
       const docName = file?.original_filename || 'Examination Document';
-      
+
       if (marks) {
         prompt = `You are a university examination mentor. Generate a complete, high-scoring university examination answer for ${marks} Marks for the question/topic represented in "${docName}".
 Structure the answer strictly for ${marks} marks according to university grading rubrics:
@@ -160,7 +160,7 @@ Structure the answer strictly for ${marks} marks according to university grading
           ? `Explain the core curriculum and conceptual structure from this prescribed university textbook: "${docName}" by ${file.author || 'Author'}. Provide sharp, to-the-point explanations and simple analogies that any student can understand.`
           : `Summarize and explain the complete examination pattern, difficulty, unit distribution, and core topics represented in this university paper: "${docName}".`;
       } else if (actionType === 'Explain Question') {
-        prompt = customQuestionInput 
+        prompt = customQuestionInput
           ? `Explain this specific examination question in simple, conceptual terms from beginner to advanced: "${customQuestionInput}" from ${file?.type === 'book' ? 'textbook' : 'paper'}: "${docName}".`
           : `Explain the most important question and core concept tested in "${docName}" from fundamental to advanced level.`;
       } else if (actionType === 'Solve This Question') {
@@ -346,11 +346,10 @@ Structure the answer strictly for ${marks} marks according to university grading
 
           <button
             onClick={() => setAiPanelOpen(!aiPanelOpen)}
-            className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
-              aiPanelOpen
+            className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${aiPanelOpen
                 ? 'bg-indigo-600 text-white shadow-xs'
                 : 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800'
-            }`}
+              }`}
           >
             <Sparkles className="w-3.5 h-3.5" />
             <span>{aiPanelOpen ? 'AI Active' : 'AI Assistant'}</span>
@@ -414,11 +413,10 @@ Structure the answer strictly for ${marks} marks according to university grading
         {/* Right AI Assistance Panel */}
         {aiPanelOpen && (
           <aside
-            className={`${
-              panelWidthMode === 'wide'
+            className={`${panelWidthMode === 'wide'
                 ? 'w-full md:w-[580px] lg:w-[680px] xl:w-[780px]'
                 : 'w-full sm:w-96 lg:w-[440px]'
-            } bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 flex flex-col shrink-0 h-full shadow-lg transition-all duration-200 absolute sm:relative inset-0 sm:inset-auto z-20 sm:z-auto`}
+              } bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 flex flex-col shrink-0 h-full shadow-lg transition-all duration-200 absolute sm:relative inset-0 sm:inset-auto z-20 sm:z-auto`}
           >
             <div className="p-3.5 px-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
               <div className="flex items-center gap-2 min-w-0">
@@ -431,11 +429,10 @@ Structure the answer strictly for ${marks} marks according to university grading
                 {/* Expand / Wide Panel Toggle */}
                 <button
                   onClick={() => setPanelWidthMode((prev) => (prev === 'normal' ? 'wide' : 'normal'))}
-                  className={`p-1.5 rounded-lg border text-xs font-semibold flex items-center gap-1 transition-all ${
-                    panelWidthMode === 'wide'
+                  className={`p-1.5 rounded-lg border text-xs font-semibold flex items-center gap-1 transition-all ${panelWidthMode === 'wide'
                       ? 'bg-indigo-50 border-indigo-200 text-indigo-600 dark:bg-indigo-950/50 dark:border-indigo-800 dark:text-indigo-400'
                       : 'border-gray-200 dark:border-gray-700 text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800'
-                  }`}
+                    }`}
                   title={panelWidthMode === 'wide' ? 'Reset to normal sidebar width' : 'Expand sidebar to wide split view'}
                 >
                   <Columns className="w-3.5 h-3.5" />
@@ -446,11 +443,10 @@ Structure the answer strictly for ${marks} marks according to university grading
                 <button
                   onClick={() => setStudyModalOpen(true)}
                   disabled={!aiOutput}
-                  className={`px-2 py-1 rounded-lg border text-xs font-semibold flex items-center gap-1 transition-all ${
-                    aiOutput
+                  className={`px-2 py-1 rounded-lg border text-xs font-semibold flex items-center gap-1 transition-all ${aiOutput
                       ? 'bg-indigo-600 text-white hover:bg-indigo-700 border-transparent shadow-2xs'
                       : 'border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50'
-                  }`}
+                    }`}
                   title="Open Fullscreen Study Preview (Bada View for reading)"
                 >
                   <Maximize2 className="w-3.5 h-3.5" />
@@ -599,11 +595,10 @@ Structure the answer strictly for ${marks} marks according to university grading
                           <button
                             key={sz}
                             onClick={() => setAiFontSize(sz)}
-                            className={`px-1.5 py-0.5 text-[10px] font-bold rounded transition-colors ${
-                              aiFontSize === sz
+                            className={`px-1.5 py-0.5 text-[10px] font-bold rounded transition-colors ${aiFontSize === sz
                                 ? 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-2xs'
                                 : 'text-gray-500 hover:text-gray-800 dark:hover:text-gray-200'
-                            }`}
+                              }`}
                             title={`Font size: ${FONT_SIZE_MAP[sz].label}`}
                           >
                             {sz === 'sm' ? 'S' : sz === 'base' ? 'M' : sz === 'lg' ? 'L' : 'XL'}
@@ -726,11 +721,10 @@ Structure the answer strictly for ${marks} marks according to university grading
                     <button
                       key={sz}
                       onClick={() => setAiFontSize(sz)}
-                      className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all ${
-                        aiFontSize === sz
+                      className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all ${aiFontSize === sz
                           ? 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-300 shadow-xs'
                           : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-100'
-                      }`}
+                        }`}
                     >
                       {FONT_SIZE_MAP[sz].label}
                     </button>
@@ -779,9 +773,8 @@ Structure the answer strictly for ${marks} marks according to university grading
                   <button
                     key={sz}
                     onClick={() => setAiFontSize(sz)}
-                    className={`px-2 py-0.5 text-xs font-bold rounded ${
-                      aiFontSize === sz ? 'bg-indigo-600 text-white' : 'text-gray-600 dark:text-gray-300'
-                    }`}
+                    className={`px-2 py-0.5 text-xs font-bold rounded ${aiFontSize === sz ? 'bg-indigo-600 text-white' : 'text-gray-600 dark:text-gray-300'
+                      }`}
                   >
                     {sz.toUpperCase()}
                   </button>
