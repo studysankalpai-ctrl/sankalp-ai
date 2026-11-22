@@ -798,7 +798,7 @@ export default function Landing() {
               <div className="relative shrink-0 text-center mx-auto md:mx-0">
                 <div className="relative w-36 h-36 sm:w-44 sm:h-44 rounded-2xl sm:rounded-3xl overflow-hidden border-2 border-white/30 shadow-2xl p-1 bg-black mx-auto">
                   <img
-                    src="/sameer.jpg"
+                    src="/sameer.png"
                     alt="Sameer Singh - Creator of SANKALP AI"
                     width="176"
                     height="176"
