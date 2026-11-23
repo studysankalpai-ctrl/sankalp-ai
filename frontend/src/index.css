@@ -157,3 +157,64 @@ body {
 .prose-custom tr:nth-child(even) {
   background-color: rgba(156, 163, 175, 0.04);
 }
+
+/* KaTeX and Math formula horizontal overflow protection */
+.katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
+  padding: 0.35rem 0;
+  margin: 0.5rem 0;
+  -webkit-overflow-scrolling: touch;
+}
+.katex {
+  max-width: 100%;
+}
+
+/* Mobile Screen Typography Optimization (text thoda sa small for mobile phones) */
+@media (max-width: 640px) {
+  .prose-custom {
+    font-size: 0.8125rem; /* ~13px on mobile */
+    line-height: 1.55;
+  }
+  .prose-custom h1 {
+    font-size: 1.15rem;
+    margin-top: 0.75rem;
+    margin-bottom: 0.35rem;
+  }
+  .prose-custom h2 {
+    font-size: 1.05rem;
+    margin-top: 0.75rem;
+    margin-bottom: 0.35rem;
+  }
+  .prose-custom h3 {
+    font-size: 0.95rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0.25rem;
+  }
+  .prose-custom h4 {
+    font-size: 0.875rem;
+  }
+  .prose-custom p {
+    margin-bottom: 0.5rem;
+  }
+  .prose-custom ul, .prose-custom ol {
+    margin-left: 1rem;
+    margin-bottom: 0.5rem;
+  }
+  .prose-custom table {
+    font-size: 0.75rem;
+  }
+  .prose-custom th, .prose-custom td {
+    padding: 0.3rem 0.45rem;
+  }
+  .prose-custom pre {
+    padding: 0.65rem;
+    font-size: 0.75rem;
+    margin: 0.5rem 0;
+  }
+  .prose-custom code {
+    font-size: 0.78rem;
+    padding: 0.1rem 0.25rem;
+  }
+}

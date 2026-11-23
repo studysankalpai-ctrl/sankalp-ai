@@ -45,26 +45,35 @@ export default function Header() {
       }`}
     >
       {/* Left: Mobile hamburger & Global Search bar */}
-      <div className="flex items-center gap-1.5 sm:gap-3 flex-1 min-w-0 max-w-xs sm:max-w-md">
+      <div className="flex items-center gap-1 sm:gap-3 flex-1 min-w-0 max-w-xs sm:max-w-md">
         <button
           onClick={() => setMobileNavOpen(true)}
-          className="p-2 rounded-xl text-gray-500 hover:text-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 md:hidden"
+          className="p-1.5 sm:p-2 rounded-xl text-gray-500 hover:text-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 md:hidden shrink-0"
         >
           <Menu className="w-5 h-5" />
         </button>
 
+        {/* Desktop Search Button */}
         <button
           onClick={() => setSearchOpen(true)}
-          className="w-full flex items-center justify-between px-3 py-1.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/60 text-gray-400 hover:border-gray-300 dark:hover:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-900 transition-all text-xs sm:text-sm group"
+          className="hidden sm:flex w-full items-center justify-between px-3 py-1.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/60 text-gray-400 hover:border-gray-300 dark:hover:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-900 transition-all text-xs sm:text-sm group"
         >
           <div className="flex items-center gap-2 truncate">
             <Search className="w-4 h-4 text-gray-400 group-hover:text-indigo-500 transition-colors shrink-0" />
-            <span className="hidden sm:inline truncate">Search syllabus & questions...</span>
-            <span className="sm:hidden">Search...</span>
+            <span className="truncate">Search syllabus & questions...</span>
           </div>
-          <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono text-gray-400 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-2xs shrink-0">
+          <kbd className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono text-gray-400 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-2xs shrink-0">
             Ctrl K
           </kbd>
+        </button>
+
+        {/* Mobile Search Icon Button */}
+        <button
+          onClick={() => setSearchOpen(true)}
+          className="sm:hidden p-1.5 rounded-xl text-gray-500 hover:text-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors shrink-0"
+          title="Search"
+        >
+          <Search className="w-4 h-4" />
         </button>
       </div>
 
@@ -183,7 +192,7 @@ export default function Header() {
             toggleTheme();
             toast.success(darkMode ? 'Light mode enabled' : 'Dark mode enabled', { id: 'theme-toast' });
           }}
-          className="p-2 rounded-xl text-gray-500 hover:text-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          className="p-1.5 sm:p-2 rounded-xl text-gray-500 hover:text-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors shrink-0"
           title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
         >
           {darkMode ? (
@@ -193,10 +202,10 @@ export default function Header() {
           )}
         </button>
 
-        {/* Settings Shortcut */}
+        {/* Settings Shortcut (Desktop only) */}
         <Link
           to="/settings"
-          className="p-2 rounded-xl text-gray-500 hover:text-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          className="hidden sm:inline-flex p-2 rounded-xl text-gray-500 hover:text-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors shrink-0"
           title="Settings"
         >
           <Settings className="w-4 h-4" />

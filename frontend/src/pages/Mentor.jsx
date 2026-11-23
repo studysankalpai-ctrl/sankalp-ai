@@ -485,9 +485,9 @@ Please structure the explanation as follows:
   const userQCount = messages.filter((m) => m.role === 'user').length;
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4.25rem)] sm:h-[calc(100vh-5rem)] -m-3 sm:-m-6 lg:-m-8 bg-[#F7F8FC] dark:bg-[#0B1020] overflow-hidden">
+    <div className="flex flex-col h-full w-full max-w-full bg-[#F7F8FC] dark:bg-[#0B1020] overflow-hidden">
       {/* Learning Controls Bar (Horizontally scrollable on mobile so controls never eat up screen height) */}
-      <div className="bg-white dark:bg-[#111827] border-b border-gray-200 dark:border-gray-800 px-3 sm:px-4 py-2 sm:py-2.5 flex items-center justify-between gap-2 shrink-0 shadow-2xs overflow-x-auto no-scrollbar">
+      <div className="bg-white dark:bg-[#111827] border-b border-gray-200 dark:border-gray-800 px-2.5 sm:px-4 py-2 sm:py-2.5 flex items-center justify-between gap-2 shrink-0 shadow-2xs overflow-x-auto no-scrollbar w-full max-w-full">
         <div className="flex items-center gap-2 text-xs shrink-0">
           {/* Subject Selector */}
           <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shrink-0">
@@ -716,7 +716,7 @@ Please structure the explanation as follows:
               </div>
             </div>
           ) : (
-            <div className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-4 sm:space-y-6">
+            <div className="flex-1 overflow-y-auto overflow-x-hidden p-2 sm:p-6 space-y-3 sm:space-y-6 w-full max-w-full">
               {/* Unit-Specific Masterclass Focus Banner */}
               {activeUnit && (
                 <div className="p-3 sm:p-4 rounded-2xl bg-gradient-to-r from-indigo-50/90 via-blue-50/80 to-purple-50/70 dark:from-indigo-950/60 dark:via-blue-950/40 dark:to-purple-950/40 border border-indigo-200 dark:border-indigo-800/80 shadow-2xs mb-3 sm:mb-4">
@@ -774,24 +774,24 @@ Please structure the explanation as follows:
                 return (
                   <div
                     key={msg.id || index}
-                    className={`flex gap-3 max-w-3xl ${isUser ? 'ml-auto justify-end' : 'mr-auto justify-start'}`}
+                    className={`flex gap-1.5 sm:gap-3 w-full max-w-3xl ${isUser ? 'ml-auto justify-end' : 'mr-auto justify-start'}`}
                   >
                     {!isUser && (
-                      <div className="w-8 h-8 rounded-xl overflow-hidden flex items-center justify-center shrink-0 shadow-xs mt-1 bg-transparent">
+                      <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl overflow-hidden flex items-center justify-center shrink-0 shadow-2xs mt-0.5 bg-transparent">
                         <img src="/Logo.png" alt="SANKALP AI" className="w-full h-full object-contain" />
                       </div>
                     )}
 
                     <div
-                      className={`rounded-2xl p-4 sm:p-5 shadow-xs transition-all ${
+                      className={`flex-1 min-w-0 max-w-full rounded-2xl p-3 sm:p-5 shadow-xs transition-all overflow-hidden break-words ${
                         isUser
-                          ? 'bg-indigo-600 text-white rounded-br-xs'
-                          : 'bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-gray-100 rounded-bl-xs'
+                          ? 'bg-indigo-600 text-white rounded-br-xs max-w-[88%] sm:max-w-[80%]'
+                          : 'bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-gray-100 rounded-bl-xs w-full'
                       }`}
                     >
                       {/* Meta header for user message */}
                       {isUser && msg.marksFormat && (
-                        <div className="flex items-center gap-2 mb-1.5 text-[11px] text-indigo-100/80">
+                        <div className="flex items-center gap-2 mb-1 text-[10px] sm:text-[11px] text-indigo-100/80">
                           <span className="font-bold">{msg.marksFormat} Marks Target</span>
                           <span>&bull;</span>
                           <span className="capitalize">{msg.language || 'English'}</span>
@@ -799,17 +799,17 @@ Please structure the explanation as follows:
                       )}
 
                       {isUser ? (
-                        <p className="text-sm font-medium whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+                        <p className="text-[13px] sm:text-sm font-medium whitespace-pre-wrap leading-relaxed">{msg.content}</p>
                       ) : (
-                        <div>
+                        <div className="min-w-0 max-w-full overflow-hidden">
                           {msg.learnByBook && (
-                            <div className="flex items-center gap-1.5 mb-2.5">
-                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
-                                <BookOpen className="w-3 h-3" /> Prescribed Book: {msg.bookTitle || 'Official University Textbook'}
+                            <div className="flex items-center gap-1.5 mb-2">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 truncate max-w-full">
+                                <BookOpen className="w-3 h-3 shrink-0" /> Prescribed Book: {msg.bookTitle || 'Official University Textbook'}
                               </span>
                             </div>
                           )}
-                          <MarkdownRenderer content={msg.content} className="text-sm" />
+                          <MarkdownRenderer content={msg.content} className="text-[13px] sm:text-sm leading-relaxed" />
                         </div>
                       )}
 

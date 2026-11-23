@@ -13,6 +13,8 @@ export default function AppLayout() {
   const { initPwa } = usePwaStore();
   const location = useLocation();
   const isPdfPage = location.pathname.startsWith('/pdf/');
+  const isMentorPage = location.pathname.startsWith('/mentor');
+  const isFullBleedPage = isPdfPage || isMentorPage;
 
   useEffect(() => {
     initTheme();
@@ -31,15 +33,15 @@ export default function AppLayout() {
       {/* Main Content Area */}
       <main
         className={`flex-1 transition-all duration-300 ${
-          isPdfPage
-            ? 'p-0 m-0'
+          isFullBleedPage
+            ? 'p-0 m-0 pt-16 flex flex-col h-screen overflow-hidden'
             : 'min-h-[calc(100vh-4rem)] pt-16 flex flex-col justify-between'
         } ${sidebarCollapsed ? 'pl-0 md:pl-20' : 'pl-0 md:pl-64'}`}
       >
         <div
           className={
-            isPdfPage
-              ? 'p-0 m-0 w-full'
+            isFullBleedPage
+              ? 'p-0 m-0 w-full h-full flex-1 overflow-hidden'
               : 'max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 flex-1 w-full'
           }
         >
@@ -48,8 +50,8 @@ export default function AppLayout() {
           </ErrorBoundary>
         </div>
 
-        {/* Global Student App Footer (hidden on full-screen PDF study reader) */}
-        {!isPdfPage && (
+        {/* Global Student App Footer (hidden on full-bleed study & chat pages) */}
+        {!isFullBleedPage && (
           <footer className="mt-auto border-t border-gray-200 dark:border-gray-800 bg-white/50 dark:bg-gray-950/40 backdrop-blur-sm py-4 px-4 sm:px-8 text-xs text-gray-500 dark:text-gray-400">
             <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
