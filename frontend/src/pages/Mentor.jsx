@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import {
   Sparkles,
   Send,
@@ -48,6 +48,7 @@ import {
 } from '../lib/mentorStorage';
 
 export default function Mentor() {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const initialSubjectId = searchParams.get('subjectId');
   const initialTopic = searchParams.get('topic');
@@ -64,6 +65,7 @@ export default function Mentor() {
     setSelectedSubject,
   } = useAppStore();
 
+  const [connectModalOpen, setConnectModalOpen] = useState(!isAiConnected);
   const [subjects, setSubjects] = useState([]);
   const [books, setBooks] = useState([]);
   const [learnByBook, setLearnByBook] = useState(initialLearnByBook || false);
@@ -86,6 +88,13 @@ export default function Mentor() {
   const [copiedIndex, setCopiedIndex] = useState(null);
   const [cheatSheetOpen, setCheatSheetOpen] = useState(false);
   const messagesEndRef = useRef(null);
+
+  // Automatically show connect popup when visiting SANKALP AI while offline
+  useEffect(() => {
+    if (!isAiConnected) {
+      setConnectModalOpen(true);
+    }
+  }, [isAiConnected]);
 
   // Helper to build initial welcome message tailored to subject
   const getSubjectWelcome = (subj) => ({
@@ -235,7 +244,8 @@ Please structure the explanation as follows:
     if (!promptText || !promptText.trim() || loading) return;
 
     if (!isAiConnected) {
-      toast.error('Please connect your API key in Settings to chat with SANKALP AI');
+      setConnectModalOpen(true);
+      toast.error('Connect your AI API key in Settings to activate SANKALP AI');
       return;
     }
 
@@ -1155,6 +1165,82 @@ Please structure the explanation as follows:
                 className="px-4 py-2 text-xs font-bold rounded-xl bg-gray-900 dark:bg-white text-white dark:text-gray-950 hover:bg-black transition-colors"
               >
                 Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Offline AI Connect Modal: "Connect your AI With API" */}
+      {connectModalOpen && !isAiConnected && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-gray-900 rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-gray-100 dark:border-gray-800 relative space-y-5 animate-in zoom-in-95 duration-200">
+            {/* Close Button */}
+            <button
+              onClick={() => setConnectModalOpen(false)}
+              className="absolute top-4 right-4 p-2 rounded-xl text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+              title="Close"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            {/* Glowing Icon Badge */}
+            <div className="flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 via-indigo-600 to-indigo-700 flex items-center justify-center text-white shadow-lg shadow-indigo-500/25 shrink-0">
+                <Sparkles className="w-6 h-6" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-900/50">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />
+                    AI Offline
+                  </span>
+                </div>
+                <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-gray-100 mt-0.5 leading-snug">
+                  Connect your AI With API
+                </h3>
+              </div>
+            </div>
+
+            {/* Explanatory Text */}
+            <div className="space-y-2.5 text-xs sm:text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+              <p>
+                To unlock <strong>SANKALP AI Exam Mentor</strong>, solve PYQs, and get high-scoring 2M, 5M, and 10M university answers, connect your free API key.
+              </p>
+              <div className="bg-gray-50 dark:bg-gray-800/60 p-3 rounded-2xl border border-gray-100 dark:border-gray-800 space-y-1.5 text-xs text-gray-600 dark:text-gray-300">
+                <div className="flex items-center gap-2">
+                  <span className="text-emerald-500 font-bold">✓</span>
+                  <span>Free Groq API Key (ultra-fast 500+ tokens/sec)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-emerald-500 font-bold">✓</span>
+                  <span>100% Free &mdash; no credit card required</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-emerald-500 font-bold">✓</span>
+                  <span>Stored securely in your private browser session</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex flex-col sm:flex-row items-center gap-2.5 pt-1">
+              <button
+                onClick={() => {
+                  setConnectModalOpen(false);
+                  navigate('/settings');
+                }}
+                className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-600/20 transition-all cursor-pointer text-center"
+              >
+                <Settings className="w-4 h-4" />
+                <span>Go to Settings</span>
+                <ChevronRight className="w-4 h-4 ml-auto sm:ml-0" />
+              </button>
+              <button
+                onClick={() => setConnectModalOpen(false)}
+                className="w-full sm:w-auto px-4 py-3 rounded-2xl text-xs font-semibold text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 transition-colors cursor-pointer text-center"
+              >
+                Maybe Later
               </button>
             </div>
           </div>

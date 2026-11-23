@@ -48,13 +48,20 @@ export default function Landing() {
     // Strictly lock pure black background on body & html to prevent any white flashes during mobile scroll or rubber banding
     const originalBodyBg = document.body.style.backgroundColor;
     const originalHtmlBg = document.documentElement.style.backgroundColor;
+    const originalBodyOverflowY = document.body.style.overflowY;
+    const originalBodyOverflowX = document.body.style.overflowX;
+
     document.body.style.backgroundColor = '#000000';
     document.documentElement.style.backgroundColor = '#000000';
     document.documentElement.classList.add('dark');
+    document.body.style.overflowY = 'auto';
+    document.body.style.overflowX = 'hidden';
 
     return () => {
       document.body.style.backgroundColor = originalBodyBg;
       document.documentElement.style.backgroundColor = originalHtmlBg;
+      document.body.style.overflowY = originalBodyOverflowY;
+      document.body.style.overflowX = originalBodyOverflowX;
     };
   }, []);
 
@@ -478,11 +485,10 @@ export default function Landing() {
                 <button
                   key={module.id}
                   onClick={() => setActiveTourTab(module.id)}
-                  className={`px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 shrink-0 transition-all border ${
-                    isActive
+                  className={`px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 shrink-0 transition-all border ${isActive
                       ? 'bg-white text-black border-white shadow-md'
                       : 'bg-zinc-950 text-zinc-400 border-white/10 hover:border-white/30 hover:text-white'
-                  }`}
+                    }`}
                 >
                   <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   <span>{module.title}</span>
@@ -567,6 +573,108 @@ export default function Landing() {
                       className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-102"
                     />
                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+      {/* CREATOR SPOTLIGHT SECTION (Sameer Singh • St. John's College Agra, Centered on Mobile) */}
+      <section id="creator" className="py-14 sm:py-20 border-t border-white/10 z-10 relative">
+        <div className="w-full max-w-[1560px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16">
+          <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-12">
+            <span className="text-xs font-mono uppercase tracking-widest text-zinc-400 mb-1.5 block">
+              Architect & Visionary
+            </span>
+            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold text-white tracking-tight">
+              Crafted by a Student, for Students
+            </h2>
+          </div>
+
+          {/* Luxury Monochrome Profile Card */}
+          <div className="relative rounded-3xl bg-zinc-950 border border-white/15 p-6 sm:p-10 lg:p-12 shadow-2xl overflow-hidden">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-white/5 to-transparent blur-3xl pointer-events-none" />
+
+            <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start gap-6 sm:gap-10 text-center md:text-left">
+              {/* Profile Image with Monochrome Ring */}
+              <div className="relative shrink-0 text-center mx-auto md:mx-0">
+                <div className="relative w-36 h-36 sm:w-44 sm:h-44 rounded-2xl sm:rounded-3xl overflow-hidden border-2 border-white/30 shadow-2xl p-1 bg-black mx-auto">
+                  <img
+                    src="/sameer.png"
+                    alt="Sameer Singh - Creator of SANKALP AI"
+                    width="176"
+                    height="176"
+                    loading="lazy"
+                    decoding="async"
+                    className="w-full h-full object-cover rounded-xl sm:rounded-2xl grayscale-0 sm:grayscale contrast-110 sm:hover:grayscale-0 transition-all duration-500" />
+                  <div className="absolute inset-0 rounded-xl sm:rounded-2xl ring-1 ring-white/20 pointer-events-none" />
+                </div>
+                <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs font-bold text-white">
+                  <ShieldCheck className="w-3.5 h-3.5 text-white" />
+                  <span>Verified Builder</span>
+                </div>
+              </div>
+
+              {/* Bio & Details */}
+              <div className="flex-1 flex flex-col items-center md:items-start text-center md:text-left">
+                <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-2">
+                  <span className="text-xs font-mono uppercase tracking-widest text-zinc-400">
+                    Platform Architect & Lead Creator
+                  </span>
+                  <span className="text-zinc-600 hidden md:inline">&bull;</span>
+                  <span className="text-xs font-mono px-2 py-0.5 rounded bg-white/10 text-white font-semibold">
+                    Full Stack & AI Engineer
+                  </span>
+                </div>
+
+                <h3 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold text-white tracking-tight mb-2">
+                  Sameer Singh
+                </h3>
+
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-zinc-900 border border-white/15 text-xs sm:text-sm font-bold text-white mb-4">
+                  <GraduationCap className="w-4 h-4 text-white" />
+                  <span>Student of St. John's College, Agra</span>
+                </div>
+
+                <p
+                  className="text-zinc-300 text-xs sm:text-sm md:text-base leading-relaxed mb-6 font-normal max-w-2xl mx-auto md:mx-0 hyphens-auto"
+                  style={{ textAlign: 'justify', textJustify: 'inter-word' }}
+                >
+                  &ldquo;SANKALP AI was born out of a real classroom reality at <strong>St. John&apos;s College, Agra</strong> &mdash; every semester, students wrestle with scattered notes, unpredictable question patterns, and thick textbooks. I architected SANKALP AI to be an autonomous, syllabus-aligned intelligence system that transforms 5-year past papers and prescribed textbooks into structured, mark-winning model answers so every student can prepare with absolute clarity and confidence.&rdquo;
+                </p>
+
+                {/* Highlights Grid */}
+                <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-4 border-t border-white/10 text-xs sm:text-sm">
+                  <div className="p-3 rounded-xl bg-black border border-white/10 text-center sm:text-left">
+                    <span className="text-[10px] sm:text-[11px] font-mono text-zinc-400 block mb-0.5">ACADEMIC ALMA MATER</span>
+                    <p className="font-bold text-white text-xs sm:text-sm">St. John's College, Agra</p>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-black border border-white/10 text-center sm:text-left">
+                    <span className="text-[10px] sm:text-[11px] font-mono text-zinc-400 block mb-0.5">CORE TECHNOLOGY</span>
+                    <p className="font-bold text-white text-xs sm:text-sm">React 19, Node.js, Groq AI</p>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-black border border-white/10 text-center sm:text-left">
+                    <span className="text-[10px] sm:text-[11px] font-mono text-zinc-400 block mb-0.5">PURPOSE & MISSION</span>
+                    <p className="font-bold text-white text-xs sm:text-sm">Empowering Students</p>
+                  </div>
+
+                  <a
+                    href="mailto:study.sankalp.ai@gmail.com"
+                    className="p-3 rounded-xl bg-black border border-white/10 hover:border-white/30 transition-all text-center sm:text-left block group"
+                    title="Send an email enquiry"
+                  >
+                    <span className="text-[10px] sm:text-[11px] font-mono text-zinc-400 mb-0.5 flex items-center justify-center sm:justify-start gap-1">
+                      <Mail className="w-3 h-3 text-white" />
+                      <span>QUERIES & ENQUIRY</span>
+                    </span>
+                    <p className="font-bold text-white text-xs sm:text-sm truncate group-hover:underline">
+                      study.sankalp.ai@gmail.com
+                    </p>
+                  </a>
                 </div>
               </div>
             </div>
@@ -777,107 +885,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* CREATOR SPOTLIGHT SECTION (Sameer Singh • St. John's College Agra, Centered on Mobile) */}
-      <section id="creator" className="py-14 sm:py-20 border-t border-white/10 z-10 relative">
-        <div className="w-full max-w-[1560px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16">
-          <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-12">
-            <span className="text-xs font-mono uppercase tracking-widest text-zinc-400 mb-1.5 block">
-              Architect & Visionary
-            </span>
-            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold text-white tracking-tight">
-              Crafted by a Student, for Students
-            </h2>
-          </div>
 
-          {/* Luxury Monochrome Profile Card */}
-          <div className="relative rounded-3xl bg-zinc-950 border border-white/15 p-6 sm:p-10 lg:p-12 shadow-2xl overflow-hidden">
-            <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-white/5 to-transparent blur-3xl pointer-events-none" />
-
-            <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start gap-6 sm:gap-10 text-center md:text-left">
-              {/* Profile Image with Monochrome Ring */}
-              <div className="relative shrink-0 text-center mx-auto md:mx-0">
-                <div className="relative w-36 h-36 sm:w-44 sm:h-44 rounded-2xl sm:rounded-3xl overflow-hidden border-2 border-white/30 shadow-2xl p-1 bg-black mx-auto">
-                  <img
-                    src="/sameer.png"
-                    alt="Sameer Singh - Creator of SANKALP AI"
-                    width="176"
-                    height="176"
-                    loading="lazy"
-                    decoding="async"
-                    className="w-full h-full object-cover rounded-xl sm:rounded-2xl filter grayscale contrast-110 hover:grayscale-0 transition-all duration-500"
-                  />
-                  <div className="absolute inset-0 rounded-xl sm:rounded-2xl ring-1 ring-white/20 pointer-events-none" />
-                </div>
-                <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs font-bold text-white">
-                  <ShieldCheck className="w-3.5 h-3.5 text-white" />
-                  <span>Verified Builder</span>
-                </div>
-              </div>
-
-              {/* Bio & Details */}
-              <div className="flex-1 flex flex-col items-center md:items-start text-center md:text-left">
-                <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-2">
-                  <span className="text-xs font-mono uppercase tracking-widest text-zinc-400">
-                    Platform Architect & Lead Creator
-                  </span>
-                  <span className="text-zinc-600 hidden md:inline">&bull;</span>
-                  <span className="text-xs font-mono px-2 py-0.5 rounded bg-white/10 text-white font-semibold">
-                    Full Stack & AI Engineer
-                  </span>
-                </div>
-
-                <h3 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold text-white tracking-tight mb-2">
-                  Sameer Singh
-                </h3>
-
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-zinc-900 border border-white/15 text-xs sm:text-sm font-bold text-white mb-4">
-                  <GraduationCap className="w-4 h-4 text-white" />
-                  <span>Student of St. John's College, Agra</span>
-                </div>
-
-                <p
-                  className="text-zinc-300 text-xs sm:text-sm md:text-base leading-relaxed mb-6 font-normal max-w-2xl mx-auto md:mx-0 hyphens-auto"
-                  style={{ textAlign: 'justify', textJustify: 'inter-word' }}
-                >
-                  &ldquo;SANKALP AI was born out of a real classroom reality at <strong>St. John&apos;s College, Agra</strong> &mdash; every semester, students wrestle with scattered notes, unpredictable question patterns, and thick textbooks. I architected SANKALP AI to be an autonomous, syllabus-aligned intelligence system that transforms 5-year past papers and prescribed textbooks into structured, mark-winning model answers so every student can prepare with absolute clarity and confidence.&rdquo;
-                </p>
-
-                {/* Highlights Grid */}
-                <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-4 border-t border-white/10 text-xs sm:text-sm">
-                  <div className="p-3 rounded-xl bg-black border border-white/10 text-center sm:text-left">
-                    <span className="text-[10px] sm:text-[11px] font-mono text-zinc-400 block mb-0.5">ACADEMIC ALMA MATER</span>
-                    <p className="font-bold text-white text-xs sm:text-sm">St. John's College, Agra</p>
-                  </div>
-
-                  <div className="p-3 rounded-xl bg-black border border-white/10 text-center sm:text-left">
-                    <span className="text-[10px] sm:text-[11px] font-mono text-zinc-400 block mb-0.5">CORE TECHNOLOGY</span>
-                    <p className="font-bold text-white text-xs sm:text-sm">React 19, Node.js, Groq AI</p>
-                  </div>
-
-                  <div className="p-3 rounded-xl bg-black border border-white/10 text-center sm:text-left">
-                    <span className="text-[10px] sm:text-[11px] font-mono text-zinc-400 block mb-0.5">PURPOSE & MISSION</span>
-                    <p className="font-bold text-white text-xs sm:text-sm">Empowering Students</p>
-                  </div>
-
-                  <a
-                    href="mailto:study.sankalp.ai@gmail.com"
-                    className="p-3 rounded-xl bg-black border border-white/10 hover:border-white/30 transition-all text-center sm:text-left block group"
-                    title="Send an email enquiry"
-                  >
-                    <span className="text-[10px] sm:text-[11px] font-mono text-zinc-400 mb-0.5 flex items-center justify-center sm:justify-start gap-1">
-                      <Mail className="w-3 h-3 text-white" />
-                      <span>QUERIES & ENQUIRY</span>
-                    </span>
-                    <p className="font-bold text-white text-xs sm:text-sm truncate group-hover:underline">
-                      study.sankalp.ai@gmail.com
-                    </p>
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* High-Impact Final Call to Action */}
       <section className="py-14 sm:py-20 border-t border-white/10 z-10 relative">

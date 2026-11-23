@@ -292,6 +292,12 @@ const useAppStore = create((set, get) => {
       set({ groqApiKey: '', isAiConnected: false });
     },
 
+    clearGroqKey: () => {
+      sessionStorage.removeItem('sankalp_groq_session_key');
+      localStorage.removeItem('sankalp_setting_groq_api_key');
+      set({ groqApiKey: '', isAiConnected: false });
+    },
+
     initAiCredentials: async () => {},
 
     initTheme: () => {

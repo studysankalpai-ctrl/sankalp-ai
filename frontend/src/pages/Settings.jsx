@@ -76,6 +76,8 @@ export default function Settings() {
     }
   }, [groqModel, setGroqModel]);
 
+  const isAiActive = Boolean(isAiConnected && groqApiKey && inputKey.trim() === groqApiKey.trim());
+
   const handleTestAndSaveKey = async () => {
     if (!inputKey.trim()) {
       toast.error('Please enter a Groq API key');
@@ -124,7 +126,13 @@ export default function Settings() {
   };
 
   const handleRemoveKey = () => {
-    clearGroqKey();
+    if (typeof clearGroqKey === 'function') {
+      clearGroqKey();
+    } else if (typeof setGroqApiKey === 'function') {
+      setGroqApiKey('');
+    }
+    sessionStorage.removeItem('sankalp_groq_session_key');
+    localStorage.removeItem('sankalp_setting_groq_api_key');
     setInputKey('');
     setTestStatus(null);
     toast.success('API key removed from session memory');
@@ -221,12 +229,32 @@ export default function Settings() {
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 pt-2">
             <button
+              type="button"
               onClick={handleTestAndSaveKey}
-              disabled={testing || !inputKey.trim()}
-              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs transition-colors disabled:opacity-50 w-full sm:w-auto text-center"
+              disabled={testing || !inputKey.trim() || isAiActive}
+              className={`inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold shadow-xs transition-all w-full sm:w-auto text-center ${
+                isAiActive
+                  ? 'bg-emerald-600 dark:bg-emerald-600 text-white cursor-not-allowed opacity-80 pointer-events-none'
+                  : 'bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-50 disabled:cursor-not-allowed'
+              }`}
+              title={isAiActive ? 'SANKALP AI is already active and connected' : ''}
             >
-              {testing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-              {testing ? 'Testing Connection...' : 'Test & Save Key'}
+              {testing ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>Testing Connection...</span>
+                </>
+              ) : isAiActive ? (
+                <>
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>AI Active</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Test & Save Key</span>
+                </>
+              )}
             </button>
 
             {isAiConnected && (

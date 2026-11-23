@@ -3,27 +3,69 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
 /**
- * Safe markdown pre-cleaner that fixes collapsed AI table rows and ensures proper
- * GFM Markdown formatting (tables, lists, headings) without corrupting text.
+ * Safe markdown pre-cleaner that fixes collapsed AI table rows, cleans up
+ * raw mathematical LaTeX artifacts into human-readable Unicode symbols,
+ * and ensures proper GFM Markdown formatting (tables, lists, headings).
  */
 function cleanMarkdown(text) {
   if (!text || typeof text !== 'string') return '';
   let clean = text;
 
-  // 1. Fix collapsed table rows: whenever a closing pipe is followed by an opening pipe on the same line
+  // 1. Remove LaTeX \boxed{...} wrappers
+  clean = clean.replace(/\\boxed\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}/g, '$1');
+
+  // 2. Clean up raw bracketed math lines like "[ a\cdot b ... ]" or "\[ ... \]"
+  clean = clean.replace(/^\[\s*\\boxed\{?([^\]]+)\}?\s*\]$/gm, '$1');
+  clean = clean.replace(/^\[\s*([\s\S]*?)\s*\]$/gm, (match, inner) => {
+    if (inner.includes('\\') || inner.includes('=') || inner.includes('+') || inner.includes('·') || inner.includes('*')) {
+      return `> **Formula:** ${inner.trim()}`;
+    }
+    return match;
+  });
+
+  // 3. Convert LaTeX math symbols to clear, universally readable Unicode
+  clean = clean
+    .replace(/\\cdot/g, ' · ')
+    .replace(/\\times/g, ' × ')
+    .replace(/\\div/g, ' ÷ ')
+    .replace(/\\pm/g, ' ± ')
+    .replace(/\\neq/g, ' ≠ ')
+    .replace(/\\leq?/g, ' ≤ ')
+    .replace(/\\geq?/g, ' ≥ ')
+    .replace(/\\forall/g, ' ∀ ')
+    .replace(/\\exists/g, ' ∃ ')
+    .replace(/\\in\b/g, ' ∈ ')
+    .replace(/\\notin\b/g, ' ∉ ')
+    .replace(/\\subset\b/g, ' ⊂ ')
+    .replace(/\\subseteq\b/g, ' ⊆ ')
+    .replace(/\\cup\b/g, ' ∪ ')
+    .replace(/\\cap\b/g, ' ∩ ')
+    .replace(/\\rightarrow|\\to\b/g, ' ➔ ')
+    .replace(/\\leftarrow/g, ' ← ')
+    .replace(/\\implies/g, ' ⟹ ')
+    .replace(/\\iff/g, ' ⟺ ')
+    .replace(/\\infty/g, ' ∞ ')
+    .replace(/\\sqrt\{([^}]+)\}/g, '√($1)')
+    .replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '($1 / $2)');
+
+  // 4. Clean messy comma/semicolon artifacts like "(R,;+,;;;\cdot,;0,;1)"
+  clean = clean.replace(/[,;]{2,}/g, ', ');
+  clean = clean.replace(/\s*,\s*;\s*/g, ', ');
+
+  // 5. Fix collapsed table rows: whenever a closing pipe is followed by an opening pipe on the same line
   // e.g. "... | | Next Row |" or "...---| | Next Row |"
   clean = clean.replace(/\|\s*\|\s*/g, '|\n| ');
 
-  // 2. Remove accidental double-newlines between table rows so table is not severed into separate paragraphs
+  // 6. Remove accidental double-newlines between table rows so table is not severed into separate paragraphs
   clean = clean.replace(/\|\n\n+(\|\s*)/g, '|\n$1');
 
-  // 3. Ensure a blank line before table starts if preceded by non-table text
+  // 7. Ensure a blank line before table starts if preceded by non-table text
   clean = clean.replace(/([^\n|])\n+(\|(?:\s*[^|\n]+\s*\|)+)/g, '$1\n\n$2');
 
-  // 4. Ensure headings have a blank line before them if preceded by text
+  // 8. Ensure headings have a blank line before them if preceded by text
   clean = clean.replace(/([^\n])\n+(#{1,6}\s+)/g, '$1\n\n$2');
 
-  // 5. Ensure bullet lists have a blank line before them if preceded by a paragraph
+  // 9. Ensure bullet lists have a blank line before them if preceded by a paragraph
   clean = clean.replace(/([^\n\-*•\d])\n+([-*•]\s+)/g, '$1\n\n$2');
 
   return clean;

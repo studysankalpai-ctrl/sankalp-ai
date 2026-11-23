@@ -184,7 +184,7 @@ export default function AdminSidebar() {
   return (
     <>
       {/* Desktop Static Sidebar */}
-      <aside className="hidden lg:flex w-64 flex-col shrink-0 min-h-screen">
+      <aside className="hidden lg:flex w-64 flex-col shrink-0 h-screen overflow-hidden">
         {sidebarContent}
       </aside>
 

@@ -179,11 +179,9 @@ export default function PdfViewerPage() {
     if (marks) {
       prompt = `Generate a complete, high-scoring university examination answer for ${marks} Marks for: "${queryText || docName}".
 Structure the answer strictly for ${marks} marks according to university grading rubrics:
-- Definition & core premise in bold
-- Key technical points with clear subheadings
-- Equations / Diagram description if applicable
-- Easy everyday real-world example
-- Exam scoring conclusion`;
+1. In Simple Words (1-2 sentences core intuition)
+2. Real-World Everyday Analogy (intuitive relatable example)
+3. University Exam Scoring Answer (Definition & core premise in bold, key technical points with clear subheadings, clean equations, text diagram if applicable, and Exam Pro-Tip)`;
     } else if (actionType === 'Explain Textbook' || actionType === 'Explain Paper') {
       prompt = file?.type === 'book'
         ? `Explain the core curriculum and conceptual structure from this prescribed university textbook: "${docName}" by ${file.author || 'Author'}. Provide sharp explanations and simple real-world analogies that any student can understand.`
