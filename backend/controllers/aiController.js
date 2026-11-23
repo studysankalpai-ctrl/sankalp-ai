@@ -216,8 +216,8 @@ const mentorChat = async (req, res, next) => {
       messages,
       subjectId,
       language = 'english',
-      answerStyle = 'exam',
-      marksFormat = null,
+      answerStyle = 'detailed',
+      marksFormat = 15,
       model = 'openai/gpt-oss-120b',
       learnByBook = false,
       bookId = null,
@@ -327,7 +327,7 @@ const mentorChat = async (req, res, next) => {
         messages: fullMessages,
         model,
         temperature: 0.35,
-        max_tokens: 1600,
+        max_tokens: 4096,
       });
 
       return successResponse(res, {
@@ -402,7 +402,7 @@ const mentorChat = async (req, res, next) => {
       messages: fullMessages,
       model,
       temperature: 0.4,
-      max_tokens: 1500,
+      max_tokens: 4096,
     });
 
     return successResponse(res, {
@@ -470,7 +470,7 @@ Return ONLY valid JSON array.`;
       messages: [{ role: 'user', content: prompt }],
       model,
       temperature: 0.3,
-      max_tokens: 1500,
+      max_tokens: 4096,
     });
 
     const questions = safeParseJson(completion.content, []);
@@ -488,7 +488,7 @@ const generateAnswer = async (req, res, next) => {
     const {
       apiKey,
       question,
-      marks = 10,
+      marks = 15,
       subjectId,
       language = 'english',
       model = 'openai/gpt-oss-120b',
@@ -553,7 +553,7 @@ FORMATTING REQUIREMENTS:
       messages: [{ role: 'user', content: prompt }],
       model,
       temperature: 0.3,
-      max_tokens: 1500,
+      max_tokens: 4096,
     });
 
     return successResponse(res, {
@@ -737,7 +737,7 @@ Limit daily_schedule to between 7 and 14 days covering all subjects sequentially
       messages: [{ role: 'user', content: prompt }],
       model,
       temperature: 0.3,
-      max_tokens: 1500,
+      max_tokens: 4096,
     });
 
     const plan = safeParseJson(completion.content, {
@@ -801,7 +801,7 @@ Return ONLY valid JSON array. Include at least 8-10 diverse predictions.`;
       messages: [{ role: 'user', content: prompt }],
       model,
       temperature: 0.3,
-      max_tokens: 1500,
+      max_tokens: 4096,
     });
 
     const predictions = safeParseJson(completion.content, []);
@@ -858,7 +858,7 @@ Return cleanly formatted Markdown with:
       messages: [{ role: 'user', content: prompt }],
       model,
       temperature: 0.3,
-      max_tokens: 1500,
+      max_tokens: 4096,
     });
 
     return successResponse(res, {
@@ -898,7 +898,7 @@ Return ONLY valid JSON array.`;
       messages: [{ role: 'user', content: prompt }],
       model,
       temperature: 0.3,
-      max_tokens: 1500,
+      max_tokens: 4096,
     });
 
     const flashcards = safeParseJson(completion.content, []);

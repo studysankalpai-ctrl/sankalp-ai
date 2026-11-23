@@ -71,12 +71,12 @@ export default function Mentor() {
   const [learnByBook, setLearnByBook] = useState(initialLearnByBook || false);
   const [selectedBookId, setSelectedBookId] = useState(initialBookId || '');
   const [language, setLanguage] = useState('english');
-  const [answerStyle, setAnswerStyle] = useState('exam');
-  const [marksFormat, setMarksFormat] = useState(10);
+  const [answerStyle, setAnswerStyle] = useState('detailed');
+  const [marksFormat, setMarksFormat] = useState(15);
   const [selectedUnitNumber, setSelectedUnitNumber] = useState(null);
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState(
-    initialTopic ? `Explain ${initialTopic} with an exam-oriented 10-mark answer and real-world example.` : ''
+    initialTopic ? `Explain ${initialTopic} with a detailed technical 15-mark answer and real-world example.` : ''
   );
   const [loading, setLoading] = useState(false);
   const [dbLoading, setDbLoading] = useState(true);
@@ -221,22 +221,22 @@ You can ask me to:
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Build rich, syllabus-grounded prompt including all detailed unit topics
+  // Build rich, textbook-level prompt including all detailed topics
   const buildUnitPrompt = (u) => {
     const topicsList = (u.topics && u.topics.length > 0)
       ? u.topics.map((t) => `• ${t}`).join('\n')
-      : (u.description ? `• ${u.description}` : '• Core unit fundamentals and principles');
+      : (u.description ? `• ${u.description}` : '• Core syllabus topics and principles');
 
-    return `Explain Unit ${u.number}: ${u.name} thoroughly according to the official university syllabus.
+    return `Teach and thoroughly explain the academic concepts of "${u.name}" in comprehensive, textbook-level detail.
 
-Official Syllabus Topics to cover:
+Topics to cover in depth:
 ${topicsList}
 
-Please structure the explanation as follows:
-1. Complete overview & core concept map of Unit ${u.number}
-2. Step-by-step detailed breakdown of each syllabus topic with definitions, formulas, and architecture/diagrams
-3. Real-world analogy for beginners ("Think of this like...") to make it effortlessly clear
-4. High-frequency university examination questions (2M definitions, 5M analytical, and 10M comprehensive questions) with model scoring keys`;
+Instructions:
+- Provide an authoritative, in-depth academic masterclass matching the quality of top university textbooks and ChatGPT.
+- Explain each concept thoroughly with complete technical definitions, working mechanisms, code/mathematical examples, and architectural diagrams.
+- Do NOT output filler introductions, generic greetings, or repetitive "In this unit..." phrases. Start directly with the actual subject concepts.
+- Use clear structured headings, comparative analysis tables, and exam scoring insights so students get genuine value and master the subject.`;
   };
 
   // Send message and persist to IndexedDB (with Local Response Caching in IndexedDB)
@@ -715,9 +715,9 @@ Please structure the explanation as follows:
       </div>
 
       {/* Main Chat & Context Panel Area */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 min-w-0 flex overflow-hidden">
         {/* Chat Stream */}
-        <div className="flex-1 flex flex-col h-full bg-[#F7F8FC] dark:bg-[#0B1020] relative">
+        <div className="flex-1 min-w-0 flex flex-col h-full bg-[#F7F8FC] dark:bg-[#0B1020] relative overflow-hidden">
           {dbLoading ? (
             <div className="flex-1 flex items-center justify-center">
               <div className="flex flex-col items-center gap-2 text-gray-400 text-xs">
@@ -726,171 +726,173 @@ Please structure the explanation as follows:
               </div>
             </div>
           ) : (
-            <div className="flex-1 overflow-y-auto overflow-x-hidden p-2 sm:p-6 space-y-3 sm:space-y-6 w-full max-w-full">
-              {/* Unit-Specific Masterclass Focus Banner */}
-              {activeUnit && (
-                <div className="p-3 sm:p-4 rounded-2xl bg-gradient-to-r from-indigo-50/90 via-blue-50/80 to-purple-50/70 dark:from-indigo-950/60 dark:via-blue-950/40 dark:to-purple-950/40 border border-indigo-200 dark:border-indigo-800/80 shadow-2xs mb-3 sm:mb-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div className="flex items-start gap-2.5 sm:gap-3">
-                      <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-black text-xs sm:text-sm shrink-0 shadow-2xs mt-0.5">
-                        U{activeUnit.number}
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                          <h4 className="font-bold text-gray-900 dark:text-gray-100 text-xs sm:text-sm">
-                            Unit {activeUnit.number}: {activeUnit.name}
-                          </h4>
-                          <span className="text-[9px] sm:text-[10px] px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/80 text-indigo-700 dark:text-indigo-300 font-bold border border-indigo-200 dark:border-indigo-700">
-                            {(activeUnit.topics || []).length || 1} Topics
-                          </span>
+            <div className="flex-1 overflow-y-auto overflow-x-hidden p-2 sm:p-6 w-full">
+              <div className="max-w-4xl mx-auto w-full space-y-3 sm:space-y-6">
+                {/* Unit-Specific Masterclass Focus Banner */}
+                {activeUnit && (
+                  <div className="p-3 sm:p-4 rounded-2xl bg-gradient-to-r from-indigo-50/90 via-blue-50/80 to-purple-50/70 dark:from-indigo-950/60 dark:via-blue-950/40 dark:to-purple-950/40 border border-indigo-200 dark:border-indigo-800/80 shadow-2xs mb-3 sm:mb-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="flex items-start gap-2.5 sm:gap-3">
+                        <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-black text-xs sm:text-sm shrink-0 shadow-2xs mt-0.5">
+                          U{activeUnit.number}
                         </div>
-                        <p className="text-[11px] sm:text-xs text-gray-600 dark:text-gray-300 line-clamp-2 mt-1 leading-relaxed">
-                          {(activeUnit.topics || []).join(' • ') || activeUnit.description || 'Core university syllabus'}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 flex-wrap">
-                      <button
-                        onClick={() => handleExplainFullUnit(activeUnit)}
-                        disabled={loading}
-                        className="px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition-colors disabled:opacity-50"
-                        title="Prompt AI to explain the complete unit from start to finish with all syllabus topics"
-                      >
-                        <Sparkles className="w-3.5 h-3.5" />
-                        <span>Explain Complete Unit</span>
-                      </button>
-                      <button
-                        onClick={() => handleInsertUnitPrompt(activeUnit)}
-                        className="px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 font-semibold text-xs hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                        title="Load complete syllabus prompt into message box"
-                      >
-                        Load Prompt
-                      </button>
-                      <button
-                        onClick={() => setSelectedUnitNumber(null)}
-                        className="p-1.5 sm:p-2 rounded-xl text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-white dark:hover:bg-gray-800 transition-colors"
-                        title="Close unit focus"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {messages.map((msg, index) => {
-                const isUser = msg.role === 'user';
-                return (
-                  <div
-                    key={msg.id || index}
-                    className={`flex gap-1.5 sm:gap-3 w-full max-w-3xl ${isUser ? 'ml-auto justify-end' : 'mr-auto justify-start'}`}
-                  >
-                    {!isUser && (
-                      <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl overflow-hidden flex items-center justify-center shrink-0 shadow-2xs mt-0.5 bg-transparent">
-                        <img src="/Logo.png" alt="SANKALP AI" className="w-full h-full object-contain" />
-                      </div>
-                    )}
-
-                    <div
-                      className={`flex-1 min-w-0 max-w-full rounded-2xl p-3 sm:p-5 shadow-xs transition-all overflow-hidden break-words ${
-                        isUser
-                          ? 'bg-indigo-600 text-white rounded-br-xs max-w-[88%] sm:max-w-[80%]'
-                          : 'bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-gray-100 rounded-bl-xs w-full'
-                      }`}
-                    >
-                      {/* Meta header for user message */}
-                      {isUser && msg.marksFormat && (
-                        <div className="flex items-center gap-2 mb-1 text-[10px] sm:text-[11px] text-indigo-100/80">
-                          <span className="font-bold">{msg.marksFormat} Marks Target</span>
-                          <span>&bull;</span>
-                          <span className="capitalize">{msg.language || 'English'}</span>
-                        </div>
-                      )}
-
-                      {isUser ? (
-                        <p className="text-[13px] sm:text-sm font-medium whitespace-pre-wrap leading-relaxed">{msg.content}</p>
-                      ) : (
-                        <div className="min-w-0 max-w-full overflow-hidden">
-                          {msg.learnByBook && (
-                            <div className="flex items-center gap-1.5 mb-2">
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 truncate max-w-full">
-                                <BookOpen className="w-3 h-3 shrink-0" /> Prescribed Book: {msg.bookTitle || 'Official University Textbook'}
-                              </span>
-                            </div>
-                          )}
-                          <MarkdownRenderer content={msg.content} className="text-[13px] sm:text-sm leading-relaxed" />
-                        </div>
-                      )}
-
-                      {/* Actions for Assistant Messages */}
-                      {!isUser && index !== 0 && (
-                        <div className="flex flex-wrap items-center justify-between gap-2 mt-3 pt-2 border-t border-gray-100 dark:border-gray-800 text-xs text-gray-400">
-                          <div className="flex items-center gap-2">
-                            <span className="text-[10px] text-gray-400">
-                              {msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                        <div>
+                          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                            <h4 className="font-bold text-gray-900 dark:text-gray-100 text-xs sm:text-sm">
+                              Unit {activeUnit.number}: {activeUnit.name}
+                            </h4>
+                            <span className="text-[9px] sm:text-[10px] px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/80 text-indigo-700 dark:text-indigo-300 font-bold border border-indigo-200 dark:border-indigo-700">
+                              {(activeUnit.topics || []).length || 1} Topics
                             </span>
-                            {msg.isCached && (
-                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-850 shadow-2xs">
-                                <Zap className="w-2.5 h-2.5 text-amber-500 fill-amber-500" />
-                                <span>Cached (0 Groq Tokens)</span>
+                          </div>
+                          <p className="text-[11px] sm:text-xs text-gray-600 dark:text-gray-300 line-clamp-2 mt-1 leading-relaxed">
+                            {(activeUnit.topics || []).join(' • ') || activeUnit.description || 'Core university syllabus'}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 flex-wrap">
+                        <button
+                          onClick={() => handleExplainFullUnit(activeUnit)}
+                          disabled={loading}
+                          className="px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition-colors disabled:opacity-50"
+                          title="Prompt AI to explain the complete unit from start to finish with all syllabus topics"
+                        >
+                          <Sparkles className="w-3.5 h-3.5" />
+                          <span>Explain Complete Unit</span>
+                        </button>
+                        <button
+                          onClick={() => handleInsertUnitPrompt(activeUnit)}
+                          className="px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 font-semibold text-xs hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                          title="Load complete syllabus prompt into message box"
+                        >
+                          Load Prompt
+                        </button>
+                        <button
+                          onClick={() => setSelectedUnitNumber(null)}
+                          className="p-1.5 sm:p-2 rounded-xl text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-white dark:hover:bg-gray-800 transition-colors"
+                          title="Close unit focus"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {messages.map((msg, index) => {
+                  const isUser = msg.role === 'user';
+                  return (
+                    <div
+                      key={msg.id || index}
+                      className={`flex gap-2 sm:gap-3 w-full ${isUser ? 'justify-end' : 'justify-start'}`}
+                    >
+                      {!isUser && (
+                        <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl overflow-hidden flex items-center justify-center shrink-0 shadow-2xs mt-0.5 bg-transparent">
+                          <img src="/Logo.png" alt="SANKALP AI" className="w-full h-full object-contain" />
+                        </div>
+                      )}
+
+                      <div
+                        className={`min-w-0 rounded-2xl p-3 sm:p-5 shadow-xs transition-all overflow-hidden break-words ${
+                          isUser
+                            ? 'bg-indigo-600 text-white rounded-br-xs max-w-[85%] sm:max-w-[75%]'
+                            : 'flex-1 bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-gray-100 rounded-bl-xs'
+                        }`}
+                      >
+                        {/* Meta header for user message */}
+                        {isUser && msg.marksFormat && (
+                          <div className="flex items-center gap-2 mb-1 text-[10px] sm:text-[11px] text-indigo-100/80">
+                            <span className="font-bold">{msg.marksFormat} Marks Target</span>
+                            <span>&bull;</span>
+                            <span className="capitalize">{msg.language || 'English'}</span>
+                          </div>
+                        )}
+
+                        {isUser ? (
+                          <p className="text-[13px] sm:text-sm font-medium whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+                        ) : (
+                          <div className="min-w-0 max-w-full overflow-hidden">
+                            {msg.learnByBook && (
+                              <div className="flex items-center gap-1.5 mb-2">
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 truncate max-w-full">
+                                  <BookOpen className="w-3 h-3 shrink-0" /> Prescribed Book: {msg.bookTitle || 'Official University Textbook'}
+                                </span>
+                              </div>
+                            )}
+                            <MarkdownRenderer content={msg.content} className="text-[13px] sm:text-sm leading-relaxed" />
+                          </div>
+                        )}
+
+                        {/* Actions for Assistant Messages */}
+                        {!isUser && index !== 0 && (
+                          <div className="flex flex-wrap items-center justify-between gap-2 mt-3 pt-2 border-t border-gray-100 dark:border-gray-800 text-xs text-gray-400">
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] text-gray-400">
+                                {msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
                               </span>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-1.5 sm:gap-2">
-                            {msg.cachedPrompt && (
-                              <button
-                                onClick={() => executePrompt(msg.cachedPrompt, { forceFresh: true })}
-                                className="px-2 py-1 rounded-lg text-gray-500 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition-colors flex items-center gap-1 text-[11px]"
-                                title="Bypass local cache and regenerate a fresh answer directly from Groq AI"
-                              >
-                                <RotateCcw className="w-3 h-3 text-amber-500" />
-                                <span>Fresh AI</span>
-                              </button>
-                            )}
-                            <button
-                              onClick={() => handleCopy(msg.content, index)}
-                              className="p-1 hover:text-indigo-600 dark:hover:text-indigo-400 rounded transition-colors flex items-center gap-1"
-                              title="Copy Answer"
-                            >
-                              {copiedIndex === index ? (
-                                <Check className="w-3.5 h-3.5 text-emerald-500" />
-                              ) : (
-                                <Copy className="w-3.5 h-3.5" />
+                              {msg.isCached && (
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-850 shadow-2xs">
+                                  <Zap className="w-2.5 h-2.5 text-amber-500 fill-amber-500" />
+                                  <span>Cached (0 Groq Tokens)</span>
+                                </span>
                               )}
-                              <span className="text-[11px]">{copiedIndex === index ? 'Copied' : 'Copy'}</span>
-                            </button>
-                            <button
-                              onClick={() => handleSaveToBookmarks(msg.content)}
-                              className="p-1 hover:text-indigo-600 dark:hover:text-indigo-400 rounded transition-colors flex items-center gap-1"
-                              title="Save to Bookmarks"
-                            >
-                              <Bookmark className="w-3.5 h-3.5" />
-                              <span className="text-[11px]">Save</span>
-                            </button>
+                            </div>
+                            <div className="flex items-center gap-1.5 sm:gap-2">
+                              {msg.cachedPrompt && (
+                                <button
+                                  onClick={() => executePrompt(msg.cachedPrompt, { forceFresh: true })}
+                                  className="px-2 py-1 rounded-lg text-gray-500 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition-colors flex items-center gap-1 text-[11px]"
+                                  title="Bypass local cache and regenerate a fresh answer directly from Groq AI"
+                                >
+                                  <RotateCcw className="w-3 h-3 text-amber-500" />
+                                  <span>Fresh AI</span>
+                                </button>
+                              )}
+                              <button
+                                onClick={() => handleCopy(msg.content, index)}
+                                className="p-1 hover:text-indigo-600 dark:hover:text-indigo-400 rounded transition-colors flex items-center gap-1"
+                                title="Copy Answer"
+                              >
+                                {copiedIndex === index ? (
+                                  <Check className="w-3.5 h-3.5 text-emerald-500" />
+                                ) : (
+                                  <Copy className="w-3.5 h-3.5" />
+                                )}
+                                <span className="text-[11px]">{copiedIndex === index ? 'Copied' : 'Copy'}</span>
+                              </button>
+                              <button
+                                onClick={() => handleSaveToBookmarks(msg.content)}
+                                className="p-1 hover:text-indigo-600 dark:hover:text-indigo-400 rounded transition-colors flex items-center gap-1"
+                                title="Save to Bookmarks"
+                              >
+                                <Bookmark className="w-3.5 h-3.5" />
+                                <span className="text-[11px]">Save</span>
+                              </button>
+                            </div>
                           </div>
+                        )}
+                      </div>
+
+                      {isUser && (
+                        <div className="w-8 h-8 rounded-xl bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-400 flex items-center justify-center shrink-0 mt-1">
+                          <User className="w-4 h-4" />
                         </div>
                       )}
                     </div>
+                  );
+                })}
 
-                    {isUser && (
-                      <div className="w-8 h-8 rounded-xl bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-400 flex items-center justify-center shrink-0 mt-1">
-                        <User className="w-4 h-4" />
-                      </div>
-                    )}
+                {loading && (
+                  <div className="flex gap-2 sm:gap-3 w-full justify-start items-center text-indigo-600 dark:text-indigo-400 text-xs font-semibold py-2">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl overflow-hidden flex items-center justify-center shrink-0 animate-pulse">
+                      <img src="/Logo.png" alt="SANKALP AI" className="w-full h-full object-contain" />
+                    </div>
+                    <span>SANKALP AI is formulating your university exam answer...</span>
                   </div>
-                );
-              })}
-
-              {loading && (
-                <div className="flex gap-3 max-w-3xl mr-auto items-center text-indigo-600 dark:text-indigo-400 text-xs font-semibold py-2">
-                  <div className="w-8 h-8 rounded-xl overflow-hidden flex items-center justify-center shrink-0 animate-pulse">
-                    <img src="/Logo.png" alt="SANKALP AI" className="w-full h-full object-contain" />
-                  </div>
-                  <span>SANKALP AI is formulating your university exam answer...</span>
-                </div>
-              )}
-              <div ref={messagesEndRef} />
+                )}
+                <div ref={messagesEndRef} />
+              </div>
             </div>
           )}
 
@@ -959,7 +961,7 @@ Please structure the explanation as follows:
 
         {/* Right Optional Academic Context Panel */}
         {contextPanelOpen && (
-          <aside className="hidden lg:flex flex-col w-80 bg-white dark:bg-[#111827] border-l border-gray-200 dark:border-gray-800 p-4 overflow-y-auto space-y-6">
+          <aside className="hidden lg:flex flex-col w-80 shrink-0 bg-white dark:bg-[#111827] border-l border-gray-200 dark:border-gray-800 p-4 overflow-y-auto space-y-6">
             <div>
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1.5">

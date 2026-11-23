@@ -67,8 +67,12 @@ const useAppStore = create((set, get) => {
         if (fromSession) return fromSession;
         const fromLocal = localStorage.getItem('sankalp_setting_groq_api_key');
         if (fromLocal) {
-          const parsed = JSON.parse(fromLocal);
-          if (parsed && typeof parsed === 'string') return parsed;
+          try {
+            const parsed = JSON.parse(fromLocal);
+            if (parsed && typeof parsed === 'string') return parsed;
+          } catch {
+            return fromLocal;
+          }
         }
       } catch {}
       return '';
@@ -81,9 +85,15 @@ const useAppStore = create((set, get) => {
         }
         const fromLocal = localStorage.getItem('sankalp_setting_groq_model');
         if (fromLocal) {
-          const parsed = JSON.parse(fromLocal);
-          if (parsed && typeof parsed === 'string' && !parsed.includes('llama-3') && !parsed.startsWith('llama3')) {
-            return parsed;
+          try {
+            const parsed = JSON.parse(fromLocal);
+            if (parsed && typeof parsed === 'string' && !parsed.includes('llama-3') && !parsed.startsWith('llama3')) {
+              return parsed;
+            }
+          } catch {
+            if (typeof fromLocal === 'string' && !fromLocal.includes('llama-3') && !fromLocal.startsWith('llama3')) {
+              return fromLocal;
+            }
           }
         }
       } catch {}
@@ -94,7 +104,14 @@ const useAppStore = create((set, get) => {
         const s = sessionStorage.getItem('sankalp_groq_session_key');
         if (s) return true;
         const l = localStorage.getItem('sankalp_setting_groq_api_key');
-        if (l && JSON.parse(l)) return true;
+        if (l) {
+          try {
+            const parsed = JSON.parse(l);
+            return Boolean(parsed);
+          } catch {
+            return Boolean(l.trim());
+          }
+        }
       } catch {}
       return false;
     })(),

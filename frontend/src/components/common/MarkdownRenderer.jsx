@@ -68,7 +68,36 @@ function cleanMarkdown(text) {
   // 9. Ensure bullet lists have a blank line before them if preceded by a paragraph
   clean = clean.replace(/([^\n\-*•\d])\n+([-*•]\s+)/g, '$1\n\n$2');
 
+  // 10. Normalize HTML <br> tags
+  clean = clean.replace(/&lt;br\s*\/?&gt;/gi, '<br>');
+
   return clean;
+}
+
+/**
+ * Recursively parses raw <br> / <br/> tags inside text nodes and replaces them
+ * with true JSX <br /> elements so tables and paragraphs render multiline content cleanly.
+ */
+function renderWithBr(children) {
+  if (children === null || children === undefined) return children;
+  return React.Children.map(children, (child, index) => {
+    if (typeof child === 'string') {
+      if (!/<br\s*\/?>/i.test(child)) return child;
+      const parts = child.split(/<br\s*\/?>/gi);
+      return parts.map((part, pIdx) => (
+        <React.Fragment key={`${index}-${pIdx}`}>
+          {pIdx > 0 && <br />}
+          {part}
+        </React.Fragment>
+      ));
+    }
+    if (React.isValidElement(child) && child.props && child.props.children) {
+      return React.cloneElement(child, {
+        children: renderWithBr(child.props.children),
+      });
+    }
+    return child;
+  });
 }
 
 /**
@@ -81,23 +110,25 @@ export default function MarkdownRenderer({ content, className = '' }) {
   if (!sanitized) return null;
 
   return (
-    <div className={`prose-custom ${className}`}>
+    <div className={`prose-custom w-full max-w-full overflow-hidden break-words ${className}`}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
           table: ({ node, ...props }) => (
-            <div className="overflow-x-auto my-3 rounded-xl border border-gray-200 dark:border-gray-700 shadow-2xs">
+            <div className="overflow-x-auto my-3 rounded-xl border border-gray-200 dark:border-gray-700 shadow-2xs max-w-full">
               <table {...props} className="w-full text-left text-[0.9em] border-collapse" />
             </div>
           ),
           thead: ({ node, ...props }) => (
             <thead {...props} className="bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-bold uppercase tracking-wider text-[0.82em]" />
           ),
-          th: ({ node, ...props }) => (
+          th: ({ node, children, ...props }) => (
             <th
               {...props}
               className="px-3.5 py-2.5 font-bold border-b border-r last:border-r-0 border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-            />
+            >
+              {renderWithBr(children)}
+            </th>
           ),
           tbody: ({ node, ...props }) => (
             <tbody {...props} className="divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-gray-900/60" />
@@ -105,11 +136,13 @@ export default function MarkdownRenderer({ content, className = '' }) {
           tr: ({ node, ...props }) => (
             <tr {...props} className="hover:bg-gray-50/80 dark:hover:bg-gray-800/50 transition-colors" />
           ),
-          td: ({ node, ...props }) => (
+          td: ({ node, children, ...props }) => (
             <td
               {...props}
               className="px-3.5 py-2.5 border-r last:border-r-0 border-gray-100 dark:border-gray-800 text-gray-800 dark:text-gray-200 leading-relaxed text-[0.95em]"
-            />
+            >
+              {renderWithBr(children)}
+            </td>
           ),
           h1: ({ node, ...props }) => (
             <h1 {...props} className="text-[1.4em] font-bold text-gray-900 dark:text-gray-100 mt-4 mb-2 pb-1.5 border-b border-gray-200 dark:border-gray-800" />
@@ -123,8 +156,10 @@ export default function MarkdownRenderer({ content, className = '' }) {
           h4: ({ node, ...props }) => (
             <h4 {...props} className="text-[1.02em] font-bold text-gray-800 dark:text-gray-200 mt-2 mb-1" />
           ),
-          p: ({ node, ...props }) => (
-            <p {...props} className="mb-2.5 leading-relaxed text-gray-800 dark:text-gray-200 text-[1em]" />
+          p: ({ node, children, ...props }) => (
+            <p {...props} className="mb-2.5 leading-relaxed text-gray-800 dark:text-gray-200 text-[1em]">
+              {renderWithBr(children)}
+            </p>
           ),
           ul: ({ node, ...props }) => (
             <ul {...props} className="list-disc pl-5 my-2.5 space-y-1.5 text-gray-800 dark:text-gray-200 text-[1em]" />
@@ -132,8 +167,10 @@ export default function MarkdownRenderer({ content, className = '' }) {
           ol: ({ node, ...props }) => (
             <ol {...props} className="list-decimal pl-5 my-2.5 space-y-1.5 text-gray-800 dark:text-gray-200 text-[1em]" />
           ),
-          li: ({ node, ...props }) => (
-            <li {...props} className="leading-relaxed" />
+          li: ({ node, children, ...props }) => (
+            <li {...props} className="leading-relaxed">
+              {renderWithBr(children)}
+            </li>
           ),
           strong: ({ node, ...props }) => (
             <strong {...props} className="font-bold text-gray-900 dark:text-white" />

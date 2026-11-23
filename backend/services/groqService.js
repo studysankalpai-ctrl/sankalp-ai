@@ -26,7 +26,7 @@ const chatCompletion = async ({
   messages,
   model = 'openai/gpt-oss-120b',
   temperature = 0.5,
-  max_tokens = 1500,
+  max_tokens = 4096,
 }) => {
   if (!apiKey || typeof apiKey !== 'string' || !apiKey.trim().startsWith('gsk_')) {
     throw new Error('Valid Groq API key is required (starts with gsk_). Please configure your key in Settings.');
@@ -79,8 +79,60 @@ const chatCompletion = async ({
     }
 
     const data = await response.json();
-    const content = data.choices?.[0]?.message?.content || '';
-    const usage = data.usage || {};
+    let content = data.choices?.[0]?.message?.content || '';
+    let finishReason = data.choices?.[0]?.finish_reason;
+    let usage = data.usage || {};
+
+    // Auto-Continuation: If response was cut off mid-sentence due to token limit (finish_reason === 'length'),
+    // automatically issue a seamless continuation request so the student receives a 100% complete answer.
+    let continuationAttempts = 0;
+    while (finishReason === 'length' && continuationAttempts < 2) {
+      continuationAttempts++;
+      console.log(`[Groq Service] Response truncated by max_tokens (finish_reason: length). Auto-continuing response (Attempt ${continuationAttempts})...`);
+
+      try {
+        const continuationMessages = [
+          ...messages,
+          { role: 'assistant', content: content },
+          { role: 'user', content: 'Continue the response exactly from where you stopped. Do not repeat anything previously written, continue the answer seamlessly to completion.' },
+        ];
+
+        const contResponse = await fetch(`${GROQ_BASE_URL}/chat/completions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey.trim()}`,
+          },
+          body: JSON.stringify({
+            model: chosenModel,
+            messages: continuationMessages,
+            temperature,
+            max_tokens: Math.min(max_tokens || 4096, 4096),
+          }),
+        });
+
+        if (contResponse.ok) {
+          const contData = await contResponse.json();
+          const contContent = contData.choices?.[0]?.message?.content || '';
+          if (contContent) {
+            content += '\n' + contContent;
+          }
+          finishReason = contData.choices?.[0]?.finish_reason;
+          if (contData.usage) {
+            usage = {
+              prompt_tokens: (usage.prompt_tokens || 0) + (contData.usage.prompt_tokens || 0),
+              completion_tokens: (usage.completion_tokens || 0) + (contData.usage.completion_tokens || 0),
+              total_tokens: (usage.total_tokens || 0) + (contData.usage.total_tokens || 0),
+            };
+          }
+        } else {
+          break;
+        }
+      } catch (contErr) {
+        console.warn('[Groq Service] Auto-continuation failed:', contErr.message);
+        break;
+      }
+    }
 
     return {
       content,

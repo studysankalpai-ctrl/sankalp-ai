@@ -32,7 +32,7 @@ export default function AppLayout() {
 
       {/* Main Content Area */}
       <main
-        className={`flex-1 transition-all duration-300 ${
+        className={`flex-1 min-w-0 transition-all duration-300 ${
           isFullBleedPage
             ? 'h-[calc(100vh-4rem)] mt-16 flex flex-col overflow-hidden p-0 m-0'
             : 'h-[calc(100vh-4rem)] mt-16 overflow-y-auto overflow-x-hidden flex flex-col justify-between'
@@ -41,7 +41,7 @@ export default function AppLayout() {
         <div
           className={
             isFullBleedPage
-              ? 'p-0 m-0 w-full h-full flex-1 overflow-hidden'
+              ? 'p-0 m-0 w-full h-full flex-1 min-w-0 overflow-hidden'
               : 'max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 flex-1 w-full'
           }
         >
