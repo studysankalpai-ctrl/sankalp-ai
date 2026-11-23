@@ -21,8 +21,11 @@ import {
   Sun,
   Moon,
   Mail,
+  Download,
+  Smartphone,
 } from 'lucide-react';
 import useAppStore from '../../store/appStore';
+import { usePwaStore } from '../../store/pwaStore';
 import { APP_NAME } from '../../lib/constants';
 import toast from 'react-hot-toast';
 
@@ -57,6 +60,8 @@ export default function Sidebar() {
     selectedSemester,
     setSelectedSemester,
   } = useAppStore();
+
+  const { isInstallable, isInstalled, isIos, promptInstall } = usePwaStore();
 
   const navSections = [
     {
@@ -293,6 +298,27 @@ export default function Sidebar() {
 
         {/* Sidebar Footer Controls */}
         <div className="p-3 border-t border-gray-100 dark:border-gray-800 space-y-1.5">
+          {/* Mobile PWA Install Button */}
+          {!isInstalled && (isInstallable || isIos) && (
+            <button
+              onClick={promptInstall}
+              className={`w-full flex items-center gap-2.5 py-2 px-2.5 text-xs font-bold rounded-xl transition-all ${
+                sidebarCollapsed ? 'justify-center px-0' : 'justify-between'
+              } bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800/80 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/60`}
+              title="Install SANKALP Mobile App"
+            >
+              <div className="flex items-center gap-2">
+                <Smartphone className="w-4 h-4 text-indigo-500 shrink-0" />
+                {!sidebarCollapsed && <span>Install Mobile App</span>}
+              </div>
+              {!sidebarCollapsed && (
+                <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-indigo-600 text-white font-extrabold uppercase">
+                  App
+                </span>
+              )}
+            </button>
+          )}
+
           {/* Quick Theme Toggle */}
           <button
             onClick={() => {

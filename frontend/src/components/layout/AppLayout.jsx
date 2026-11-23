@@ -4,17 +4,21 @@ import Sidebar from './Sidebar';
 import Header from './Header';
 import SearchModal from '../common/SearchModal';
 import ErrorBoundary from '../common/ErrorBoundary';
+import PwaInstallPrompt from '../common/PwaInstallPrompt';
 import useAppStore from '../../store/appStore';
+import { usePwaStore } from '../../store/pwaStore';
 
 export default function AppLayout() {
   const { sidebarCollapsed, initTheme, initAiCredentials } = useAppStore();
+  const { initPwa } = usePwaStore();
   const location = useLocation();
   const isPdfPage = location.pathname.startsWith('/pdf/');
 
   useEffect(() => {
     initTheme();
     initAiCredentials();
-  }, [initTheme, initAiCredentials]);
+    initPwa();
+  }, [initTheme, initAiCredentials, initPwa]);
 
   return (
     <div className="min-h-screen bg-[#F7F8FC] dark:bg-[#0B1020] text-gray-900 dark:text-gray-100 flex flex-col selection:bg-indigo-500 selection:text-white">
@@ -76,6 +80,9 @@ export default function AppLayout() {
 
       {/* Global Search Dialog */}
       <SearchModal />
+
+      {/* PWA Mobile App Installation Prompt */}
+      <PwaInstallPrompt />
     </div>
   );
 }
