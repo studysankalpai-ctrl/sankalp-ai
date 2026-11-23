@@ -21,7 +21,7 @@ export default function AppLayout() {
   }, [initTheme, initAiCredentials, initPwa]);
 
   return (
-    <div className="min-h-screen bg-[#F7F8FC] dark:bg-[#0B1020] text-gray-900 dark:text-gray-100 flex flex-col selection:bg-indigo-500 selection:text-white">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#F7F8FC] dark:bg-[#0B1020] text-gray-900 dark:text-gray-100 flex flex-col selection:bg-indigo-500 selection:text-white">
       {/* Sidebar Navigation */}
       <Sidebar />
 

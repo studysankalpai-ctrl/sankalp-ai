@@ -35,6 +35,8 @@
 
   html {
     color-scheme: light;
+    overflow-x: hidden;
+    max-width: 100%;
   }
 
   html.dark {
@@ -47,6 +49,8 @@ body {
   background-color: var(--bg-main);
   color: var(--text-main);
   overflow-x: hidden;
+  max-width: 100%;
+  width: 100%;
 }
 
 /* Custom Scrollbars */

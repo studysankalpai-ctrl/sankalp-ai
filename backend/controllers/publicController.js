@@ -14,6 +14,34 @@ const Book = require('../models/Book');
 const { successResponse, errorResponse } = require('../utils/apiResponse');
 const { streamFromGridFS, resolveLocalFilePath, existsInGridFS } = require('../services/storageService');
 
+// High-speed in-memory cache for instant switching
+let academicTreeCache = null;
+let academicTreeCacheTime = 0;
+
+// GET /api/public/academic-tree - Returns entire published academic hierarchy in one instant query
+const getAcademicTree = async (req, res, next) => {
+  try {
+    res.setHeader('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
+    if (academicTreeCache && Date.now() - academicTreeCacheTime < 60000) {
+      return successResponse(res, academicTreeCache, 'Academic hierarchy (cached)');
+    }
+
+    const [courses, semesters, subjects] = await Promise.all([
+      Course.find({ is_archived: { $ne: true } }).sort({ sort_order: 1, name: 1 }).lean(),
+      Semester.find({ is_archived: { $ne: true } }).sort({ number: 1, sort_order: 1 }).lean(),
+      Subject.find({ is_archived: { $ne: true } }).sort({ sort_order: 1, name: 1 }).lean(),
+    ]);
+
+    const result = { courses, semesters, subjects };
+    academicTreeCache = result;
+    academicTreeCacheTime = Date.now();
+
+    return successResponse(res, result, 'Academic hierarchy');
+  } catch (error) {
+    next(error);
+  }
+};
+
 // GET /api/public/courses
 const getPublishedCourses = async (req, res, next) => {
   try {
@@ -649,6 +677,7 @@ const getSubjectBooks = async (req, res, next) => {
 };
 
 module.exports = {
+  getAcademicTree,
   getPublishedCourses,
   getCourseSemesters,
   getSemesterSubjects,

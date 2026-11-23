@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const {
+  getAcademicTree,
   getPublishedCourses,
   getCourseSemesters,
   getSemesterSubjects,
@@ -21,6 +22,7 @@ const {
   getSubjectBooks,
 } = require('../controllers/publicController');
 
+router.get('/academic-tree', getAcademicTree);
 router.get('/courses', getPublishedCourses);
 router.get('/courses/:courseId/semesters', getCourseSemesters);
 router.get('/semesters/:semesterId/subjects', getSemesterSubjects);

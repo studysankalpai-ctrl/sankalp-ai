@@ -19,6 +19,7 @@ api.interceptors.request.use((config) => {
 
 // Public Student API (No login required)
 export const publicApi = {
+  getAcademicTree: () => api.get('/public/academic-tree'),
   getCourses: () => api.get('/public/courses'),
   getSemesters: (courseId) => api.get(`/public/courses/${courseId}/semesters`),
   getSubjects: (semesterId) => api.get(`/public/semesters/${semesterId}/subjects`),

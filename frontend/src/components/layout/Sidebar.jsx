@@ -59,6 +59,9 @@ export default function Sidebar() {
     semesters,
     selectedSemester,
     setSelectedSemester,
+    subjects,
+    selectedSubject,
+    setSelectedSubject,
   } = useAppStore();
 
   const { isInstallable, isInstalled, isIos, promptInstall } = usePwaStore();
@@ -189,6 +192,27 @@ export default function Sidebar() {
                       semesters.map((s) => (
                         <option key={s._id} value={s._id}>
                           {s.name}
+                        </option>
+                      ))
+                    )}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-0.5">Subject</label>
+                  <select
+                    value={selectedSubject?._id || ''}
+                    onChange={(e) => {
+                      const sub = subjects.find((x) => x._id === e.target.value);
+                      if (sub) setSelectedSubject(sub);
+                    }}
+                    className="w-full px-2.5 py-1.5 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 font-semibold text-gray-800 dark:text-gray-200 focus:outline-none"
+                  >
+                    {subjects.length === 0 ? (
+                      <option value="">No Subjects Available</option>
+                    ) : (
+                      subjects.map((sub) => (
+                        <option key={sub._id} value={sub._id}>
+                          {sub.code ? `${sub.code} - ${sub.name}` : sub.name}
                         </option>
                       ))
                     )}

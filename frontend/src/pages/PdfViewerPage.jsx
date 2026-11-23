@@ -51,6 +51,7 @@ export default function PdfViewerPage() {
   const [aiPanelOpen, setAiPanelOpen] = useState(
     typeof window !== 'undefined' ? window.innerWidth >= 1024 : true
   );
+  const [mobileView, setMobileView] = useState('pdf'); // 'pdf' | 'ai' (Mobile tab switcher)
   const [aiLoading, setAiLoading] = useState(false);
   const [aiOutput, setAiOutput] = useState('');
   const [selectedActionTitle, setSelectedActionTitle] = useState('');
@@ -201,6 +202,8 @@ Structure the answer strictly for ${marks} marks according to university grading
     setCustomQuestionInput('');
     setAiLoading(true);
     setSelectedActionTitle(actionType);
+    setMobileView('ai');
+    setAiPanelOpen(true);
 
     try {
       // Determine the exact subject ID associated with this document
@@ -303,21 +306,21 @@ Structure the answer strictly for ${marks} marks according to university grading
       } flex flex-col bg-gray-100 dark:bg-gray-950 overflow-hidden z-20 transition-all duration-300`}
     >
       {/* Top Toolbar */}
-      <div className="h-12 sm:h-14 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-3 sm:px-4 flex items-center justify-between shrink-0 shadow-2xs z-10">
+      <div className="h-12 sm:h-14 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-2.5 sm:px-4 flex items-center justify-between shrink-0 shadow-2xs z-10 gap-1.5 sm:gap-2">
         {/* Left: Back & Filename */}
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+        <div className="flex items-center gap-1.5 sm:gap-3 min-w-0 flex-1 max-w-[42%] sm:max-w-[38%]">
           <Link
             to="/library"
-            className="p-1.5 rounded-lg text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors shrink-0"
+            className="p-1 sm:p-1.5 rounded-lg text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors shrink-0"
             title="Back to Academic Library"
           >
             <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
           </Link>
           <div className="min-w-0">
-            <h2 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-gray-100 truncate max-w-[130px] sm:max-w-xs md:max-w-md">
+            <h2 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-gray-100 truncate">
               {file?.title || file?.original_filename || 'Academic PDF Document'}
             </h2>
-            <p className="text-[10px] sm:text-[11px] text-gray-400 truncate max-w-[140px] sm:max-w-xs hidden sm:block">
+            <p className="text-[10px] sm:text-[11px] text-gray-400 truncate hidden sm:block">
               {file?.type === 'book'
                 ? `Prescribed Textbook • By ${file.author || 'Author'} (${file.edition || 'Standard Edition'})`
                 : file?.subject?.name
@@ -327,12 +330,68 @@ Structure the answer strictly for ${marks} marks according to university grading
           </div>
         </div>
 
-        {/* Right: Master Paper Button, Zoom, Print, Download, Fullscreen & AI Toggle */}
-        <div className="flex items-center gap-1 sm:gap-2">
+        {/* Center / Mobile View Switcher */}
+        <div className="flex items-center justify-center shrink-0">
+          {/* Mobile Phone Segmented Toggle: [ PDF | ✦ AI Tutor ] */}
+          <div className="flex md:hidden items-center bg-gray-100 dark:bg-gray-800 rounded-xl p-0.5 border border-gray-200 dark:border-gray-700/80 shadow-2xs">
+            <button
+              onClick={() => setMobileView('pdf')}
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all ${
+                mobileView === 'pdf'
+                  ? 'bg-white dark:bg-gray-900 text-indigo-600 dark:text-indigo-400 shadow-2xs'
+                  : 'text-gray-500 dark:text-gray-400'
+              }`}
+            >
+              PDF
+            </button>
+            <button
+              onClick={() => {
+                setMobileView('ai');
+                setAiPanelOpen(true);
+              }}
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1 ${
+                mobileView === 'ai'
+                  ? 'bg-indigo-600 text-white shadow-2xs'
+                  : 'text-gray-500 dark:text-gray-400'
+              }`}
+            >
+              <Sparkles className="w-3 h-3" />
+              <span>AI Tutor</span>
+            </button>
+          </div>
+
+          {/* Desktop Centered Zoom Controls */}
+          <div className="hidden md:flex items-center gap-1 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700/80 rounded-xl p-1 text-xs text-gray-600 dark:text-gray-300 shadow-2xs">
+            <button
+              onClick={() => setZoomLevel((z) => Math.max(50, z - 15))}
+              className="p-1 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition-colors text-gray-600 dark:text-gray-300"
+              title="Zoom Out"
+            >
+              <ZoomOut className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => setZoomLevel(100)}
+              className="px-1.5 py-0.5 rounded-md hover:bg-white dark:hover:bg-gray-700 text-[11px] font-mono font-bold transition-colors cursor-pointer"
+              title="Click to reset zoom to 100%"
+            >
+              {zoomLevel}%
+            </button>
+            <button
+              onClick={() => setZoomLevel((z) => Math.min(200, z + 15))}
+              className="p-1 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition-colors text-gray-600 dark:text-gray-300"
+              title="Zoom In"
+            >
+              <ZoomIn className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Right: Master Paper Button, Print, Download, Fullscreen & Desktop AI Toggle */}
+        <div className="flex items-center gap-1 sm:gap-2 justify-end flex-1 min-w-0">
           {file?.type === 'book' ? (
             <Link
               to={`/mentor?bookId=${file._id}&learnByBook=true`}
-              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs transition-all"
+              className="hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs transition-all shrink-0"
               title="Open Universal AI Exam Mentor in Learn by Book mode"
             >
               <Sparkles className="w-3.5 h-3.5" />
@@ -342,7 +401,7 @@ Structure the answer strictly for ${marks} marks according to university grading
             <button
               onClick={handleGenerateMasterFinalPaper}
               disabled={generatingMasterPaper}
-              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-gray-900 hover:bg-black dark:bg-white dark:hover:bg-gray-100 text-white dark:text-gray-900 shadow-xs transition-all disabled:opacity-50"
+              className="hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-gray-900 hover:bg-black dark:bg-white dark:hover:bg-gray-100 text-white dark:text-gray-900 shadow-xs transition-all disabled:opacity-50 shrink-0"
               title="Synthesize all 5 years into a Master Final Preparation Paper"
             >
               {generatingMasterPaper ? (
@@ -350,34 +409,15 @@ Structure the answer strictly for ${marks} marks according to university grading
               ) : (
                 <FileCheck2 className="w-3.5 h-3.5" />
               )}
-              <span>{generatingMasterPaper ? 'Analyzing 5-Yrs...' : 'Generate 5-Yr Final Paper'}</span>
+              <span>{generatingMasterPaper ? 'Analyzing...' : '5-Yr Paper'}</span>
             </button>
           )}
-
-          {/* Zoom controls */}
-          <div className="hidden sm:flex items-center gap-1 bg-gray-100 dark:bg-gray-800 rounded-xl p-1 text-xs text-gray-600 dark:text-gray-300">
-            <button
-              onClick={() => setZoomLevel((z) => Math.max(50, z - 15))}
-              className="p-1 rounded-lg hover:bg-white dark:hover:bg-gray-700"
-              title="Zoom Out"
-            >
-              <ZoomOut className="w-3.5 h-3.5" />
-            </button>
-            <span className="px-1 text-[11px] font-mono">{zoomLevel}%</span>
-            <button
-              onClick={() => setZoomLevel((z) => Math.min(200, z + 15))}
-              className="p-1 rounded-lg hover:bg-white dark:hover:bg-gray-700"
-              title="Zoom In"
-            >
-              <ZoomIn className="w-3.5 h-3.5" />
-            </button>
-          </div>
 
           <a
             href={pdfViewUrl}
             target="_blank"
             rel="noreferrer"
-            className="p-1.5 sm:p-2 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            className="hidden sm:inline-flex p-1.5 sm:p-2 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors shrink-0"
             title="Open in Full Browser Tab"
           >
             <ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -385,7 +425,7 @@ Structure the answer strictly for ${marks} marks according to university grading
 
           <button
             onClick={handlePrint}
-            className="hidden sm:inline-flex p-2 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            className="hidden md:inline-flex p-2 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors shrink-0"
             title="Print Document"
           >
             <Printer className="w-4 h-4" />
@@ -394,7 +434,7 @@ Structure the answer strictly for ${marks} marks according to university grading
           <a
             href={pdfDownloadUrl}
             download={file?.original_filename || 'document.pdf'}
-            className="p-1.5 sm:p-2 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            className="p-1.5 sm:p-2 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors shrink-0"
             title="Download PDF"
           >
             <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -402,15 +442,16 @@ Structure the answer strictly for ${marks} marks according to university grading
 
           <button
             onClick={handleFullscreen}
-            className="hidden sm:inline-flex p-2 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            className="hidden sm:inline-flex p-2 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors shrink-0"
             title="Toggle Full Screen"
           >
             <Maximize2 className="w-4 h-4" />
           </button>
 
+          {/* Desktop AI Tutor Toggle Button */}
           <button
             onClick={() => setAiPanelOpen(!aiPanelOpen)}
-            className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+            className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 ${
               aiPanelOpen
                 ? 'bg-indigo-600 text-white shadow-xs'
                 : 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800'
@@ -424,38 +465,36 @@ Structure the answer strictly for ${marks} marks according to university grading
 
       {/* Main Split Layout: PDF on Left, Dedicated Document AI Tutor on Right */}
       <div className="flex-1 min-h-0 w-full flex overflow-hidden relative">
-        {/* Left PDF Frame (Full 100% height) */}
-        <div className="flex-1 min-h-0 h-full bg-gray-200 dark:bg-gray-900/80 p-2 sm:p-3 flex flex-col overflow-hidden">
+        {/* Left PDF Frame (Full width on mobile when mobileView === 'pdf', and flex-1 on desktop) */}
+        <div
+          className={`flex-1 min-h-0 h-full bg-gray-100 dark:bg-gray-950 p-1 sm:p-3 flex-col overflow-hidden ${
+            mobileView === 'ai' ? 'hidden md:flex' : 'flex'
+          }`}
+        >
           {pdfViewUrl ? (
-            <div className="w-full h-full flex-1 min-h-0 rounded-2xl overflow-auto shadow-md bg-white border border-gray-300 dark:border-gray-700 relative">
+            <div className="w-full h-full flex-1 min-h-0 rounded-xl sm:rounded-2xl overflow-auto shadow-sm bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 relative flex flex-col">
               <div
                 style={{
                   width: `${zoomLevel}%`,
-                  height: '100%',
+                  height: `${Math.max(100, zoomLevel)}%`,
                   minWidth: '100%',
+                  minHeight: '100%',
                   margin: '0 auto',
-                  transition: 'width 0.15s ease',
+                  transition: 'width 0.15s ease, height 0.15s ease',
                 }}
-                className="h-full flex items-center justify-center"
+                className="flex-1 min-h-0 w-full h-full flex flex-col"
               >
-                <object
-                  data={`${pdfViewUrl}#toolbar=1`}
-                  type="application/pdf"
-                  className="w-full h-full block rounded-2xl border-0 bg-white"
+                <iframe
+                  ref={iframeRef}
+                  src={`${pdfViewUrl}#toolbar=1&navpanes=0&view=FitH`}
+                  className="w-full h-full flex-1 min-h-full block rounded-xl sm:rounded-2xl border-0 bg-white"
                   style={{ width: '100%', height: '100%', minHeight: '100%', border: 'none' }}
-                >
-                  <iframe
-                    ref={iframeRef}
-                    src={`${pdfViewUrl}#toolbar=1`}
-                    className="w-full h-full block rounded-2xl border-0 bg-white"
-                    style={{ width: '100%', height: '100%', minHeight: '100%', border: 'none' }}
-                    title={file?.title || file?.original_filename || 'Academic Document'}
-                  />
-                </object>
+                  title={file?.title || file?.original_filename || 'Academic Document'}
+                />
               </div>
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center h-full p-8 text-center text-gray-400">
+            <div className="flex flex-col items-center justify-center h-full p-6 sm:p-8 text-center text-gray-400">
               <FileQuestion className="w-12 h-12 text-gray-300 dark:text-gray-700 mb-3" />
               <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                 {loadError || 'PDF file not available for display'}
@@ -474,17 +513,27 @@ Structure the answer strictly for ${marks} marks according to university grading
         </div>
 
         {/* Right Dedicated Document AI Assistance Panel */}
-        {aiPanelOpen && (
+        {((typeof window !== 'undefined' && aiPanelOpen) || mobileView === 'ai') && (
           <aside
             className={`${
+              mobileView === 'pdf' ? 'hidden md:flex' : 'flex'
+            } ${
               panelWidthMode === 'wide'
                 ? 'w-full md:w-[540px] lg:w-[640px]'
-                : 'w-full sm:w-96 lg:w-[420px]'
-            } bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 flex flex-col shrink-0 h-full max-h-full min-h-0 shadow-lg z-20 overflow-hidden`}
+                : 'w-full md:w-96 lg:w-[420px]'
+            } bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 flex-col shrink-0 h-full max-h-full min-h-0 shadow-lg z-20 overflow-hidden`}
           >
             {/* 1. Header (shrink-0) */}
-            <div className="p-3 px-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between shrink-0">
+            <div className="p-3 px-3.5 sm:px-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2 min-w-0">
+                {/* Mobile Back to PDF Button */}
+                <button
+                  onClick={() => setMobileView('pdf')}
+                  className="p-1 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors md:hidden shrink-0"
+                  title="Back to PDF"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                </button>
                 <div className="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
                   <Sparkles className="w-3.5 h-3.5" />
                 </div>
@@ -494,7 +543,7 @@ Structure the answer strictly for ${marks} marks according to university grading
                   </h3>
                   <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold truncate flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    <span>Scoped to this PDF ({file?.subject?.code || file?.subject?.name || 'Document'})</span>
+                    <span>Scoped to PDF ({file?.subject?.code || file?.subject?.name || 'Document'})</span>
                   </p>
                 </div>
               </div>
@@ -511,10 +560,10 @@ Structure the answer strictly for ${marks} marks according to university grading
                   </button>
                 )}
 
-                {/* Normal / Wide Mode Toggle */}
+                {/* Normal / Wide Mode Toggle (Desktop only) */}
                 <button
                   onClick={() => setPanelWidthMode((prev) => (prev === 'normal' ? 'wide' : 'normal'))}
-                  className={`p-1.5 rounded-lg border text-xs font-semibold flex items-center gap-1 transition-all ${
+                  className={`hidden sm:flex p-1.5 rounded-lg border text-xs font-semibold items-center gap-1 transition-all ${
                     panelWidthMode === 'wide'
                       ? 'bg-indigo-50 border-indigo-200 text-indigo-600 dark:bg-indigo-950/50 dark:border-indigo-800 dark:text-indigo-400'
                       : 'border-gray-200 dark:border-gray-700 text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800'
@@ -522,12 +571,15 @@ Structure the answer strictly for ${marks} marks according to university grading
                   title={panelWidthMode === 'wide' ? 'Normal width' : 'Expand width'}
                 >
                   <Columns className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline text-[11px]">{panelWidthMode === 'wide' ? 'Normal' : 'Wide'}</span>
+                  <span className="text-[11px]">{panelWidthMode === 'wide' ? 'Normal' : 'Wide'}</span>
                 </button>
 
-                {/* Close Panel */}
+                {/* Close Panel / Return to PDF */}
                 <button
-                  onClick={() => setAiPanelOpen(false)}
+                  onClick={() => {
+                    setAiPanelOpen(false);
+                    setMobileView('pdf');
+                  }}
                   className="p-1.5 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                   title="Close AI Panel"
                 >
