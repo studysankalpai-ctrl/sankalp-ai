@@ -23,7 +23,7 @@ export default function AppLayout() {
   }, [initTheme, initAiCredentials, initPwa]);
 
   return (
-    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#F7F8FC] dark:bg-[#0B1020] text-gray-900 dark:text-gray-100 flex flex-col selection:bg-indigo-500 selection:text-white">
+    <div className="h-screen w-full overflow-hidden bg-[#F7F8FC] dark:bg-[#0B1020] text-gray-900 dark:text-gray-100 flex flex-col selection:bg-indigo-500 selection:text-white">
       {/* Sidebar Navigation */}
       <Sidebar />
 
@@ -34,8 +34,8 @@ export default function AppLayout() {
       <main
         className={`flex-1 transition-all duration-300 ${
           isFullBleedPage
-            ? 'p-0 m-0 pt-16 flex flex-col h-screen overflow-hidden'
-            : 'min-h-[calc(100vh-4rem)] pt-16 flex flex-col justify-between'
+            ? 'h-[calc(100vh-4rem)] mt-16 flex flex-col overflow-hidden p-0 m-0'
+            : 'h-[calc(100vh-4rem)] mt-16 overflow-y-auto overflow-x-hidden flex flex-col justify-between'
         } ${sidebarCollapsed ? 'pl-0 md:pl-20' : 'pl-0 md:pl-64'}`}
       >
         <div
