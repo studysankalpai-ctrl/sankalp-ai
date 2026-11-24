@@ -332,3 +332,52 @@ body {
   animation: ai-voice-bar 1.05s ease-in-out infinite 0.15s;
 }
 
+/* ========================================================
+   UNIVERSAL PRINT ENGINE: High-Contrast Physical Paper Reset
+   Guarantees 100% black text on pure white paper regardless
+   of whether user has Dark Theme or Light Theme selected.
+   ======================================================== */
+@media print {
+  :root, html, body, .dark {
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    color-scheme: light !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Force all headings, paragraphs, lists, and tables to dark ink */
+  .dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6,
+  .dark p, .dark span, .dark li, .dark strong, .dark b,
+  .dark td, .dark th, .dark blockquote, .dark code {
+    color: #111827 !important;
+    text-shadow: none !important;
+  }
+
+  .dark strong, .dark b, .dark h1, .dark h2 {
+    color: #000000 !important;
+  }
+
+  /* Transparent / light table backgrounds */
+  .dark thead, .dark th {
+    background-color: #f1f5f9 !important;
+    color: #0f172a !important;
+  }
+
+  .dark tbody, .dark tr, .dark td {
+    background-color: #ffffff !important;
+    color: #1e293b !important;
+  }
+
+  /* Eliminate dark backgrounds in print */
+  .dark div, .dark section, .dark article, .dark main {
+    background-color: transparent !important;
+  }
+
+  /* Hide navigation, sidebar, fixed floating bars */
+  nav, aside, footer, header, .no-print {
+    display: none !important;
+  }
+}
+

@@ -138,8 +138,69 @@ export default function CheatSheetModal({ isOpen, onClose, subject, course, seme
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/80 backdrop-blur-xs overflow-y-auto">
-      {/* Print-specific style block */}
+      {/* Print and Dark-Mode Sheet Isolation Style Block */}
       <style>{`
+        /* 1. ON-SCREEN SHEET ISOLATION: Forces white paper + black text even when app is in Dark Mode */
+        #cheatsheet-print-container {
+          background-color: #ffffff !important;
+          color: #111827 !important;
+        }
+        #cheatsheet-print-container * {
+          color: #111827 !important;
+          border-color: #e5e7eb !important;
+          text-shadow: none !important;
+        }
+        #cheatsheet-print-container h1,
+        #cheatsheet-print-container h2,
+        #cheatsheet-print-container h4,
+        #cheatsheet-print-container strong,
+        #cheatsheet-print-container b {
+          color: #000000 !important;
+        }
+        #cheatsheet-print-container h3 {
+          color: #4338ca !important;
+        }
+        #cheatsheet-print-container p,
+        #cheatsheet-print-container li,
+        #cheatsheet-print-container span {
+          color: #1f2937 !important;
+        }
+        #cheatsheet-print-container table {
+          background-color: #ffffff !important;
+          border-color: #cbd5e1 !important;
+        }
+        #cheatsheet-print-container thead,
+        #cheatsheet-print-container th {
+          background-color: #f1f5f9 !important;
+          color: #0f172a !important;
+          border-color: #cbd5e1 !important;
+        }
+        #cheatsheet-print-container tbody,
+        #cheatsheet-print-container tr {
+          background-color: #ffffff !important;
+        }
+        #cheatsheet-print-container td {
+          background-color: #ffffff !important;
+          color: #1e293b !important;
+          border-color: #e2e8f0 !important;
+        }
+        #cheatsheet-print-container blockquote {
+          background-color: #f8fafc !important;
+          border-left-color: #6366f1 !important;
+          color: #334155 !important;
+        }
+        #cheatsheet-print-container code {
+          background-color: #f1f5f9 !important;
+          color: #0f172a !important;
+          border-color: #cbd5e1 !important;
+        }
+        #cheatsheet-print-container pre {
+          background-color: #f8fafc !important;
+          color: #0f172a !important;
+          border-color: #cbd5e1 !important;
+        }
+
+        /* 2. PRINT / SAVE-AS-PDF STYLES: Flawless A4 physical output */
         @media print {
           body * {
             visibility: hidden !important;
@@ -147,6 +208,9 @@ export default function CheatSheetModal({ isOpen, onClose, subject, course, seme
           #cheatsheet-print-container,
           #cheatsheet-print-container * {
             visibility: visible !important;
+            color: #000000 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
           #cheatsheet-print-container {
             position: absolute !important;
@@ -154,18 +218,27 @@ export default function CheatSheetModal({ isOpen, onClose, subject, course, seme
             top: 0 !important;
             width: 100% !important;
             margin: 0 !important;
-            padding: 12mm !important;
-            background: white !important;
-            color: black !important;
+            padding: 10mm !important;
+            background: #ffffff !important;
+            color: #000000 !important;
             box-shadow: none !important;
             border: none !important;
+          }
+          #cheatsheet-print-container thead,
+          #cheatsheet-print-container th {
+            background-color: #f1f5f9 !important;
+            color: #000000 !important;
+          }
+          #cheatsheet-print-container td {
+            background-color: #ffffff !important;
+            color: #000000 !important;
           }
           .no-print {
             display: none !important;
           }
           .print-columns {
             column-count: 2 !important;
-            column-gap: 18px !important;
+            column-gap: 16px !important;
           }
           .print-unit-card {
             break-inside: avoid !important;

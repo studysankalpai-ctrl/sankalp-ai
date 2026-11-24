@@ -438,6 +438,39 @@ OUTPUT FORMAT (Respond with strictly valid JSON ONLY):
       };
     }
 
+    // 1. Sanitize marks_awarded to be a clean, valid number between 0 and 5 (in 0.5 increments)
+    let rawMarks = Number(resultJson.marks_awarded);
+    if (isNaN(rawMarks) || rawMarks < 0) rawMarks = 0;
+    if (rawMarks > 5) rawMarks = 5;
+    resultJson.marks_awarded = Math.round(rawMarks * 2) / 2;
+    resultJson.max_marks = 5;
+
+    // 2. Mathematically calculate exact Viva Scorecard totals (Zero LLM addition hallucination)
+    if (resultJson.report_card || resultJson.is_final) {
+      const priorMarks = (previousHistory || []).map((h) => Number(h.marks) || 0);
+      const totalScoreSum = priorMarks.reduce((sum, m) => sum + m, 0) + resultJson.marks_awarded;
+      const accurateOverallScore = Number(totalScoreSum.toFixed(1));
+      const totalTurnsCount = (previousHistory || []).length + 1;
+      const accurateMaxScore = totalTurnsCount * 5;
+
+      const percentage = Math.round((accurateOverallScore / accurateMaxScore) * 100);
+      let accurateGrade = 'Grade A - Distinction';
+      if (percentage >= 85) accurateGrade = 'Grade A+ (Distinction)';
+      else if (percentage >= 75) accurateGrade = 'Grade A (First Class)';
+      else if (percentage >= 60) accurateGrade = 'Grade B (Second Division)';
+      else if (percentage >= 50) accurateGrade = 'Grade C (Satisfactory)';
+      else accurateGrade = 'Grade D (Needs Practice)';
+
+      if (!resultJson.report_card) {
+        resultJson.report_card = {};
+      }
+
+      resultJson.report_card.overall_score = accurateOverallScore;
+      resultJson.report_card.max_possible_score = accurateMaxScore;
+      resultJson.report_card.grade = accurateGrade;
+      resultJson.report_card.percentage = percentage;
+    }
+
     return successResponse(res, resultJson, 'Viva turn evaluated');
   } catch (error) {
     next(error);

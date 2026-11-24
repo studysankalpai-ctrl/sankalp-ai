@@ -395,7 +395,18 @@ export default function VivaRoom() {
 
         // CASE A: Examination is Completed -> Show Report Card
         if (turnData.is_final && turnData.report_card) {
-          setFinalReport(turnData.report_card);
+          // Mathematically verify and bind score to exact sum of question marks
+          const historySum = updatedHistory.reduce((acc, h) => acc + (Number(h.marks) || 0), 0);
+          const computedTotal = Number(historySum.toFixed(1));
+          const computedMax = Math.max(updatedHistory.length * 5, 5);
+
+          const verifiedReportCard = {
+            ...turnData.report_card,
+            overall_score: computedTotal,
+            max_possible_score: computedMax,
+          };
+
+          setFinalReport(verifiedReportCard);
           setSessionState('report_card');
 
           const finalLead =
@@ -475,12 +486,12 @@ export default function VivaRoom() {
         selectedSubject,
         selectedCourse,
         language: language === 'hindi' ? 'Hindi' : language === 'hinglish' ? 'Hinglish' : 'English',
-        persona: examinerPersona === 'strict' ? 'Strict External University Examiner' : 'Friendly Senior Professor',
+        persona: difficulty === 'strict' ? 'Strict External University Examiner' : 'Friendly Senior Professor',
       });
       toast.success('Official Viva Scorecard PDF downloaded!', { id: 'viva-pdf' });
     } catch (err) {
       console.error('PDF export failed:', err);
-      toast.error('Failed to export PDF scorecard. Please try again.', { id: 'viva-pdf' });
+      toast.error(err?.message || 'Failed to export PDF scorecard. Please try again.', { id: 'viva-pdf' });
     } finally {
       setIsExportingPdf(false);
     }

@@ -25,22 +25,156 @@ const MAX_Y = 270; // Printable ceiling before page split
 const HEADER_START_Y = 16;
 
 /**
- * Strips markdown emphasis symbols while preserving text integrity
+ * Strips markdown emphasis symbols while preserving text integrity and converting
+ * non-ASCII or LaTeX symbols into clean, 100% PDF-safe Latin text.
+ * Prevents jsPDF Helvetica encoding bugs that produce garbage artifacts (e.g. "%¸", "!’", "& ")
  */
 export function cleanMarkdownText(str) {
   if (!str) return '';
-  return str
+  let clean = String(str);
+
+  // 1. Remove LaTeX \boxed{...} wrappers
+  clean = clean.replace(/\\boxed\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}/g, '$1');
+
+  // 2. Normalize LaTeX & Math notations to clean plain ASCII
+  clean = clean
+    .replace(/\\cdot/g, ' * ')
+    .replace(/\\times/g, ' x ')
+    .replace(/\\div/g, ' / ')
+    .replace(/\\pm/g, ' +/- ')
+    .replace(/\\neq/g, ' != ')
+    .replace(/\\leq?/g, ' <= ')
+    .replace(/\\geq?/g, ' >= ')
+    .replace(/\\forall/g, ' for all ')
+    .replace(/\\exists/g, ' there exists ')
+    .replace(/\\in\b/g, ' in ')
+    .replace(/\\notin\b/g, ' not in ')
+    .replace(/\\subset\b/g, ' subset of ')
+    .replace(/\\subseteq\b/g, ' subset of ')
+    .replace(/\\cap\b/g, ' intersect ')
+    .replace(/\\cup\b/g, ' union ')
+    .replace(/\\rightarrow|\\to\b/g, ' -> ')
+    .replace(/\\leftarrow/g, ' <- ')
+    .replace(/\\implies/g, ' => ')
+    .replace(/\\iff/g, ' <=> ')
+    .replace(/\\infty/g, ' inf ')
+    .replace(/\\approx/g, ' ~ ')
+    .replace(/\\sqrt\{([^}]+)\}/g, 'sqrt($1)')
+    .replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '($1 / $2)')
+    .replace(/\\([()[\]{}])/g, '$1');
+
+  // 3. Numbered emojis (Keycap 1️⃣, 2️⃣, etc.) -> Standard numbered labels (Prevents "1þ ã" corruption)
+  clean = clean.replace(/([0-9])\uFE0F?\u20E3/g, '$1. ');
+
+  // 4. Academic callout emojis -> clean, elegant ASCII badges (Prevents "Ø<ß¯", "Ø=Ü¡", "Ø=ÜÝ", "&¡")
+  clean = clean
+    .replace(/💡/g, '[NOTE] ')
+    .replace(/🎯/g, '[ANALOGY] ')
+    .replace(/🏆/g, '[EXAM SCORING] ')
+    .replace(/⚡/g, '[EXAM TIP] ')
+    .replace(/📌/g, '[KEY POINT] ')
+    .replace(/🔥/g, '[IMPORTANT] ')
+    .replace(/🔍/g, '[OVERVIEW] ')
+    .replace(/[✅✔️✓]/g, '[OK]')
+    .replace(/[❌✖️✗]/g, '[X]')
+    .replace(/[⚠️⚠]/g, '[!]')
+    .replace(/[⭐🌟]/g, '[*]')
+    .replace(/📝/g, '[NOTE] ')
+    .replace(/📖/g, '[BOOK] ')
+    .replace(/🎓/g, '[ACADEMIC] ')
+    .replace(/[⏱️⏳]/g, '[TIME] ')
+    .replace(/📊/g, '[CHART] ')
+    .replace(/[❓❔]/g, '[?]')
+    .replace(/❗/g, '[!]');
+
+  // 5. Aggressively strip all remaining emojis and surrogate pairs
+  clean = clean.replace(/[\u{1F000}-\u{1FAFF}\u{1F300}-\u{1F5FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '');
+
+  // 6. Unicode whitespace normalization (CRITICAL: prevents \u202F turning into ' /' in WinAnsi)
+  clean = clean
+    .replace(/[\u202F\u00A0\u2000-\u200B\uFEFF]/g, ' ')
+    .replace(/[\u200C\u200D\u2060]/g, '');
+
+  // 7. Unicode dashes, hyphens, and quotes
+  clean = clean
+    .replace(/[\u2010\u2011\u2012\u2013\u2014\u2015\u2212]/g, '-')
+    .replace(/[–—]/g, '-')
+    .replace(/[\u201C\u201D\u201E\u201F«»]/g, '"')
+    .replace(/[\u2018\u2019\u201A\u201B‹›`]/g, "'")
+    .replace(/…/g, '...');
+
+  // 8. Box-drawing characters (CRITICAL: prevents \u251C turning into '% %' in WinAnsi)
+  clean = clean
+    .replace(/[─━═┄┅┈┉]/g, '-')
+    .replace(/[│┃║┆┇┊┋]/g, '|')
+    .replace(/[┌┍┎┏┐┑┒┓└┕┖┗┘┙┚┛├┝┞┟┠┡┢┣┤┥┦┧┨┩┪┫┬┭┮┯┰┱┲┳┴┵┶┷┸┹┺┻┼┽┾┿╀╁╂╃╄╅╆╇╈╉╊╋╭╮╯╰═║╒╓╔╕╖╗╘╙╚╛╜╝╞╟╠╡╢╣╤╥╦╧╨╩╪╫╬]/g, '+')
+    .replace(/[╱╲╳╴╵╶╷╸╹╺╻╼╽╾╿]/g, '-');
+
+  // 9. Unicode arrows
+  clean = clean
+    .replace(/[➔→⇒➜➝➞➟➠➡➢➣➤➥➦➧➨➩➪➫➬➭➮➯➱➲➳➴➵➶➷➸➹➺➻➼➽➾]/g, ' -> ')
+    .replace(/[←⇐]/g, ' <- ')
+    .replace(/[↔⇔]/g, ' <-> ')
+    .replace(/[↑⇑]/g, ' ^ ')
+    .replace(/[↓⇓]/g, ' v ')
+    .replace(/[▼▽▾▿]/g, ' v ')
+    .replace(/[▲△▴▵]/g, ' ^ ')
+    .replace(/[►▶▸▹►▻]/g, ' > ')
+    .replace(/[◄◀◂◃◄◅]/g, ' < ');
+
+  // 10. Bullets & geometric shapes
+  clean = clean
+    .replace(/[•●○■□▪▫◆◇◈◉◊◦]/g, '-')
+    .replace(/[·]/g, '*')
+    .replace(/[≠]/g, '!=')
+    .replace(/[≤]/g, '<=')
+    .replace(/[≥]/g, '>=')
+    .replace(/[±]/g, '+/-')
+    .replace(/[×]/g, 'x')
+    .replace(/[÷]/g, '/')
+    .replace(/[≈]/g, '~')
+    .replace(/[≡]/g, '==')
+    .replace(/[∞]/g, 'inf');
+
+  // 11. HTML entity decode
+  clean = clean
+    .replace(/&bull;/gi, '-')
+    .replace(/&amp;/gi, '&')
+    .replace(/&quot;/gi, '"')
+    .replace(/&apos;/gi, "'")
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&mdash;/gi, '-')
+    .replace(/&ndash;/gi, '-');
+
+  // 12. Clean up markdown bold, italic, code, links
+  clean = clean
+    .replace(/\*\*\*(.*?)\*\*\*/g, '$1')
     .replace(/\*\*(.*?)\*\*/g, '$1')
     .replace(/\*(.*?)\*/g, '$1')
+    .replace(/___(.*?)___/g, '$1')
     .replace(/__(.*?)__/g, '$1')
     .replace(/_(.*?)_/g, '$1')
+    .replace(/~~(.*?)~~/g, '$1')
     .replace(/`([^`]+)`/g, '$1')
     .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-    .trim();
+    .replace(/^#{1,6}\s+/gm, ''); // Strip leading header hashes if inside paragraphs
+
+  // 13. Clean up stray / corrupt slash artifacts (e.g. " /C", " /Kanetkar", " /1", " /%")
+  clean = clean
+    .replace(/ \/([0-9A-Za-z%])/g, ' $1')
+    .replace(/<=\\([0-9])/g, '<= $1');
+
+  // 14. FINAL INVARIANT: Strict ASCII only (codes 32-126 + newline + tab)
+  // Ensures jsPDF Helvetica NEVER drops into 2-byte UTF-16 mode with null bytes and slashes
+  clean = clean.replace(/[^\x20-\x7E\t\n]/g, '');
+
+  return clean.trim();
 }
 
 /**
- * Parses markdown into structured blocks: h1, h2, h3, table, quote, bullet, text
+ * Parses markdown into structured blocks: h1, h2, h3, h4, table, code, hr, quote, bullet, number_list, text
  */
 export function parseMarkdownBlocks(md) {
   if (!md) return [];
@@ -57,7 +191,34 @@ export function parseMarkdownBlocks(md) {
       continue;
     }
 
-    // 1. Table Detection (| Header 1 | Header 2 |)
+    // 1. Code Block Fence (```lang ... ```)
+    if (trimmed.startsWith('```')) {
+      const lang = trimmed.replace(/^```/, '').trim();
+      i++;
+      const codeLines = [];
+      while (i < lines.length && !lines[i].trim().startsWith('```')) {
+        codeLines.push(lines[i]);
+        i++;
+      }
+      if (i < lines.length && lines[i].trim().startsWith('```')) {
+        i++;
+      }
+      blocks.push({
+        type: 'code',
+        lang: lang || 'text',
+        code: codeLines.join('\n'),
+      });
+      continue;
+    }
+
+    // 2. Horizontal Divider (---, ***, ___)
+    if (/^([-*_]){3,}$/.test(trimmed)) {
+      blocks.push({ type: 'hr' });
+      i++;
+      continue;
+    }
+
+    // 3. Table Detection (| Header 1 | Header 2 |)
     if (trimmed.startsWith('|') && trimmed.endsWith('|')) {
       const tableLines = [];
       while (i < lines.length && lines[i].trim().startsWith('|') && lines[i].trim().endsWith('|')) {
@@ -81,19 +242,35 @@ export function parseMarkdownBlocks(md) {
       }
     }
 
-    // 2. Headings
+    // 4. Multi-line Blockquotes (> Quote text)
+    if (trimmed.startsWith('>')) {
+      const quoteLines = [];
+      while (i < lines.length && lines[i].trim().startsWith('>')) {
+        quoteLines.push(lines[i].trim().replace(/^>\s*/, ''));
+        i++;
+      }
+      blocks.push({ type: 'quote', text: quoteLines.join(' ') });
+      continue;
+    }
+
+    // 5. Headings & Lists
     if (trimmed.startsWith('# ')) {
       blocks.push({ type: 'h1', text: trimmed.replace(/^#\s+/, '') });
     } else if (trimmed.startsWith('## ')) {
       blocks.push({ type: 'h2', text: trimmed.replace(/^##\s+/, '') });
     } else if (trimmed.startsWith('### ')) {
       blocks.push({ type: 'h3', text: trimmed.replace(/^###\s+/, '') });
-    } else if (trimmed.startsWith('> ')) {
-      blocks.push({ type: 'quote', text: trimmed.replace(/^>\s+/, '') });
+    } else if (trimmed.startsWith('#### ') || trimmed.startsWith('##### ') || trimmed.startsWith('###### ')) {
+      blocks.push({ type: 'h4', text: trimmed.replace(/^#{4,6}\s+/, '') });
     } else if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
       blocks.push({ type: 'bullet', text: trimmed.replace(/^[-*]\s+/, '') });
-    } else if (/^\d+\.\s+/.test(trimmed)) {
-      blocks.push({ type: 'number_list', text: trimmed.replace(/^\d+\.\s+/, '') });
+    } else if (/^(\d+)\.\s+/.test(trimmed)) {
+      const match = trimmed.match(/^(\d+)\.\s+/);
+      blocks.push({
+        type: 'number_list',
+        index: match ? match[1] : '1',
+        text: trimmed.replace(/^\d+\.\s+/, ''),
+      });
     } else {
       blocks.push({ type: 'text', text: trimmed });
     }
@@ -103,13 +280,47 @@ export function parseMarkdownBlocks(md) {
 }
 
 /**
- * Draws an authentic grid table with wrapped text and alternating row stripes
+ * Draws an authentic grid table with auto-balanced columns, wrapped text, and alternating row stripes
  */
 export function drawPdfTable(doc, headers, rows, startY, customWidths = null) {
   const marginX = MARGIN_LEFT;
   const totalW = USABLE_WIDTH;
   const numCols = headers.length;
-  const widths = customWidths || headers.map(() => totalW / numCols);
+  if (numCols === 0) return startY;
+
+  let widths = customWidths;
+  if (!widths || widths.length !== numCols) {
+    const colLengths = headers.map((h, c) => {
+      let maxLen = String(h || '').length;
+      for (let r = 0; r < Math.min(rows.length, 12); r++) {
+        const cell = String(rows[r]?.[c] || '');
+        if (cell.length > maxLen) maxLen = cell.length;
+      }
+      return Math.max(12, Math.min(maxLen, 90));
+    });
+
+    const sumLengths = colLengths.reduce((a, b) => a + b, 0);
+    const minW = Math.max(16, Math.floor(totalW / (numCols * 2)));
+    widths = colLengths.map((len) => (len / sumLengths) * totalW);
+
+    let underMinTotal = 0;
+    let overMinTotal = 0;
+    for (let c = 0; c < numCols; c++) {
+      if (widths[c] < minW) {
+        underMinTotal += (minW - widths[c]);
+        widths[c] = minW;
+      } else {
+        overMinTotal += widths[c];
+      }
+    }
+    if (underMinTotal > 0 && overMinTotal > 0) {
+      for (let c = 0; c < numCols; c++) {
+        if (widths[c] > minW) {
+          widths[c] -= underMinTotal * (widths[c] / overMinTotal);
+        }
+      }
+    }
+  }
 
   let y = startY;
 
@@ -129,7 +340,12 @@ export function drawPdfTable(doc, headers, rows, startY, customWidths = null) {
   let currentX = marginX;
   for (let c = 0; c < numCols; c++) {
     const colW = widths[c] || totalW / numCols;
-    doc.text(String(headers[c] || ''), currentX + 3, y + 5.5);
+    const hText = cleanMarkdownText(String(headers[c] || ''));
+    let safeH = hText;
+    while (safeH.length > 3 && doc.getTextWidth(safeH) > colW - 5) {
+      safeH = safeH.substring(0, safeH.length - 4) + '...';
+    }
+    doc.text(safeH, currentX + 3, y + 5.5);
     currentX += colW;
   }
   y += 8.5;
@@ -141,15 +357,21 @@ export function drawPdfTable(doc, headers, rows, startY, customWidths = null) {
   for (let r = 0; r < rows.length; r++) {
     const row = rows[r];
 
-    // Compute row height based on tallest cell
     let maxLines = 1;
     const cellLines = [];
     for (let c = 0; c < numCols; c++) {
       const colW = widths[c] || totalW / numCols;
       const val = cleanMarkdownText(String(row[c] || ''));
-      const lines = doc.splitTextToSize(val, colW - 5);
-      cellLines.push(lines);
-      if (lines.length > maxLines) maxLines = lines.length;
+      const rawLines = doc.splitTextToSize(val, colW - 6);
+      const safeLines = rawLines.map((l) => {
+        let line = l;
+        while (line.length > 3 && doc.getTextWidth(line) > colW - 5) {
+          line = line.substring(0, line.length - 4) + '...';
+        }
+        return line;
+      });
+      cellLines.push(safeLines);
+      if (safeLines.length > maxLines) maxLines = safeLines.length;
     }
     const rowH = Math.max(7, maxLines * 4 + 3);
 
@@ -166,8 +388,14 @@ export function drawPdfTable(doc, headers, rows, startY, customWidths = null) {
       doc.setTextColor(255, 255, 255);
       let hX = marginX;
       for (let c = 0; c < numCols; c++) {
-        doc.text(String(headers[c] || ''), hX + 3, y + 5.5);
-        hX += widths[c] || totalW / numCols;
+        const colW = widths[c] || totalW / numCols;
+        const hText = cleanMarkdownText(String(headers[c] || ''));
+        let safeH = hText;
+        while (safeH.length > 3 && doc.getTextWidth(safeH) > colW - 5) {
+          safeH = safeH.substring(0, safeH.length - 4) + '...';
+        }
+        doc.text(safeH, hX + 3, y + 5.5);
+        hX += colW;
       }
       y += 8.5;
       doc.setFont('helvetica', 'normal');
@@ -180,17 +408,18 @@ export function drawPdfTable(doc, headers, rows, startY, customWidths = null) {
       doc.rect(marginX, y, totalW, rowH, 'F');
     }
 
-    // Cell text & vertical lines
+    // Cell text
     doc.setTextColor(30, 41, 59);
     let cellX = marginX;
     for (let c = 0; c < numCols; c++) {
+      const colW = widths[c] || totalW / numCols;
       const lines = cellLines[c];
       let lineY = y + 4.5;
       for (let l of lines) {
         doc.text(l, cellX + 3, lineY);
         lineY += 4;
       }
-      cellX += widths[c] || totalW / numCols;
+      cellX += colW;
     }
 
     // Bottom border
@@ -220,47 +449,149 @@ export function renderFormattedBlocks(doc, blocks, startY) {
 
     switch (block.type) {
       case 'h1': {
-        if (y + 16 > MAX_Y) { doc.addPage(); y = HEADER_START_Y + 6; }
+        const h1Lines = doc.splitTextToSize(cleanMarkdownText(block.text), USABLE_WIDTH - 12);
+        const h1Height = Math.max(9.5, h1Lines.length * 4.8 + 4.5);
+        if (y + h1Height + 3 > MAX_Y) { doc.addPage(); y = HEADER_START_Y + 6; }
         doc.setFillColor(241, 245, 249); // slate-100 banner
-        doc.rect(MARGIN_LEFT, y, USABLE_WIDTH, 9.5, 'F');
+        doc.rect(MARGIN_LEFT, y, USABLE_WIDTH, h1Height, 'F');
         doc.setFillColor(15, 23, 42); // slate-900 left accent bar
-        doc.rect(MARGIN_LEFT, y, 3, 9.5, 'F');
+        doc.rect(MARGIN_LEFT, y, 3, h1Height, 'F');
 
         doc.setFont('helvetica', 'bold');
-        doc.setFontSize(11.5);
+        doc.setFontSize(11);
         doc.setTextColor(15, 23, 42);
-        doc.text(cleanMarkdownText(block.text), MARGIN_LEFT + 6, y + 6.5);
-        y += 14;
+        let h1Y = y + 5.5;
+        for (let l of h1Lines) {
+          doc.text(l, MARGIN_LEFT + 6, h1Y);
+          h1Y += 4.8;
+        }
+        y += h1Height + 4;
         break;
       }
 
       case 'h2': {
-        if (y + 12 > MAX_Y) { doc.addPage(); y = HEADER_START_Y + 6; }
+        const h2Lines = doc.splitTextToSize(cleanMarkdownText(block.text), USABLE_WIDTH);
+        const h2Height = h2Lines.length * 4.5 + 4;
+        if (y + h2Height + 3 > MAX_Y) { doc.addPage(); y = HEADER_START_Y + 6; }
         doc.setFont('helvetica', 'bold');
-        doc.setFontSize(10.5);
+        doc.setFontSize(10);
         doc.setTextColor(30, 41, 59);
-        doc.text(cleanMarkdownText(block.text), MARGIN_LEFT, y + 4);
+        let h2Y = y + 4;
+        for (let l of h2Lines) {
+          doc.text(l, MARGIN_LEFT, h2Y);
+          h2Y += 4.5;
+        }
 
         doc.setDrawColor(203, 213, 225);
         doc.setLineWidth(0.3);
-        doc.line(MARGIN_LEFT, y + 6, MARGIN_LEFT + USABLE_WIDTH, y + 6);
-        y += 10.5;
+        doc.line(MARGIN_LEFT, h2Y - 1, MARGIN_LEFT + USABLE_WIDTH, h2Y - 1);
+        y = h2Y + 3.5;
         break;
       }
 
       case 'h3': {
-        if (y + 10 > MAX_Y) { doc.addPage(); y = HEADER_START_Y + 6; }
+        const h3Lines = doc.splitTextToSize(cleanMarkdownText(block.text), USABLE_WIDTH - 8);
+        const h3Height = h3Lines.length * 4.2 + 2;
+        if (y + h3Height + 2 > MAX_Y) { doc.addPage(); y = HEADER_START_Y + 6; }
+        // Sleek vector square bullet
+        doc.setFillColor(99, 102, 241); // indigo-500
+        doc.rect(MARGIN_LEFT, y + 1.2, 2, 2, 'F');
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(9.5);
         doc.setTextColor(51, 65, 85);
-        doc.text(`▸  ${cleanMarkdownText(block.text)}`, MARGIN_LEFT, y + 4);
-        y += 7.5;
+        let h3Y = y + 3.5;
+        for (let l of h3Lines) {
+          doc.text(l, MARGIN_LEFT + 4.5, h3Y);
+          h3Y += 4.2;
+        }
+        y = h3Y + 2;
+        break;
+      }
+
+      case 'h4': {
+        const h4Lines = doc.splitTextToSize(cleanMarkdownText(block.text), USABLE_WIDTH - 6);
+        const h4Height = h4Lines.length * 4 + 2;
+        if (y + h4Height + 2 > MAX_Y) { doc.addPage(); y = HEADER_START_Y + 6; }
+        doc.setFillColor(100, 116, 139); // slate-500 dot
+        doc.circle(MARGIN_LEFT + 2, y + 2, 0.6, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8.5);
+        doc.setTextColor(71, 85, 105);
+        let h4Y = y + 3.2;
+        for (let l of h4Lines) {
+          doc.text(l, MARGIN_LEFT + 4.5, h4Y);
+          h4Y += 4;
+        }
+        y = h4Y + 1.5;
         break;
       }
 
       case 'table': {
         y = drawPdfTable(doc, block.headers, block.rows, y);
         y += 5.5;
+        break;
+      }
+
+      case 'code': {
+        const codeLines = block.code.split('\n');
+        doc.setFont('courier', 'normal');
+        doc.setFontSize(7.5);
+
+        const wrappedLines = [];
+        for (let cl of codeLines) {
+          const cleanCl = cleanMarkdownText(cl);
+          const split = doc.splitTextToSize(cleanCl, USABLE_WIDTH - 12);
+          wrappedLines.push(...split);
+        }
+
+        let lineIdx = 0;
+        while (lineIdx < wrappedLines.length) {
+          if (y + 14 > MAX_Y) {
+            doc.addPage();
+            y = HEADER_START_Y + 6;
+          }
+
+          const availableH = MAX_Y - y;
+          const maxLinesOnThisPage = Math.max(2, Math.floor((availableH - 8) / 3.6));
+          const linesToDraw = wrappedLines.slice(lineIdx, lineIdx + maxLinesOnThisPage);
+          const boxH = linesToDraw.length * 3.6 + 6;
+
+          doc.setFillColor(248, 250, 252); // slate-50
+          doc.setDrawColor(203, 213, 225); // slate-300
+          doc.setLineWidth(0.3);
+          doc.roundedRect(MARGIN_LEFT, y, USABLE_WIDTH, boxH, 1.5, 1.5, 'FD');
+
+          doc.setFillColor(71, 85, 105); // slate-600 left accent
+          doc.rect(MARGIN_LEFT, y, 2.5, boxH, 'F');
+
+          if (lineIdx === 0 && block.lang && block.lang !== 'text') {
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(6.5);
+            doc.setTextColor(148, 163, 184);
+            doc.text(block.lang.toUpperCase(), MARGIN_LEFT + USABLE_WIDTH - 4, y + 4.5, { align: 'right' });
+          }
+
+          doc.setFont('courier', 'normal');
+          doc.setFontSize(7.5);
+          doc.setTextColor(15, 23, 42);
+          let cY = y + 4.5;
+          for (let cl of linesToDraw) {
+            doc.text(cl, MARGIN_LEFT + 6, cY);
+            cY += 3.6;
+          }
+
+          y += boxH + 3.5;
+          lineIdx += linesToDraw.length;
+        }
+        break;
+      }
+
+      case 'hr': {
+        if (y + 6 > MAX_Y) { doc.addPage(); y = HEADER_START_Y + 6; }
+        doc.setDrawColor(226, 232, 240); // slate-200
+        doc.setLineWidth(0.35);
+        doc.line(MARGIN_LEFT, y + 2, MARGIN_LEFT + USABLE_WIDTH, y + 2);
+        y += 5;
         break;
       }
 
@@ -292,10 +623,16 @@ export function renderFormattedBlocks(doc, blocks, startY) {
         const bLines = doc.splitTextToSize(cleanMarkdownText(block.text), USABLE_WIDTH - 6);
         if (y + bLines.length * 4.2 > MAX_Y) { doc.addPage(); y = HEADER_START_Y + 6; }
 
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(8.5);
-        doc.setTextColor(99, 102, 241);
-        doc.text(isNum ? '•' : '•', MARGIN_LEFT + 2, y + 3.5);
+        if (isNum && block.index) {
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(8);
+          doc.setTextColor(99, 102, 241);
+          doc.text(`${block.index}.`, MARGIN_LEFT + 1, y + 3.5);
+        } else {
+          // Native vector circle dot
+          doc.setFillColor(99, 102, 241);
+          doc.circle(MARGIN_LEFT + 2.5, y + 2.2, 0.65, 'F');
+        }
 
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(8.5);
@@ -335,28 +672,32 @@ export function renderFormattedBlocks(doc, blocks, startY) {
  * Universal Academic Header
  */
 function renderDocumentHeader(doc, title, subtitle, metaText) {
+  const cleanTitle = cleanMarkdownText(title);
+  const cleanSubtitle = cleanMarkdownText(subtitle);
+  const cleanMeta = metaText ? cleanMarkdownText(metaText) : '';
+
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(7.5);
   doc.setTextColor(100, 116, 139);
-  doc.text('SANKALP AI • AUTONOMOUS UNIVERSITY EXAMINATION PLATFORM', MARGIN_LEFT, HEADER_START_Y);
+  doc.text('SANKALP AI | AUTONOMOUS UNIVERSITY EXAMINATION PLATFORM', MARGIN_LEFT, HEADER_START_Y);
 
   doc.setFontSize(14);
   doc.setTextColor(15, 23, 42);
-  doc.text(title, MARGIN_LEFT, HEADER_START_Y + 6.5);
+  doc.text(cleanTitle, MARGIN_LEFT, HEADER_START_Y + 6.5);
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(9.5);
   doc.setTextColor(51, 65, 85);
-  doc.text(subtitle, MARGIN_LEFT, HEADER_START_Y + 12.5);
+  doc.text(cleanSubtitle, MARGIN_LEFT, HEADER_START_Y + 12.5);
 
-  if (metaText) {
+  if (cleanMeta) {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
     doc.setTextColor(100, 116, 139);
-    doc.text(metaText, MARGIN_LEFT, HEADER_START_Y + 17);
+    doc.text(cleanMeta, MARGIN_LEFT, HEADER_START_Y + 17);
   }
 
-  const dividerY = metaText ? HEADER_START_Y + 20.5 : HEADER_START_Y + 16;
+  const dividerY = cleanMeta ? HEADER_START_Y + 20.5 : HEADER_START_Y + 16;
   doc.setDrawColor(15, 23, 42);
   doc.setLineWidth(0.5);
   doc.line(MARGIN_LEFT, dividerY, MARGIN_LEFT + USABLE_WIDTH, dividerY);
@@ -379,7 +720,7 @@ function stampAllPageFooters(doc) {
     doc.setFontSize(7.5);
     doc.setTextColor(148, 163, 184);
     doc.text(
-      'SANKALP AI • St. John\'s College, Agra Curriculum Grounded • Official Examination Document',
+      'SANKALP AI | St. John\'s College, Agra Curriculum Grounded | Official Examination Document',
       MARGIN_LEFT,
       287.5
     );
@@ -499,7 +840,7 @@ export async function exportMockTestScorecardPdf(res) {
     const ev = evaluations[idx];
 
     const questionLines = doc.splitTextToSize(cleanMarkdownText(ev.question || ''), USABLE_WIDTH - 12);
-    const answerLines = doc.splitTextToSize(ev.studentAnswer || 'Unattempted', USABLE_WIDTH - 16);
+    const answerLines = doc.splitTextToSize(cleanMarkdownText(ev.studentAnswer || 'Unattempted'), USABLE_WIDTH - 16);
     const feedbackLines = doc.splitTextToSize(cleanMarkdownText(ev.feedback || ''), USABLE_WIDTH - 16);
     const modelAnswerLines = ev.modelAnswer ? doc.splitTextToSize(cleanMarkdownText(ev.modelAnswer), USABLE_WIDTH - 16) : [];
 
@@ -661,7 +1002,7 @@ export async function exportVivaScorecardPdf({
   let y = renderDocumentHeader(
     doc,
     'OFFICIAL ORAL VIVA VOCE EXAMINATION SCORECARD',
-    `${subjectName} (${subjectCode}) • ${selectedCourse?.name || 'University Examination'}`,
+    `${subjectName} (${subjectCode}) | ${selectedCourse?.name || 'University Examination'}`,
     `Date Evaluated: ${new Date().toLocaleDateString()} | Examiner Persona: ${persona} | Mode: ${language.toUpperCase()}`
   );
 
@@ -671,8 +1012,11 @@ export async function exportVivaScorecardPdf({
   doc.setLineWidth(0.4);
   doc.roundedRect(MARGIN_LEFT, y, USABLE_WIDTH, 23, 2, 2, 'FD');
 
-  const totalScore = finalReport.overall_score || 0;
-  const maxScore = finalReport.max_possible_score || (vivaHistory.length * 5) || 15;
+  const calculatedTotal = vivaHistory && vivaHistory.length > 0
+    ? vivaHistory.reduce((acc, v) => acc + (Number(v.marks) || 0), 0)
+    : finalReport.overall_score || 0;
+  const totalScore = Number(Number(calculatedTotal).toFixed(1));
+  const maxScore = (vivaHistory.length > 0 ? vivaHistory.length * 5 : finalReport.max_possible_score) || 25;
   const percentage = Math.round((totalScore / maxScore) * 100);
 
   // Big Score Text
@@ -691,7 +1035,12 @@ export async function exportVivaScorecardPdf({
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(9.5);
   doc.setTextColor(255, 255, 255);
-  const cleanGrade = (finalReport.grade || 'Grade A').replace(/^Grade\s+/i, '');
+  const rawGrade = typeof finalReport.grade === 'string'
+    ? finalReport.grade
+    : typeof finalReport.grade === 'object' && finalReport.grade?.letter
+    ? `${finalReport.grade.letter} ${finalReport.grade.description || ''}`
+    : 'Grade A';
+  const cleanGrade = String(rawGrade).replace(/^Grade\s+/i, '');
   doc.text(cleanGrade.substring(0, 14), MARGIN_LEFT + 73, y + 13.5, { align: 'center' });
 
   // Status / Division
@@ -717,12 +1066,17 @@ export async function exportVivaScorecardPdf({
   y += 28;
 
   // Examiner Verdict Callout
-  if (finalReport.verdict) {
+  const verdictText = typeof finalReport.verdict === 'string'
+    ? finalReport.verdict
+    : typeof finalReport.verdict === 'object'
+    ? JSON.stringify(finalReport.verdict)
+    : '';
+  if (verdictText) {
     if (y + 18 > MAX_Y) { doc.addPage(); y = HEADER_START_Y + 6; }
     doc.setFillColor(241, 245, 249);
     doc.setDrawColor(203, 213, 225);
     doc.setLineWidth(0.3);
-    const verdictLines = doc.splitTextToSize(`"${cleanMarkdownText(finalReport.verdict)}"`, USABLE_WIDTH - 14);
+    const verdictLines = doc.splitTextToSize(`"${cleanMarkdownText(verdictText)}"`, USABLE_WIDTH - 14);
     const verdictBoxH = 8 + verdictLines.length * 4.2;
     doc.roundedRect(MARGIN_LEFT, y, USABLE_WIDTH, verdictBoxH, 1.5, 1.5, 'FD');
     doc.setFillColor(99, 102, 241);
@@ -899,7 +1253,23 @@ export async function exportVivaScorecardPdf({
   }
 
   // 4. Strengths & Weaknesses Checklist
-  if ((finalReport.strengths && finalReport.strengths.length > 0) || (finalReport.weaknesses && finalReport.weaknesses.length > 0)) {
+  const rawStrengths = Array.isArray(finalReport.strengths)
+    ? finalReport.strengths
+    : typeof finalReport.strengths === 'string'
+    ? [finalReport.strengths]
+    : [];
+  const rawWeaknesses = Array.isArray(finalReport.weaknesses)
+    ? finalReport.weaknesses
+    : typeof finalReport.weaknesses === 'string'
+    ? [finalReport.weaknesses]
+    : [];
+  const rawTrapQuestions = Array.isArray(finalReport.examiner_trap_questions)
+    ? finalReport.examiner_trap_questions
+    : typeof finalReport.examiner_trap_questions === 'string'
+    ? [finalReport.examiner_trap_questions]
+    : [];
+
+  if (rawStrengths.length > 0 || rawWeaknesses.length > 0) {
     if (y + 35 > MAX_Y) { doc.addPage(); y = HEADER_START_Y + 6; }
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(9.5);
@@ -908,20 +1278,23 @@ export async function exportVivaScorecardPdf({
     y += 5;
 
     // Strengths
-    if (finalReport.strengths && finalReport.strengths.length > 0) {
+    if (rawStrengths.length > 0) {
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(8.5);
       doc.setTextColor(21, 128, 61);
       doc.text('Demonstrated Strengths:', MARGIN_LEFT, y);
       y += 4.5;
-      for (let s of finalReport.strengths) {
-        const sLines = doc.splitTextToSize(`✓  ${cleanMarkdownText(s)}`, USABLE_WIDTH - 4);
+      for (let s of rawStrengths) {
+        const cleanS = cleanMarkdownText(s);
+        const sLines = doc.splitTextToSize(cleanS, USABLE_WIDTH - 8);
         if (y + sLines.length * 4.2 > MAX_Y) { doc.addPage(); y = HEADER_START_Y + 6; }
+        doc.setFillColor(21, 128, 61); // emerald green vector dot
+        doc.circle(MARGIN_LEFT + 2.5, y + 2, 0.65, 'F');
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(8);
         doc.setTextColor(15, 23, 42);
         for (let l of sLines) {
-          doc.text(l, MARGIN_LEFT + 2, y);
+          doc.text(l, MARGIN_LEFT + 5.5, y);
           y += 4.2;
         }
       }
@@ -929,20 +1302,23 @@ export async function exportVivaScorecardPdf({
     }
 
     // Weaknesses / Revise
-    if (finalReport.weaknesses && finalReport.weaknesses.length > 0) {
+    if (rawWeaknesses.length > 0) {
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(8.5);
       doc.setTextColor(180, 83, 9);
       doc.text('Concepts to Revise Before University Oral Viva Exam:', MARGIN_LEFT, y);
       y += 4.5;
-      for (let w of finalReport.weaknesses) {
-        const wLines = doc.splitTextToSize(`⚠  ${cleanMarkdownText(w)}`, USABLE_WIDTH - 4);
+      for (let w of rawWeaknesses) {
+        const cleanW = cleanMarkdownText(w);
+        const wLines = doc.splitTextToSize(cleanW, USABLE_WIDTH - 8);
         if (y + wLines.length * 4.2 > MAX_Y) { doc.addPage(); y = HEADER_START_Y + 6; }
+        doc.setFillColor(180, 83, 9); // amber vector dot
+        doc.circle(MARGIN_LEFT + 2.5, y + 2, 0.65, 'F');
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(8);
         doc.setTextColor(15, 23, 42);
         for (let l of wLines) {
-          doc.text(l, MARGIN_LEFT + 2, y);
+          doc.text(l, MARGIN_LEFT + 5.5, y);
           y += 4.2;
         }
       }
@@ -950,15 +1326,15 @@ export async function exportVivaScorecardPdf({
     }
 
     // Trap Questions
-    if (finalReport.examiner_trap_questions && finalReport.examiner_trap_questions.length > 0) {
+    if (rawTrapQuestions.length > 0) {
       if (y + 20 > MAX_Y) { doc.addPage(); y = HEADER_START_Y + 6; }
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(8.5);
       doc.setTextColor(190, 18, 60); // rose-700
       doc.text('Top Examiner Trap Questions in This Subject:', MARGIN_LEFT, y);
       y += 4.5;
-      for (let idx = 0; idx < finalReport.examiner_trap_questions.length; idx++) {
-        const tq = finalReport.examiner_trap_questions[idx];
+      for (let idx = 0; idx < rawTrapQuestions.length; idx++) {
+        const tq = rawTrapQuestions[idx];
         const tLines = doc.splitTextToSize(`${idx + 1}.  ${cleanMarkdownText(tq)}`, USABLE_WIDTH - 4);
         if (y + tLines.length * 4.2 > MAX_Y) { doc.addPage(); y = HEADER_START_Y + 6; }
         doc.setFont('helvetica', 'normal');
@@ -1032,7 +1408,7 @@ export async function exportRevisionPdf({
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(8);
       doc.setTextColor(100, 116, 139);
-      doc.text(`CARD ${idx + 1} • ${(card.tag || 'CONCEPT').toUpperCase()}`, MARGIN_LEFT + 4, y + 5.5);
+      doc.text(`CARD ${idx + 1} | ${(card.tag || 'CONCEPT').toUpperCase()}`, MARGIN_LEFT + 4, y + 5.5);
 
       // Question
       doc.setFont('helvetica', 'bold');
@@ -1102,55 +1478,84 @@ export async function exportMentorChatPdf({
   for (let idx = 0; idx < messages.length; idx++) {
     const msg = messages[idx];
     const isUser = msg.role === 'user';
-    const roleTitle = isUser ? 'STUDENT QUESTION' : 'SANKALP AI MENTOR ANSWER';
 
-    // Parse AI responses with full headings and tables if present
-    if (!isUser && msg.content && (msg.content.includes('|') || msg.content.includes('#'))) {
-      if (y + 12 > MAX_Y) { doc.addPage(); y = HEADER_START_Y + 6; }
-      doc.setFillColor(241, 245, 249);
-      doc.setDrawColor(203, 213, 225);
-      doc.roundedRect(MARGIN_LEFT, y, USABLE_WIDTH, 7.5, 1, 1, 'FD');
+    if (isUser) {
+      // Student Question Card
+      const qText = cleanMarkdownText(msg.content || '');
+      const qLines = doc.splitTextToSize(qText, USABLE_WIDTH - 14);
+      const cardHeight = Math.max(15, 9 + qLines.length * 4.2 + 4);
+
+      if (y + cardHeight > MAX_Y) {
+        doc.addPage();
+        y = HEADER_START_Y + 6;
+      }
+
+      // Background & border
+      doc.setFillColor(248, 250, 252); // slate-50
+      doc.setDrawColor(203, 213, 225); // slate-300
+      doc.setLineWidth(0.35);
+      doc.roundedRect(MARGIN_LEFT, y, USABLE_WIDTH, cardHeight, 1.5, 1.5, 'FD');
+
+      // Indigo left accent
+      doc.setFillColor(79, 70, 229); // indigo-600
+      doc.rect(MARGIN_LEFT, y, 3, cardHeight, 'F');
+
+      // Header Tag
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      doc.setTextColor(79, 70, 229);
+      doc.text('STUDENT EXAMINATION QUERY', MARGIN_LEFT + 6, y + 5.5);
+
+      // Question body
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8.5);
+      doc.setTextColor(15, 23, 42);
+      let lineY = y + 10;
+      for (let l of qLines) {
+        doc.text(l, MARGIN_LEFT + 6, lineY);
+        lineY += 4.2;
+      }
+
+      y += cardHeight + 6;
+    } else {
+      // SANKALP AI Academic Mentor Answer
+      if (y + 16 > MAX_Y) {
+        doc.addPage();
+        y = HEADER_START_Y + 6;
+      }
+
+      // Header Banner Strip
+      doc.setFillColor(240, 253, 244); // emerald-50
+      doc.setDrawColor(187, 247, 208); // emerald-200
+      doc.setLineWidth(0.35);
+      doc.roundedRect(MARGIN_LEFT, y, USABLE_WIDTH, 8, 1.5, 1.5, 'FD');
+
+      // Emerald left accent
+      doc.setFillColor(21, 128, 61); // emerald-700
+      doc.rect(MARGIN_LEFT, y, 3, 8, 'F');
+
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(8);
       doc.setTextColor(21, 128, 61);
-      doc.text(roleTitle, MARGIN_LEFT + 4, y + 5);
-      y += 10;
+      doc.text('SANKALP AI ACADEMIC MENTOR MODEL ANSWER', MARGIN_LEFT + 6, y + 5.2);
+      y += 11;
 
-      const blocks = parseMarkdownBlocks(msg.content);
+      // Always parse structured blocks (headings, tables, code blocks, callouts, lists, paragraphs)
+      const blocks = parseMarkdownBlocks(msg.content || '');
       y = renderFormattedBlocks(doc, blocks, y);
-      y += 4;
-      continue;
+
+      // Separation line between question-answer pairs
+      if (idx < messages.length - 1) {
+        if (y + 6 > MAX_Y) {
+          doc.addPage();
+          y = HEADER_START_Y + 6;
+        }
+        doc.setDrawColor(226, 232, 240);
+        doc.setLineWidth(0.3);
+        doc.line(MARGIN_LEFT, y + 2, MARGIN_LEFT + USABLE_WIDTH, y + 2);
+        y += 6;
+      }
     }
-
-    const cleanContent = cleanMarkdownText(msg.content || '');
-    const lines = doc.splitTextToSize(cleanContent, USABLE_WIDTH - 12);
-    const cardHeight = 9 + lines.length * 4 + 3.5;
-
-    if (y + cardHeight > MAX_Y) {
-      doc.addPage();
-      y = HEADER_START_Y + 6;
-    }
-
-    doc.setFillColor(isUser ? 248 : 255, isUser ? 250 : 255, isUser ? 252 : 255);
-    doc.setDrawColor(isUser ? 203 : 226, isUser ? 213 : 232, isUser ? 225 : 240);
-    doc.setLineWidth(0.3);
-    doc.roundedRect(MARGIN_LEFT, y, USABLE_WIDTH, cardHeight, 1.5, 1.5, 'FD');
-
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8);
-    doc.setTextColor(isUser ? 15 : 21, isUser ? 23 : 128, isUser ? 42 : 61);
-    doc.text(roleTitle, MARGIN_LEFT + 4, y + 5);
-
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
-    doc.setTextColor(30, 41, 59);
-    let lineY = y + 9.5;
-    for (let l of lines) {
-      doc.text(l, MARGIN_LEFT + 4, lineY);
-      lineY += 4;
-    }
-
-    y += cardHeight + 4;
   }
 
   stampAllPageFooters(doc);
@@ -1171,7 +1576,7 @@ export async function exportCheatsheetPdf({
   return await exportRevisionPdf({
     subjectName,
     subjectCode,
-    courseName: `${courseName} • ${semesterName}`,
+    courseName: `${courseName} | ${semesterName}`,
     tabTitle: '1-Page Examination Master Cheatsheet',
     content,
     flashcards: [],
