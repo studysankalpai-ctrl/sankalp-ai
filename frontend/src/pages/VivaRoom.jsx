@@ -24,6 +24,7 @@ import {
   Zap,
   X,
   Edit3,
+  Languages,
 } from 'lucide-react';
 import useAppStore from '../store/appStore';
 import api, { aiApi } from '../lib/api';
@@ -47,6 +48,7 @@ export default function VivaRoom() {
   const [sessionState, setSessionState] = useState('setup'); // 'setup' | 'in_viva' | 'report_card'
   const [selectedUnitNumber, setSelectedUnitNumber] = useState('');
   const [difficulty, setDifficulty] = useState('strict'); // 'strict' | 'friendly'
+  const [language, setLanguage] = useState('english'); // 'english' | 'hindi' | 'hinglish'
   const [totalQuestions, setTotalQuestions] = useState(5);
   const [loading, setLoading] = useState(false);
 
@@ -118,8 +120,15 @@ export default function VivaRoom() {
       rec.continuous = !isMobile;
       rec.interimResults = true;
 
-      const deviceLang = (typeof navigator !== 'undefined' && navigator.language) || 'en-US';
-      rec.lang = deviceLang.startsWith('en') ? deviceLang : 'en-US';
+      // Voice Recognition Language configuration
+      if (language === 'hindi') {
+        rec.lang = 'hi-IN';
+      } else if (language === 'hinglish') {
+        rec.lang = 'hi-IN'; // Devanagari/Hindi acoustic model recognizes mixed Indian words and pronunciations accurately
+      } else {
+        const deviceLang = (typeof navigator !== 'undefined' && navigator.language) || 'en-IN';
+        rec.lang = deviceLang.startsWith('en') ? deviceLang : 'en-IN';
+      }
 
       rec.onstart = () => {
         setIsListening(true);
@@ -166,7 +175,7 @@ export default function VivaRoom() {
       console.error('[Speech Recognition Error]:', err);
       setIsListening(false);
     }
-  }, [isSpeechRecognitionSupported]);
+  }, [isSpeechRecognitionSupported, language]);
 
   // Stop Candidate Speech Recognition
   const stopListening = useCallback(() => {
@@ -179,7 +188,7 @@ export default function VivaRoom() {
     setIsListening(false);
   }, []);
 
-  // Speak Examiner's text using natural voice
+  // Speak Examiner's text using natural voice (Hindi or English)
   const speakExaminerText = (text, onComplete) => {
     stopListening();
     setExaminerSpeaking(true);
@@ -188,6 +197,7 @@ export default function VivaRoom() {
     playSpeech({
       messageId: `viva_${Date.now()}`,
       content: cleaned,
+      lang: language === 'hindi' ? 'hi-IN' : language === 'hinglish' ? 'hi-IN' : 'en-IN',
       rate: 0.98,
       onFinish: () => {
         setExaminerSpeaking(false);
@@ -206,7 +216,13 @@ export default function VivaRoom() {
   // Test Mobile Speaker & Audio
   const handleTestMobileAudio = () => {
     unlockMobileAudio();
-    speakExaminerText('Audio test successful. Your SANKALP AI Examiner voice is working properly.');
+    const testText =
+      language === 'hindi'
+        ? 'ऑडियो परीक्षण सफल रहा। आपकी संकल्प एआई परीक्षक की आवाज़ ठीक से काम कर रही है।'
+        : language === 'hinglish'
+        ? 'Audio test successful! SANKALP AI Examiner ki aawaz bilkul clear aa rahi hai.'
+        : 'Audio test successful. Your SANKALP AI Examiner voice is working properly.';
+    speakExaminerText(testText);
     toast.success('Playing audio test! Ensure phone is not on silent mode and volume is up.');
   };
 
@@ -234,6 +250,7 @@ export default function VivaRoom() {
         subjectId: selectedSubject._id,
         unitNumber: selectedUnitNumber ? Number(selectedUnitNumber) : null,
         difficulty,
+        language,
         totalQuestions: Number(totalQuestions),
         model: groqModel,
       });
@@ -250,10 +267,17 @@ export default function VivaRoom() {
         setFinalReport(null);
         setSessionState('in_viva');
 
-        toast.success(`Oral Viva Started: ${selectedSubject.name}`);
+        const langBadge = language === 'hindi' ? 'हिंदी (Hindi)' : language === 'hinglish' ? 'Hinglish' : 'English';
+        toast.success(`Oral Viva Started [${langBadge}]: ${selectedSubject.name}`);
 
-        // Read out examiner's greeting and Question 1
-        const initialSpeech = `${data.greeting} Question number one: ${data.question_text}`;
+        // Read out examiner's greeting and Question 1 in selected language
+        const qLead =
+          language === 'hindi'
+            ? 'प्रश्न संख्या एक:'
+            : language === 'hinglish'
+            ? 'Question number 1:'
+            : 'Question number one:';
+        const initialSpeech = `${data.greeting} ${qLead} ${data.question_text}`;
         speakExaminerText(initialSpeech);
       } else {
         toast.error('Failed to start viva session. Please try again.');
@@ -284,6 +308,7 @@ export default function VivaRoom() {
         subjectId: selectedSubject?._id,
         unitNumber: selectedUnitNumber ? Number(selectedUnitNumber) : null,
         difficulty,
+        language,
         questionNumber,
         totalQuestions: Number(totalQuestions),
         currentQuestionText: currentQuestion,
@@ -319,7 +344,12 @@ export default function VivaRoom() {
           setFinalReport(turnData.report_card);
           setSessionState('report_card');
 
-          const finalSpeech = `${turnData.verbal_feedback} That concludes your oral viva examination. Your overall result is ready on screen.`;
+          const finalSpeech =
+            language === 'hindi'
+              ? `${turnData.verbal_feedback} इस प्रकार आपकी मौखिक परीक्षा संपन्न होती है। आपका मूल्यांकन परिणाम स्क्रीन पर उपलब्ध है।`
+              : language === 'hinglish'
+              ? `${turnData.verbal_feedback} Viva exam complete ho gaya hai. Aapka overall scorecard screen par ready hai.`
+              : `${turnData.verbal_feedback} That concludes your oral viva examination. Your overall result is ready on screen.`;
           speakExaminerText(finalSpeech);
           return;
         }
@@ -331,8 +361,20 @@ export default function VivaRoom() {
         setQuestionNumber(turnData.next_question_number || questionNumber + 1);
         setIsCrossQuestion(Boolean(turnData.is_cross_question));
 
-        // Speak feedback + next question
-        const nextSpeech = `${turnData.verbal_feedback} ${turnData.is_cross_question ? 'Now answer this follow-up:' : 'Next question:'} ${turnData.next_question_text}`;
+        // Speak feedback + next question in appropriate language
+        const promptLead =
+          language === 'hindi'
+            ? turnData.is_cross_question
+              ? 'अब इस प्रति-प्रश्न (Cross-Question) का उत्तर दें:'
+              : 'अगला प्रश्न:'
+            : language === 'hinglish'
+            ? turnData.is_cross_question
+              ? 'Ab is cross-question ka answer dein:'
+              : 'Next question:'
+            : turnData.is_cross_question
+            ? 'Now answer this follow-up:'
+            : 'Next question:';
+        const nextSpeech = `${turnData.verbal_feedback} ${promptLead} ${turnData.next_question_text}`;
         speakExaminerText(nextSpeech);
       }
     } catch (err) {
@@ -346,7 +388,13 @@ export default function VivaRoom() {
   const handleRepeatQuestion = () => {
     unlockMobileAudio();
     if (!currentQuestion) return;
-    speakExaminerText(`Let me repeat the question: ${currentQuestion}`);
+    const repeatLead =
+      language === 'hindi'
+        ? 'परीक्षक प्रश्न दोहराते हैं:'
+        : language === 'hinglish'
+        ? 'Question repeat kar raha hoon:'
+        : 'Let me repeat the question:';
+    speakExaminerText(`${repeatLead} ${currentQuestion}`);
   };
 
   // End viva early
@@ -363,15 +411,25 @@ export default function VivaRoom() {
       {/* 1. SETUP SCREEN: Configure & Launch Voice Viva Room */}
       {/* ============================================================ */}
       {sessionState === 'setup' && (
-        <div className="flex-1 overflow-y-auto p-4 sm:p-8 flex items-center justify-center">
-          <div className="w-full max-w-2xl bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-800 rounded-3xl p-6 sm:p-10 shadow-xl space-y-6">
-            {/* Header Badge & Title (No Gradients) */}
-            <div className="text-center space-y-2">
+        <div className="flex-1 overflow-y-auto px-4 py-6 sm:py-10 flex justify-center items-start">
+          <div className="w-full max-w-2xl bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-800 rounded-3xl p-6 sm:p-10 shadow-xl space-y-6 my-2 sm:my-4">
+            {/* Header Badge & Title */}
+            <div className="text-center space-y-3 pt-1">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-gray-200 text-xs font-bold tracking-wider shadow-2xs">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                </span>
+                <span>AI Oral Viva Voce</span>
+                <span className="px-1.5 py-0.5 bg-black dark:bg-white text-white dark:text-black rounded text-[9px] font-black">
+                  NEW
+                </span>
+              </div>
               <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-950 dark:text-white tracking-tight">
-                Smart Viva Room
+                AI Viva-Voce Room
               </h1>
               <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 max-w-lg mx-auto leading-relaxed">
-                Step into a live virtual university oral exam. Speak your answers naturally the AI Examiner listens, evaluates your conceptual depth, and asks real cross-questions.
+                Step into a live virtual university oral exam. Speak your answers naturally — the AI Examiner listens, evaluates your conceptual depth, and asks real cross-questions.
               </p>
             </div>
 
@@ -455,6 +513,47 @@ export default function VivaRoom() {
                 <span className="text-[10px] font-bold text-gray-700 dark:text-gray-300">5 Units Connected</span>
               </div>
             )}
+
+            {/* Viva Voce Language Selector (English, Hindi, Hinglish) */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
+                  <Languages className="w-3.5 h-3.5 text-gray-700 dark:text-gray-300" /> Viva Voce Language
+                </label>
+                <span className="text-[10px] text-gray-500 dark:text-gray-400 font-medium">
+                  Examiner asks & transcribes in this language
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { id: 'english', label: '🇬🇧 English', sub: 'Academic English' },
+                  { id: 'hindi', label: '🇮🇳 हिंदी', sub: 'शुद्ध व सरल हिंदी' },
+                  { id: 'hinglish', label: '🗣️ Hinglish', sub: 'Hindi + English Mix' },
+                ].map((l) => (
+                  <button
+                    key={l.id}
+                    type="button"
+                    onClick={() => setLanguage(l.id)}
+                    className={`px-3 py-2.5 rounded-xl text-xs font-bold border transition-all flex flex-col items-center gap-0.5 cursor-pointer ${
+                      language === l.id
+                        ? 'bg-black text-white dark:bg-white dark:text-black border-black dark:border-white shadow-xs'
+                        : 'bg-gray-50 dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100 hover:border-gray-400'
+                    }`}
+                  >
+                    <span className="text-xs">{l.label}</span>
+                    <span
+                      className={`text-[9px] font-normal ${
+                        language === l.id
+                          ? 'text-gray-300 dark:text-gray-700'
+                          : 'text-gray-600 dark:text-gray-400'
+                      }`}
+                    >
+                      {l.sub}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
 
             {/* Examiner Persona & Viva Length */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -591,6 +690,9 @@ export default function VivaRoom() {
                 <span className="w-2 h-2 rounded-full bg-rose-600 animate-ping" />
                 Live Viva: Q{questionNumber} of {totalQuestions}
               </span>
+              <span className="px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-gray-200 text-[10px] font-bold">
+                {language === 'hindi' ? '🇮🇳 हिंदी' : language === 'hinglish' ? '🗣️ Hinglish' : '🇬🇧 English'}
+              </span>
               {isCrossQuestion && (
                 <span className="px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-300 text-[10px] font-bold">
                   ⚠️ Cross-Question
@@ -686,66 +788,142 @@ export default function VivaRoom() {
               )}
             </div>
 
-            {/* Interactive Voice Orb (Solid Colors - No Gradients) */}
-            <div className="flex flex-col items-center justify-center py-4 sm:py-8 space-y-4">
+            {/* ChatGPT-Style AI Glowing Voice Orb */}
+            <div className="flex flex-col items-center justify-center py-4 sm:py-6 space-y-4">
               <div className="relative flex items-center justify-center">
-                {/* Concentric Pulsing Ripples */}
+                {/* 1. Atmospheric Glowing Ambient Aura (ChatGPT Voice Style) */}
+                {examinerSpeaking ? (
+                  <div className="absolute w-56 h-56 sm:w-64 sm:h-64 rounded-full bg-indigo-500/30 blur-2xl animate-ai-breathe pointer-events-none" />
+                ) : isListening ? (
+                  <div className="absolute w-56 h-56 sm:w-64 sm:h-64 rounded-full bg-emerald-500/30 blur-2xl animate-ai-breathe pointer-events-none" />
+                ) : (
+                  <div className="absolute w-48 h-48 sm:w-56 sm:h-56 rounded-full bg-gray-400/20 dark:bg-white/10 blur-xl animate-ai-breathe pointer-events-none" />
+                )}
+
+                {/* 2. Concentric Ethereal Ripple Wave Rings */}
                 {isListening && (
                   <>
-                    <span className="absolute w-44 h-44 rounded-full bg-emerald-500/20 animate-ping" />
-                    <span className="absolute w-36 h-36 rounded-full bg-emerald-500/30 animate-pulse" />
+                    <span className="absolute w-52 h-52 sm:w-60 sm:h-60 rounded-full border border-emerald-400/40 animate-ai-ripple pointer-events-none" />
+                    <span className="absolute w-44 h-44 sm:w-52 sm:h-52 rounded-full border border-emerald-500/30 animate-ai-ripple-delayed pointer-events-none" />
                   </>
                 )}
                 {examinerSpeaking && (
                   <>
-                    <span className="absolute w-44 h-44 rounded-full bg-indigo-500/20 animate-ping" />
-                    <span className="absolute w-36 h-36 rounded-full bg-indigo-500/30 animate-pulse" />
+                    <span className="absolute w-52 h-52 sm:w-60 sm:h-60 rounded-full border border-indigo-400/40 animate-ai-ripple pointer-events-none" />
+                    <span className="absolute w-44 h-44 sm:w-52 sm:h-52 rounded-full border border-indigo-500/30 animate-ai-ripple-delayed pointer-events-none" />
                   </>
                 )}
 
-                {/* Big Center Microphone Button (No Gradient) */}
+                {/* 3. The Central AI Glow Circle (ChatGPT Advanced Voice Mode Orb) */}
                 <button
                   type="button"
                   onClick={() => (isListening ? stopListening() : startListening())}
                   disabled={loading}
-                  className={`relative w-28 h-28 sm:w-32 sm:h-32 rounded-full flex flex-col items-center justify-center transition-all duration-300 shadow-lg cursor-pointer ${
+                  className={`relative w-28 h-28 sm:w-36 sm:h-36 rounded-full flex flex-col items-center justify-center transition-all duration-300 shadow-2xl cursor-pointer select-none active:scale-95 ${
                     isListening
-                      ? 'bg-emerald-600 text-white ring-4 ring-emerald-300 dark:ring-emerald-500/50 scale-105'
+                      ? 'bg-emerald-600 text-white ring-4 ring-emerald-300 dark:ring-emerald-400/70 shadow-[0_0_45px_rgba(16,185,129,0.45)] scale-105'
                       : examinerSpeaking
-                      ? 'bg-indigo-600 text-white ring-4 ring-indigo-300 dark:ring-indigo-500/50 animate-pulse'
-                      : 'bg-black hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-black ring-4 ring-gray-200 dark:ring-gray-700'
+                      ? 'bg-indigo-600 text-white ring-4 ring-indigo-300 dark:ring-indigo-400/70 shadow-[0_0_45px_rgba(99,102,241,0.45)] scale-105'
+                      : 'bg-black hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-black ring-4 ring-gray-200 dark:ring-gray-700 shadow-lg'
                   }`}
                 >
-                  {isListening ? (
+                  {loading ? (
                     <>
-                      <Mic className="w-10 h-10 animate-bounce" />
-                      <span className="text-[10px] font-bold mt-1 tracking-wider uppercase">Speaking...</span>
+                      <Loader2 className="w-8 h-8 animate-spin text-white" />
+                      <span className="text-[10px] font-bold mt-1 tracking-wider uppercase text-gray-300">
+                        Thinking...
+                      </span>
+                    </>
+                  ) : isListening ? (
+                    <>
+                      {/* Live Animated Voice Equalizer Waveform */}
+                      <div className="flex items-center justify-center gap-1 h-8">
+                        <span className="w-1 bg-emerald-200 rounded-full animate-ai-bar-2" />
+                        <span className="w-1 bg-white rounded-full animate-ai-bar-4" />
+                        <Mic className="w-7 h-7 text-white animate-pulse mx-0.5" />
+                        <span className="w-1 bg-white rounded-full animate-ai-bar-3" />
+                        <span className="w-1 bg-emerald-200 rounded-full animate-ai-bar-1" />
+                      </div>
+                      <span className="text-[10px] font-extrabold mt-1 tracking-wider uppercase text-emerald-100">
+                        Listening
+                      </span>
                     </>
                   ) : examinerSpeaking ? (
                     <>
-                      <Volume2 className="w-10 h-10 animate-pulse" />
-                      <span className="text-[10px] font-bold mt-1 tracking-wider uppercase">Examiner</span>
+                      {/* ChatGPT Voice Frequency Waves */}
+                      <div className="flex items-center justify-center gap-1.5 h-8">
+                        <span className="w-1 bg-indigo-200 rounded-full animate-ai-bar-1" />
+                        <span className="w-1.5 bg-white rounded-full animate-ai-bar-2" />
+                        <span className="w-1.5 bg-white rounded-full animate-ai-bar-3" />
+                        <span className="w-1.5 bg-white rounded-full animate-ai-bar-4" />
+                        <span className="w-1 bg-indigo-200 rounded-full animate-ai-bar-5" />
+                      </div>
+                      <span className="text-[10px] font-extrabold mt-1 tracking-wider uppercase text-indigo-100">
+                        Examiner
+                      </span>
                     </>
                   ) : (
                     <>
-                      <Mic className="w-10 h-10 text-white dark:text-black" />
-                      <span className="text-[10px] font-bold mt-1 tracking-wider uppercase">Tap to Answer</span>
+                      {/* Idle ChatGPT AI Voice Circle */}
+                      <div className="flex items-center justify-center gap-1 h-8">
+                        <span className="w-1 h-2 bg-gray-400 dark:bg-gray-500 rounded-full" />
+                        <span className="w-1 h-3.5 bg-gray-300 dark:bg-gray-400 rounded-full" />
+                        <Mic className="w-7 h-7 text-white dark:text-black mx-1" />
+                        <span className="w-1 h-3.5 bg-gray-300 dark:bg-gray-400 rounded-full" />
+                        <span className="w-1 h-2 bg-gray-400 dark:bg-gray-500 rounded-full" />
+                      </div>
+                      <span className="text-[10px] font-black mt-1 tracking-wider uppercase text-white dark:text-black">
+                        Tap to Speak
+                      </span>
                     </>
                   )}
                 </button>
               </div>
 
-              {/* Status Hint */}
-              <div className="text-center space-y-1">
-                <p className="text-xs sm:text-sm font-bold text-gray-950 dark:text-white">
+              {/* Status Hint with AI Glowing State Dot */}
+              <div className="flex flex-col items-center justify-center space-y-1">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-2xs">
+                  <span
+                    className={`w-2 h-2 rounded-full ${
+                      isListening
+                        ? 'bg-emerald-500 animate-ping'
+                        : examinerSpeaking
+                        ? 'bg-indigo-500 animate-pulse'
+                        : 'bg-gray-400'
+                    }`}
+                  />
+                  <span className="text-xs font-bold text-gray-950 dark:text-white">
+                    {isListening
+                      ? language === 'hindi'
+                        ? 'परीक्षक आपकी आवाज़ सुन रहे हैं... उत्तर बोलें'
+                        : language === 'hinglish'
+                        ? 'Listening... Apna answer bolein'
+                        : 'Listening to candidate response...'
+                      : examinerSpeaking
+                      ? language === 'hindi'
+                        ? 'परीक्षक बोल रहे हैं... ध्यान से सुनें'
+                        : language === 'hinglish'
+                        ? 'Examiner bol rahe hain... Dhyan se sunein'
+                        : 'Examiner speaking... Listen carefully'
+                      : language === 'hindi'
+                      ? 'मौखिक परीक्षा सक्रिय • बोलने के लिए घेरे को स्पर्श करें'
+                      : language === 'hinglish'
+                      ? 'AI Viva Ready • Bolne ke liye orb tap karein'
+                      : 'AI Viva Voice Ready • Tap orb to answer'}
+                  </span>
+                </div>
+                <p className="text-[11px] text-gray-500 dark:text-gray-400">
                   {isListening
-                    ? '🟢 Listening to your answer... Speak naturally into mic'
-                    : examinerSpeaking
-                    ? '🔊 Examiner is speaking... Listen carefully'
-                    : 'Tap the mic to begin speaking your oral response'}
-                </p>
-                <p className="text-[11px] text-gray-600 dark:text-gray-400">
-                  {isListening ? 'Tap mic again or click "Submit Spoken Answer" when finished' : 'Speak clearly in English or Hinglish'}
+                    ? language === 'hindi'
+                      ? 'माइक्रोफ़ोन में स्पष्ट बोलें, फिर नीचे "उत्तर सबमिट करें" दबाएं'
+                      : language === 'hinglish'
+                      ? 'Mic me clearly bolein, fir niche Submit button dabayein'
+                      : 'Speak clearly into your microphone, then click Submit below'
+                    : language === 'hindi'
+                    ? 'जब भी आप उत्तर देने के लिए तैयार हों, ऊपर ग्लोइंग सर्कल पर टैप करें'
+                    : language === 'hinglish'
+                    ? 'Jab bhi bolne ke liye ready hon, glowing circle tap karein'
+                    : 'Tap the glowing circle above whenever you are ready to speak'}
                 </p>
               </div>
             </div>
@@ -756,12 +934,18 @@ export default function VivaRoom() {
                 <div className="flex items-center justify-between text-[11px] text-gray-600 dark:text-gray-400 mb-2 font-semibold flex-wrap gap-1">
                   <span className="flex items-center gap-1.5 font-bold text-gray-900 dark:text-gray-100">
                     <Mic className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                    {typingMode ? 'Your Response (Typing Mode):' : 'Your Spoken Response (Live Transcript):'}
+                    {typingMode
+                      ? language === 'hindi'
+                        ? 'आपका उत्तर (टाइपिंग मोड):'
+                        : 'Your Response (Typing Mode):'
+                      : language === 'hindi'
+                      ? 'आपका मौखिक उत्तर (लाइव ट्रांसक्रिप्ट):'
+                      : 'Your Spoken Response (Live Transcript):'}
                   </span>
                   <div className="flex items-center gap-2">
                     {isListening && (
                       <span className="text-emerald-600 dark:text-emerald-400 font-bold animate-pulse text-[10px]">
-                        ● Recording Voice
+                        ● {language === 'hindi' ? 'आवाज़ रिकॉर्ड हो रही है' : 'Recording Voice'}
                       </span>
                     )}
                     <button
@@ -773,7 +957,15 @@ export default function VivaRoom() {
                       className="px-2 py-0.5 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 text-[10px] font-bold transition-colors cursor-pointer flex items-center gap-1"
                     >
                       <Edit3 className="w-3 h-3" />
-                      <span>{typingMode ? '🎙️ Mic Mode' : '⌨️ Type Answer'}</span>
+                      <span>
+                        {typingMode
+                          ? language === 'hindi'
+                            ? '🎙️ माइक मोड'
+                            : '🎙️ Mic Mode'
+                          : language === 'hindi'
+                          ? '⌨️ लिखकर उत्तर दें'
+                          : '⌨️ Type Answer'}
+                      </span>
                     </button>
                   </div>
                 </div>
@@ -782,13 +974,23 @@ export default function VivaRoom() {
                   <textarea
                     value={transcript}
                     onChange={(e) => setTranscript(e.target.value)}
-                    placeholder="Type your oral answer here if you are in a noisy room or if microphone is restricted on your phone..."
+                    placeholder={
+                      language === 'hindi'
+                        ? 'यहाँ अपना मौखिक उत्तर टाइप करें यदि कमरे में शोर है या फ़ोन का माइक काम नहीं कर रहा है...'
+                        : language === 'hinglish'
+                        ? 'Yahan apna viva answer type karein...'
+                        : 'Type your oral answer here if you are in a noisy room or if microphone is restricted on your phone...'
+                    }
                     className="w-full h-20 p-2.5 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-xs sm:text-sm text-gray-950 dark:text-white focus:outline-none focus:border-black dark:focus:border-white resize-none"
                   />
                 ) : (
                   <p className="text-xs sm:text-sm text-gray-950 dark:text-white leading-relaxed italic font-medium">
                     {transcript || interimTranscript
                       ? `${transcript} ${interimTranscript}`
+                      : language === 'hindi'
+                      ? 'जैसे ही आप बोलेंगे, आपके शब्द वास्तविक समय में यहाँ दिखाई देंगे... (शोर होने पर "⌨️ लिखकर उत्तर दें" चुनें)'
+                      : language === 'hinglish'
+                      ? 'Aapke bole gaye words yahan real-time me dikhenge... (Noise hone par "⌨️ Type Answer" use karein)'
                       : 'Your spoken words will appear here in real-time as you speak... (Tap "⌨️ Type Answer" if in a noisy area)'}
                   </p>
                 )}
@@ -804,12 +1006,22 @@ export default function VivaRoom() {
                 {loading ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Examiner is Evaluating Your Response...</span>
+                    <span>
+                      {language === 'hindi'
+                        ? 'परीक्षक आपके उत्तर का मूल्यांकन कर रहे हैं...'
+                        : 'Examiner is Evaluating Your Response...'}
+                    </span>
                   </>
                 ) : (
                   <>
                     <Send className="w-4 h-4" />
-                    <span>Submit Spoken Answer to Examiner</span>
+                    <span>
+                      {language === 'hindi'
+                        ? 'परीक्षक को मौखिक उत्तर सबमिट करें'
+                        : language === 'hinglish'
+                        ? 'Examiner ko Answer Submit Karein'
+                        : 'Submit Spoken Answer to Examiner'}
+                    </span>
                   </>
                 )}
               </button>
@@ -822,8 +1034,8 @@ export default function VivaRoom() {
       {/* 3. POST-VIVA REPORT CARD: Comprehensive University Evaluation */}
       {/* ============================================================ */}
       {sessionState === 'report_card' && finalReport && (
-        <div className="flex-1 overflow-y-auto p-4 sm:p-8 flex items-center justify-center">
-          <div className="w-full max-w-3xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-3xl p-6 sm:p-10 shadow-xl space-y-6 animate-in zoom-in-95 duration-200">
+        <div className="flex-1 overflow-y-auto px-4 py-6 sm:py-10 flex justify-center items-start">
+          <div className="w-full max-w-3xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-3xl p-6 sm:p-10 shadow-xl space-y-6 animate-in zoom-in-95 duration-200 my-2 sm:my-4">
             {/* Header / Grade Badge (No Gradients) */}
             <div className="text-center space-y-2 pb-4 border-b border-gray-200 dark:border-gray-800">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-gray-200 text-xs font-bold uppercase tracking-wider">

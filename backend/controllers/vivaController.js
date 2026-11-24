@@ -112,6 +112,25 @@ const buildVivaSyllabusContext = async (subjectId, unitNumber = null, topic = nu
 };
 
 /**
+ * Helper to build language instructions for Hindi, Hinglish, or English
+ */
+const getLanguageGuidance = (language = 'english') => {
+  if (language === 'hindi') {
+    return `CRITICAL LANGUAGE REQUIREMENT (HINDI - हिंदी):
+- You MUST speak, greet, formulate all viva questions, provide spoken feedback, and interact STRICTLY in natural, clear, standard university examination Hindi (हिंदी).
+- Keep core technical keywords in English/Hinglish brackets if helpful (e.g. "पॉइंटर (Pointer)", "मेमोरी एलोकेशन (Memory Allocation)", "एरे (Array)", "फंक्शन (Function)"), but all spoken sentences, greetings, feedback, and questions MUST be in natural Hindi.
+- Example spoken question: "नमस्ते उम्मीदवार। आपकी मौखिक परीक्षा शुरू होती है। पहला प्रश्न: सी भाषा में पॉइंटर (Pointer) क्या होता है और यह मेमोरी में वेरिएबल्स का एड्रेस कैसे स्टोर करता है?"`;
+  }
+  if (language === 'hinglish') {
+    return `CRITICAL LANGUAGE REQUIREMENT (HINGLISH):
+- You MUST speak, greet, ask viva questions, and give feedback in natural Indian University Hinglish (conversational mix of Hindi & English as professors speak in university oral exams).
+- Example spoken question: "Namaste candidate. Aapka oral viva start ho raha hai. First question: C language me Pointer kya hota hai aur ye memory me variable ka address kaise store karta hai?"`;
+  }
+  return `CRITICAL LANGUAGE REQUIREMENT (ENGLISH):
+- Formulate all questions, greetings, and verbal feedback in clear, authoritative university examination English.`;
+};
+
+/**
  * POST /api/ai/viva/start
  * Initialize a live oral viva session & generate Question #1 strictly based on Unit Syllabus
  */
@@ -123,6 +142,7 @@ const startVivaSession = async (req, res, next) => {
       unitNumber = null,
       topic = null,
       difficulty = 'strict', // 'strict' | 'friendly'
+      language = 'english', // 'english' | 'hindi' | 'hinglish'
       totalQuestions = 5,
       model = 'openai/gpt-oss-120b',
     } = req.body;
@@ -143,6 +163,8 @@ EXAMINER PERSONA: ${
         ? 'Strict, authoritative University External Examiner who tests conceptual depth, catches memorization/bluffing, and expects precise technical terms and internal mechanisms'
         : 'Supportive University Professor who encourages the candidate and tests core practical understanding'
     }
+
+${getLanguageGuidance(language)}
 
 OFFICIAL PRESCRIBED SYLLABUS & TOPICS TO TEST:
 ${syllabusDetails}
@@ -178,12 +200,22 @@ Respond with a strictly valid JSON object ONLY:
       resultJson = JSON.parse(cleaned);
     } catch {
       resultJson = {
-        greeting: `Welcome, candidate. We are now commencing your official oral viva examination for ${subjectName} covering ${scopeDesc}. Please answer clearly.`,
+        greeting:
+          language === 'hindi'
+            ? `नमस्ते उम्मीदवार। ${subjectName} के लिए आपकी आधिकारिक मौखिक परीक्षा शुरू हो रही है। कृपया स्पष्ट बोलें।`
+            : language === 'hinglish'
+            ? `Welcome candidate. ${subjectName} ke liye oral viva exam start ho raha hai. Please answer clearly.`
+            : `Welcome, candidate. We are now commencing your official oral viva examination for ${subjectName} covering ${scopeDesc}. Please answer clearly.`,
         question_number: 1,
         total_questions: totalQuestions,
-        question_text: `To start off, explain the primary concept of ${
-          activeUnit ? activeUnit.name : subjectName
-        } and its practical working in university examinations.`,
+        question_text:
+          language === 'hindi'
+            ? `${activeUnit ? activeUnit.name : subjectName} की मुख्य संकल्पना और कार्यप्रणाली को विस्तार से समझाएं।`
+            : language === 'hinglish'
+            ? `${activeUnit ? activeUnit.name : subjectName} ka fundamental concept aur practical working mechanism explain karein.`
+            : `To start off, explain the primary concept of ${
+                activeUnit ? activeUnit.name : subjectName
+              } and its practical working in university examinations.`,
         syllabus_topic_tested: activeUnit ? activeUnit.name : 'Core Concepts',
         expected_keywords: ['definition', 'working principle', 'practical application'],
       };
@@ -222,6 +254,7 @@ const respondVivaTurn = async (req, res, next) => {
       unitNumber = null,
       topic = null,
       difficulty = 'strict',
+      language = 'english', // 'english' | 'hindi' | 'hinglish'
       questionNumber = 1,
       totalQuestions = 5,
       currentQuestionText,
@@ -253,6 +286,8 @@ Examiner Persona: ${
         : 'Friendly, supportive university professor'
     }
 
+${getLanguageGuidance(language)}
+
 SUBJECT: ${subjectName} ${subjectCode ? `(${subjectCode})` : ''}
 EXAMINATION SCOPE: ${scopeDesc}
 
@@ -279,7 +314,7 @@ CURRENT EXAM STATE:
 
 YOUR TASK:
 1. Grade the candidate's answer for this question out of 5 marks (e.g. 4.5/5).
-2. Formulate your spoken verbal reaction (~1-2 short sentences in natural English/Hinglish):
+2. Formulate your spoken verbal reaction (~1-2 short sentences strictly adhering to the LANGUAGE REQUIREMENT above):
    - Mention what was technically accurate.
    - Point out what critical technical detail, equation, keyword or mechanism was missed according to university standards.
 3. DECIDE NEXT STEP:

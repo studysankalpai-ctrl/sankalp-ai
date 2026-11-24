@@ -141,12 +141,31 @@ export function cleanTextForSpeech(markdown) {
 /**
  * Pick the most natural, human-like voice available on user's device
  */
-export function getBestNaturalVoice() {
+export function getBestNaturalVoice(preferredLang = 'en-IN') {
   if (typeof window === 'undefined' || !window.speechSynthesis) return null;
   const voices = cachedVoices.length > 0 ? cachedVoices : window.speechSynthesis.getVoices();
   if (!voices || voices.length === 0) return null;
 
-  // 1. Natural / Neural Indian English Voice (e.g. Edge Neerja, Prabhat, Rishi Enhanced)
+  const wantHindi = preferredLang === 'hi' || preferredLang === 'hi-IN' || preferredLang === 'hindi';
+
+  // 1. If Hindi is preferred: find Neural / Natural Hindi voice first
+  if (wantHindi) {
+    const hindiNatural = voices.find(
+      (v) =>
+        (v.lang === 'hi-IN' || v.lang === 'hi_IN' || v.lang.startsWith('hi')) &&
+        /(natural|neural|online|enhanced|google|siri|swara|madhur)/i.test(v.name)
+    );
+    if (hindiNatural) return hindiNatural;
+
+    const anyHindi = voices.find((v) => v.lang === 'hi-IN' || v.lang === 'hi_IN' || v.lang.startsWith('hi'));
+    if (anyHindi) return anyHindi;
+
+    // Fallback to Indian English which handles Hinglish/Hindi phonetics well
+    const indianVoice = voices.find((v) => v.lang === 'en-IN' || v.lang === 'en_IN');
+    if (indianVoice) return indianVoice;
+  }
+
+  // 2. Natural / Neural Indian English Voice (e.g. Edge Neerja, Prabhat, Rishi Enhanced)
   const indianNatural = voices.find(
     (v) =>
       (v.lang === 'en-IN' || v.lang === 'en_IN') &&
@@ -154,21 +173,17 @@ export function getBestNaturalVoice() {
   );
   if (indianNatural) return indianNatural;
 
-  // 2. Standard Indian English Voice
+  // 3. Standard Indian English Voice
   const indianEng = voices.find((v) => v.lang === 'en-IN' || v.lang === 'en_IN');
   if (indianEng) return indianEng;
 
-  // 3. Natural Hindi Voice
+  // 4. Natural Hindi Voice (for general English if Indian English not present)
   const hindiNatural = voices.find(
     (v) =>
       (v.lang === 'hi-IN' || v.lang === 'hi_IN') &&
       /(natural|neural|online|enhanced|google|siri)/i.test(v.name)
   );
   if (hindiNatural) return hindiNatural;
-
-  // 4. Other Hindi Voice
-  const hindi = voices.find((v) => v.lang === 'hi-IN' || v.lang === 'hi_IN');
-  if (hindi) return hindi;
 
   // 5. High-quality UK / US English Natural Voice (Siri Samantha, Daniel, Google US)
   const englishNatural = voices.find(
@@ -211,7 +226,7 @@ function splitIntoSentences(text) {
 /**
  * Play Speech for a given message
  */
-export function playSpeech({ messageId, content, rate = currentRate, onFinish }) {
+export function playSpeech({ messageId, content, lang = 'en-IN', rate = currentRate, onFinish }) {
   if (typeof window === 'undefined' || !window.speechSynthesis) {
     return false;
   }
@@ -258,10 +273,13 @@ export function playSpeech({ messageId, content, rate = currentRate, onFinish })
     // Keep global reference on window to prevent Garbage Collection on iOS / Android
     window._sankalpActiveUtterance = utterance;
 
-    const voice = getBestNaturalVoice();
+    const wantHindi = lang === 'hi' || lang === 'hi-IN' || lang === 'hindi';
+    const voice = getBestNaturalVoice(wantHindi ? 'hi-IN' : 'en-IN');
     if (voice) {
       utterance.voice = voice;
       utterance.lang = voice.lang;
+    } else if (wantHindi) {
+      utterance.lang = 'hi-IN';
     } else {
       // Safe fallback language supported on all iPhones and Androids
       const deviceLang =
