@@ -420,52 +420,7 @@ export default function MasterPaperModal({ paper, onClose }) {
   };
 
   const handleDownloadMarkdown = (includeAnswers = false) => {
-    let md = `# UNIVERSITY SEMESTER EXAMINATION BOARD\n`;
-    md += `## ${paper.paper_title}\n\n`;
-    md += `**Course**: ${paper.course_name} • **Semester**: ${paper.semester_name}\n`;
-    md += `**Subject**: ${paper.subject_name} (${paper.subject_code || 'N/A'})\n`;
-    md += `**Time Allowed**: ${paper.duration || '3 Hours'} | **Maximum Marks**: ${paper.max_marks || 70} Marks\n\n`;
-    md += `---\n\n`;
-    md += `### GENERAL INSTRUCTIONS TO CANDIDATES\n`;
-    (paper.instructions || []).forEach((ins, idx) => {
-      md += `${idx + 1}. ${ins}\n`;
-    });
-    md += `\n---\n\n`;
-
-    (paper.sections || []).forEach((sec) => {
-      md += `## ${sec.section_name} (Total: ${sec.total_marks} Marks)\n`;
-      md += `*${sec.section_instructions}*\n\n`;
-      (sec.questions || []).forEach((q) => {
-        md += `**Q.${q.q_num}.** ${q.question} \`[${q.marks} Marks]\``;
-        if (q.repetition_status) {
-          md += ` *(${q.repetition_status})*`;
-        }
-        md += `\n`;
-        if (q.or_question) {
-          md += `\n> **[OR]**\n> ${q.or_question}\n`;
-        }
-        if (includeAnswers && q.model_solution) {
-          md += `\n**Model Answer & Scoring Key (${q.marks}M):**\n${q.model_solution}\n`;
-        }
-        md += `\n---\n\n`;
-      });
-    });
-
-    md += `\n### ✦✦✦ END OF QUESTION PAPER ✦✦✦\n`;
-
-    const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    const safeTitle = (paper.paper_title || 'Final_Paper')
-      .replace(/[^a-zA-Z0-9_\-]/g, '_')
-      .replace(/_+/g, '_');
-    link.href = url;
-    link.download = `${safeTitle}${includeAnswers ? '_with_Solutions' : ''}.md`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    toast.success(`Downloaded: ${safeTitle}${includeAnswers ? '_with_Solutions' : ''}.md`);
+    handlePrintToPdf(includeAnswers);
     setDownloadMenuOpen(false);
   };
 
@@ -583,13 +538,16 @@ export default function MasterPaperModal({ paper, onClose }) {
                     </button>
 
                     <button
-                      onClick={() => handleDownloadMarkdown(showAllSolutions)}
+                      onClick={() => {
+                        handlePrintToPdf(showAllSolutions);
+                        setDownloadMenuOpen(false);
+                      }}
                       className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-gray-800 dark:text-gray-200 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                     >
-                      <FileText className="w-4 h-4 text-emerald-500 shrink-0" />
+                      <Printer className="w-4 h-4 text-emerald-500 shrink-0" />
                       <div>
-                        <p className="font-bold">Markdown File (.md)</p>
-                        <p className="text-[10px] text-gray-400">Word / Notion / Notes compatible</p>
+                        <p className="font-bold">Official Printable Exam PDF</p>
+                        <p className="text-[10px] text-gray-400">Standard A4 University Question Paper</p>
                       </div>
                     </button>
                   </div>

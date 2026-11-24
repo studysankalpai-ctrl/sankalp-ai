@@ -55,7 +55,7 @@ import {
   saveSubjectChat,
   clearSubjectChat,
   getAllSubjectChats,
-  exportChatToMarkdown,
+  exportChatToPdf,
   buildResponseCacheKey,
   getCachedResponse,
   saveCachedResponse,
@@ -459,14 +459,27 @@ Instructions:
     toast.success(`Chat history cleared for ${selectedSubject?.name || 'this subject'}`);
   };
 
-  // Export current subject chat to Markdown
-  const handleExportChat = () => {
-    exportChatToMarkdown(
-      selectedSubject?.name || 'General Subject',
-      selectedSubject?.code || 'N/A',
-      messages
-    );
-    toast.success('Chat transcript exported as Markdown!');
+  const [exportingPdf, setExportingPdf] = useState(false);
+
+  // Export current subject chat to PDF
+  const handleExportChat = async () => {
+    if (userQCount === 0) return;
+    setExportingPdf(true);
+    const toastId = toast.loading('Generating Mentorship Transcript PDF...');
+    try {
+      await exportChatToPdf(
+        selectedSubject?.name || 'General Subject',
+        selectedSubject?.code || 'N/A',
+        messages
+      );
+      toast.success('Mentorship transcript exported as PDF!', { id: toastId });
+    } catch (err) {
+      console.error('PDF export error:', err);
+      toast.error('Failed to export PDF, opening print dialog...', { id: toastId });
+      window.print();
+    } finally {
+      setExportingPdf(false);
+    }
   };
 
   // Open all subjects history modal
@@ -606,9 +619,9 @@ Instructions:
   const userQCount = messages.filter((m) => m.role === 'user').length;
 
   return (
-    <div className="flex flex-col h-full w-full max-w-full bg-[#F7F8FC] dark:bg-[#0B1020] overflow-hidden">
+    <div className="flex flex-col h-full w-full max-w-full bg-[#F7F8FC] dark:bg-black overflow-hidden">
       {/* Learning Controls Bar (Horizontally scrollable on mobile so controls never eat up screen height) */}
-      <div className="bg-white dark:bg-[#111827] border-b border-gray-200 dark:border-gray-800 px-2.5 sm:px-4 py-2 sm:py-2.5 flex items-center justify-between gap-2 shrink-0 shadow-2xs overflow-x-auto no-scrollbar w-full max-w-full">
+      <div className="bg-white dark:bg-[#0a0a0a] border-b border-gray-200 dark:border-gray-800 px-2.5 sm:px-4 py-2 sm:py-2.5 flex items-center justify-between gap-2 shrink-0 shadow-2xs overflow-x-auto no-scrollbar w-full max-w-full">
         <div className="flex items-center gap-2 text-xs shrink-0">
           {/* Subject Selector */}
           <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shrink-0">
@@ -748,7 +761,7 @@ Instructions:
           {/* 1-Page Printable Exam Cheat Sheet Button */}
           <button
             onClick={() => setCheatSheetOpen(true)}
-            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs transition-all hover:scale-102 shrink-0"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-black hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-100 dark:text-black text-xs font-bold shadow-xs transition-all hover:scale-102 shrink-0 cursor-pointer"
             title="Generate & print 1-page A4 exam revision cheat sheet covering all 5 units"
           >
             <FileText className="w-3.5 h-3.5" />
@@ -780,15 +793,19 @@ Instructions:
             <span className="hidden sm:inline">All Subjects</span>
           </button>
 
-          {/* Export Transcript */}
+          {/* Export Transcript as PDF */}
           <button
             onClick={handleExportChat}
-            disabled={userQCount === 0}
-            className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
-            title="Download this subject's chat transcript as Markdown"
+            disabled={userQCount === 0 || exportingPdf}
+            className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5 cursor-pointer"
+            title="Download this subject's chat transcript as an official PDF document"
           >
-            <Download className="w-3.5 h-3.5 text-indigo-500" />
-            <span className="hidden sm:inline">Export</span>
+            {exportingPdf ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-500" />
+            ) : (
+              <Download className="w-3.5 h-3.5 text-indigo-500" />
+            )}
+            <span className="hidden sm:inline">{exportingPdf ? 'Exporting...' : 'Export PDF'}</span>
           </button>
 
           {/* Clear Subject Chat */}
@@ -828,7 +845,7 @@ Instructions:
       {/* Main Chat & Context Panel Area */}
       <div className="flex-1 min-w-0 flex overflow-hidden">
         {/* Chat Stream */}
-        <div className="flex-1 min-w-0 flex flex-col h-full bg-[#F7F8FC] dark:bg-[#0B1020] relative overflow-hidden">
+        <div className="flex-1 min-w-0 flex flex-col h-full bg-[#F7F8FC] dark:bg-black relative overflow-hidden">
           {dbLoading ? (
             <div className="flex-1 flex items-center justify-center">
               <div className="flex flex-col items-center gap-2 text-gray-400 text-xs">
@@ -907,13 +924,13 @@ Instructions:
                       <div
                         className={`min-w-0 rounded-2xl p-3 sm:p-5 shadow-xs transition-all overflow-hidden break-words ${
                           isUser
-                            ? 'bg-indigo-600 text-white rounded-br-xs max-w-[85%] sm:max-w-[75%]'
-                            : 'flex-1 bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-gray-100 rounded-bl-xs'
+                            ? 'bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-950 rounded-br-xs max-w-[85%] sm:max-w-[75%]'
+                            : 'flex-1 bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-gray-100 rounded-bl-xs'
                         }`}
                       >
                         {/* Meta header for user message */}
                         {isUser && msg.marksFormat && (
-                          <div className="flex items-center gap-2 mb-1 text-[10px] sm:text-[11px] text-indigo-100/80">
+                          <div className="flex items-center gap-2 mb-1 text-[10px] sm:text-[11px] text-neutral-300 dark:text-neutral-600">
                             <span className="font-bold">{msg.marksFormat} Marks Target</span>
                             <span>&bull;</span>
                             <span className="capitalize">{msg.language || 'English'}</span>
@@ -977,7 +994,7 @@ Instructions:
 
                             {/* Desi Real-Life Analogy Card */}
                             {msg.analogy && msg.showAnalogy && (
-                              <div className="mt-4 p-3.5 sm:p-5 rounded-2xl bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-yellow-500/10 border border-amber-300 dark:border-amber-700/60 shadow-xs animate-in fade-in slide-in-from-top-2 duration-200">
+                              <div className="mt-4 p-3.5 sm:p-5 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-700/60 shadow-xs animate-in fade-in slide-in-from-top-2 duration-200">
                                 <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-amber-200 dark:border-amber-800/60">
                                   <div className="flex items-center gap-2">
                                     <div className="w-7 h-7 rounded-lg bg-amber-500 text-white flex items-center justify-center font-bold shadow-2xs">
@@ -1152,7 +1169,7 @@ Instructions:
           )}
 
           {/* Message Input Box (With iPhone Safe Area Bottom Protection) */}
-          <div className="p-2.5 sm:p-4 pb-[max(0.625rem,calc(env(safe-area-inset-bottom,0px)+0.25rem))] bg-white dark:bg-[#111827] border-t border-gray-200 dark:border-gray-800 shrink-0">
+          <div className="p-2.5 sm:p-4 pb-[max(0.625rem,calc(env(safe-area-inset-bottom,0px)+0.25rem))] bg-white dark:bg-[#0a0a0a] border-t border-gray-200 dark:border-gray-800 shrink-0">
             {/* Active Book Ribbon if Learn by Book Mode is On */}
             {learnByBook && (
               <div className="max-w-4xl mx-auto px-3 py-1.5 sm:px-4 sm:py-2 mb-2 rounded-xl bg-emerald-50/90 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 flex items-center justify-between text-xs text-emerald-950 dark:text-emerald-200 shadow-2xs">
@@ -1191,7 +1208,7 @@ Instructions:
               <button
                 onClick={handleSendMessage}
                 disabled={!inputValue.trim() || loading}
-                className="p-2 sm:p-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-40 disabled:cursor-not-allowed shrink-0 transition-colors shadow-xs"
+                className="p-2 sm:p-2.5 rounded-xl bg-black hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-100 dark:text-black disabled:opacity-40 disabled:cursor-not-allowed shrink-0 transition-colors shadow-xs cursor-pointer"
               >
                 <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </button>
@@ -1216,7 +1233,7 @@ Instructions:
 
         {/* Right Optional Academic Context Panel */}
         {contextPanelOpen && (
-          <aside className="hidden lg:flex flex-col w-80 shrink-0 bg-white dark:bg-[#111827] border-l border-gray-200 dark:border-gray-800 p-4 overflow-y-auto space-y-6">
+          <aside className="hidden lg:flex flex-col w-80 shrink-0 bg-white dark:bg-[#0a0a0a] border-l border-gray-200 dark:border-gray-800 p-4 overflow-y-auto space-y-6">
             <div>
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1.5">

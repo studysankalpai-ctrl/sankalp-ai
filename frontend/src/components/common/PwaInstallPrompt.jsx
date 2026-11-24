@@ -25,7 +25,7 @@ export default function PwaInstallPrompt() {
           aria-label="Install SANKALP Mobile App Banner"
           className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 sm:max-w-md z-40 animate-fade-in"
         >
-          <div className="bg-white/95 dark:bg-[#111827]/95 backdrop-blur-md border border-indigo-200 dark:border-indigo-900/60 rounded-2xl p-3.5 sm:p-4 shadow-xl flex items-center justify-between gap-3">
+          <div className="bg-white/95 dark:bg-[#0a0a0a]/95 backdrop-blur-md border border-indigo-200 dark:border-indigo-900/60 rounded-2xl p-3.5 sm:p-4 shadow-xl flex items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 p-0.5 shrink-0 shadow-xs flex items-center justify-center">
                 <img

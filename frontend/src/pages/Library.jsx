@@ -177,16 +177,16 @@ export default function Library() {
 
         <button
           onClick={() => setActiveTab('books')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 ${
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
             activeTab === 'books'
-              ? 'bg-emerald-600 text-white shadow-xs'
+              ? 'bg-black dark:bg-white text-white dark:text-black shadow-xs'
               : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
           }`}
         >
           <BookOpen className="w-4 h-4" />
           <span>Prescribed Textbooks & Books</span>
           {booksList.length > 0 && (
-            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${activeTab === 'books' ? 'bg-white/20' : 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300'}`}>
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${activeTab === 'books' ? 'bg-white/20 dark:bg-black/20' : 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300'}`}>
               {booksList.length}
             </span>
           )}
@@ -196,7 +196,7 @@ export default function Library() {
       {/* Books Tab View */}
       {activeTab === 'books' && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between flex-wrap gap-3 p-4 rounded-2xl bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-800 shadow-2xs">
+          <div className="flex items-center justify-between flex-wrap gap-3 p-4 rounded-2xl bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-gray-800 shadow-2xs">
             <div className="flex items-center gap-2">
               <BookOpen className="w-4 h-4 text-emerald-600" />
               <div>
@@ -234,7 +234,7 @@ export default function Library() {
               {filteredBooks.map((book) => (
                 <div
                   key={book._id}
-                  className="p-5 rounded-2xl bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-800 hover:border-emerald-500/50 dark:hover:border-emerald-500/50 shadow-xs hover:shadow-md transition-all flex flex-col justify-between space-y-4"
+                  className="p-5 rounded-2xl bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-gray-800 hover:border-emerald-500/50 dark:hover:border-emerald-500/50 shadow-xs hover:shadow-md transition-all flex flex-col justify-between space-y-4"
                 >
                   <div className="flex items-start gap-3.5">
                     <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
@@ -311,7 +311,7 @@ export default function Library() {
       {activeTab === 'folders' && (
         <div className="space-y-6">
       {/* Breadcrumb Navigation Bar */}
-      <div className="flex items-center justify-between flex-wrap gap-4 p-3.5 rounded-2xl bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-800 shadow-2xs">
+      <div className="flex items-center justify-between flex-wrap gap-4 p-3.5 rounded-2xl bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-gray-800 shadow-2xs">
         <nav className="flex items-center gap-1.5 text-xs sm:text-sm font-medium overflow-x-auto no-scrollbar py-1 max-w-full">
           <button
             onClick={() => {
@@ -380,7 +380,7 @@ export default function Library() {
                   <div
                     key={folder._id}
                     onClick={() => openFolder(folder._id)}
-                    className="group flex items-center gap-3 p-3.5 rounded-2xl bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-800 hover:border-indigo-400 dark:hover:border-indigo-600 hover:shadow-md cursor-pointer transition-all duration-150"
+                    className="group flex items-center gap-3 p-3.5 rounded-2xl bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-gray-800 hover:border-indigo-400 dark:hover:border-indigo-600 hover:shadow-md cursor-pointer transition-all duration-150"
                   >
                     <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                       <Folder className="w-5 h-5 fill-amber-500/20" />
@@ -412,7 +412,7 @@ export default function Library() {
                   {filteredFiles.map((file) => (
                     <div
                       key={file._id}
-                      className="p-4 rounded-2xl bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-800 hover:border-indigo-300 dark:hover:border-indigo-800 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between"
+                      className="p-4 rounded-2xl bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-gray-800 hover:border-indigo-300 dark:hover:border-indigo-800 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between"
                     >
                       <div>
                         <div className="flex items-start justify-between gap-3 mb-3">
@@ -454,7 +454,7 @@ export default function Library() {
                   ))}
                 </div>
               ) : (
-                <div className="overflow-x-auto rounded-2xl bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-800">
+                <div className="overflow-x-auto rounded-2xl bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-gray-800">
                   <table className="w-full text-left text-sm">
                     <thead>
                       <tr className="border-b border-gray-100 dark:border-gray-800 text-xs font-semibold text-gray-400 uppercase tracking-wider bg-gray-50/50 dark:bg-gray-900/50">

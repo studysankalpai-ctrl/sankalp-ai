@@ -38,6 +38,8 @@ import {
   Menu,
   X,
   Mail,
+  Mic,
+  ClipboardCheck,
 } from 'lucide-react';
 
 export default function Landing() {
@@ -103,6 +105,44 @@ export default function Landing() {
       ],
       link: '/predictions',
       linkText: 'Generate Master Paper',
+    },
+    {
+      id: 'viva',
+      title: 'AI Viva Voce Room',
+      subtitle: 'Speech-Powered Oral Exam Simulation',
+      icon: Mic,
+      image: '/screenshots/mentor.png',
+      badge: 'Live Audio AI',
+      tagline: 'Simulate high-stakes university oral vivas with an AI external examiner.',
+      description:
+        'Overcome oral exam anxiety with speech-driven interactive practice. SANKALP AI speaks questions aloud, transcribes your spoken answers in real time using Web Speech, and grades your response against university syllabi with instant scorecards.',
+      highlights: [
+        'Hands-free speech dialogue: AI speaks questions and listens to student answers',
+        '4 Examiner Personas: Strict Academic, Friendly Mentor, Rapid-Fire, Standard',
+        'Instant oral viva scorecard with conceptual strengths and missing points',
+        'Zero typing needed  builds confidence for real university practical exams',
+      ],
+      link: '/viva',
+      linkText: 'Enter AI Viva Room',
+    },
+    {
+      id: 'tests',
+      title: 'Timed Mock Tests & PDF Scorecard',
+      subtitle: '5-Min, 10-Min Drills & Official PDF Scorecards',
+      icon: ClipboardCheck,
+      image: '/screenshots/final-paper.png',
+      badge: 'Rapid Exam Drills',
+      tagline: 'Test your retention under time pressure with automatic rubric grading and PDF export.',
+      description:
+        'Practice with 5-minute blitz drills, 10-minute quizzes, or full 3-hour university mocks. Features real-time urgency timer warnings, an interactive question matrix, automated marking with model answers, and instant 1-click A4 PDF scorecard download complete with your typed answers.',
+      highlights: [
+        'Rapid 5 Min (Blitz) & 10 Min (Express) quick revision presets',
+        'Live timer HUD with smart warning alerts and review flagging',
+        'Real-time word and character counters for descriptive 10-mark answers',
+        'Official Scorecard PDF export with marks, grade badge, and typed answers',
+      ],
+      link: '/tests',
+      linkText: 'Take a Mock Test',
     },
     {
       id: 'library',
@@ -184,15 +224,15 @@ export default function Landing() {
 
       {/* Top Navbar (Monochrome Black & White, Responsive Mobile Height & Text, iPhone Notch Protection) */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-black/95 sm:bg-black/85 sm:backdrop-blur-xl border-b border-white/10 transition-all pt-[env(safe-area-inset-top,0px)]">
-        <div className="w-full max-w-[1560px] mx-auto px-3.5 sm:px-6 md:px-8 lg:px-12 h-16 sm:h-20 flex items-center justify-between">
+        <div className="w-full max-w-[1560px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 h-14 sm:h-16 flex items-center justify-between">
           {/* Logo & Brand Identity */}
-          <Link to="/" className="flex items-center gap-2 sm:gap-3.5 group shrink-0">
-            <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-white/5 border border-white/20 p-1 sm:p-1.5 flex items-center justify-center transition-all duration-300 group-hover:border-white/50 group-hover:bg-white/10">
+          <Link to="/" className="flex items-center gap-2.5 group shrink-0">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-white/5 border border-white/20 p-1 flex items-center justify-center transition-all duration-200 group-hover:border-white/50 group-hover:bg-white/10">
               <img
                 src="/Logo.png"
                 alt="SANKALP AI"
-                width="36"
-                height="36"
+                width="32"
+                height="32"
                 loading="eager"
                 fetchPriority="high"
                 decoding="async"
@@ -200,22 +240,22 @@ export default function Landing() {
               />
             </div>
             <div>
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                <span className="font-extrabold text-base sm:text-2xl tracking-tight text-white group-hover:text-zinc-200 transition-colors">
+              <div className="flex items-center gap-1.5">
+                <span className="font-extrabold text-sm sm:text-base tracking-tight text-white group-hover:text-zinc-200 transition-colors">
                   SANKALP AI
                 </span>
-                <span className="text-[9px] sm:text-xs font-mono uppercase tracking-wider sm:tracking-widest px-1.5 sm:px-2.5 py-0.5 rounded-full bg-white/10 border border-white/15 text-zinc-300">
+                <span className="text-[9px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/10 border border-white/15 text-zinc-300 font-semibold">
                   2.0 Core
                 </span>
               </div>
-              <p className="text-[10px] sm:text-xs text-zinc-400 font-medium hidden sm:block">
+              <p className="text-[10px] text-zinc-400 font-medium hidden sm:block leading-tight">
                 University Exam Intelligence Engine
               </p>
             </div>
           </Link>
 
           {/* Center Navigation Links (Desktop) */}
-          <nav className="hidden lg:flex items-center gap-8 text-sm font-semibold text-zinc-300">
+          <nav className="hidden lg:flex items-center gap-7 text-xs font-semibold text-zinc-400">
             <a href="#tour" className="hover:text-white transition-colors">
               Inside Software
             </a>
@@ -225,7 +265,7 @@ export default function Landing() {
             <a href="#workflow" className="hover:text-white transition-colors">
               How It Works
             </a>
-            <Link to="/guide" className="hover:text-white transition-colors text-white">
+            <Link to="/guide" className="hover:text-white transition-colors">
               User Manual
             </Link>
             <a href="#creator" className="hover:text-white transition-colors">
@@ -234,22 +274,22 @@ export default function Landing() {
           </nav>
 
           {/* Right Action: Enter AI Platform + Mobile Hamburger */}
-          <div className="flex items-center gap-1.5 sm:gap-3">
+          <div className="flex items-center gap-2">
             <Link
               to="/dashboard"
-              className="group inline-flex items-center gap-1 sm:gap-2 px-2.5 sm:px-6 py-1.5 sm:py-3 rounded-full bg-white hover:bg-zinc-200 text-black text-[11px] sm:text-base font-extrabold tracking-tight shadow-lg shadow-white/5 transition-all duration-200 hover:scale-[1.03] active:scale-[0.98]"
+              className="group inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full bg-white hover:bg-zinc-200 text-black text-xs font-extrabold tracking-tight shadow-md shadow-white/5 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
             >
-              <span>Enter <span className="hidden sm:inline">SANKALP</span> AI</span>
-              <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 transition-transform group-hover:translate-x-1" />
+              <span>Enter SANKALP AI</span>
+              <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
             </Link>
 
             {/* Mobile Menu Button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-1.5 sm:p-2 rounded-lg sm:rounded-xl text-zinc-400 hover:text-white hover:bg-white/10 border border-white/10 transition-colors"
+              className="lg:hidden p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 border border-white/10 transition-colors"
               aria-label="Toggle Navigation"
             >
-              {mobileMenuOpen ? <X className="w-4 h-4 sm:w-5 sm:h-5" /> : <Menu className="w-4 h-4 sm:w-5 sm:h-5" />}
+              {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
             </button>
           </div>
         </div>
@@ -257,7 +297,7 @@ export default function Landing() {
         {/* Mobile Navigation Drawer */}
         {mobileMenuOpen && (
           <div className="lg:hidden bg-zinc-950 border-b border-white/15 px-5 py-4 space-y-3 animate-in fade-in duration-200">
-            <nav className="flex flex-col gap-2 text-sm font-medium text-zinc-300">
+            <nav className="flex flex-col gap-2 text-xs font-medium text-zinc-300">
               <a
                 href="#tour"
                 onClick={() => setMobileMenuOpen(false)}
@@ -299,9 +339,9 @@ export default function Landing() {
               <Link
                 to="/dashboard"
                 onClick={() => setMobileMenuOpen(false)}
-                className="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-white text-black text-xs sm:text-sm font-extrabold shadow-md"
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-white text-black text-xs font-bold shadow-md"
               >
-                <Bot className="w-4 h-4 text-black" />
+                <Bot className="w-3.5 h-3.5 text-black" />
                 <span>Launch SANKALP AI</span>
               </Link>
             </div>
@@ -310,7 +350,7 @@ export default function Landing() {
       </header>
 
       {/* 2-Column Hero Section: Left (Copy & CTAs) + Right (Live Software Frame) */}
-      <section className="relative pt-[calc(6rem+env(safe-area-inset-top,0px))] pb-12 sm:pt-36 sm:pb-20 z-10">
+      <section className="relative pt-[calc(4.75rem+env(safe-area-inset-top,0px))] pb-12 sm:pt-28 sm:pb-20 z-10">
         <div className="w-full max-w-[1560px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 xl:gap-16 items-center">
             {/* Left Column (Headline, Natural Human-Centric Copy & CTAs - Immediate Paint on Mobile) */}
@@ -333,7 +373,7 @@ export default function Landing() {
               </p>
 
               {/* Action Buttons (Centered on mobile, horizontal on tablet/desktop) */}
-              <div className="w-full flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-2.5 sm:gap-3 pt-1">
+              <div className="w-full flex flex-wrap items-center justify-center lg:justify-start gap-2.5 sm:gap-3 pt-1">
                 <Link
                   to="/dashboard"
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 sm:px-6 py-3 rounded-xl bg-white hover:bg-zinc-200 text-black text-xs sm:text-sm font-extrabold shadow-lg shadow-white/10 transition-all hover:scale-[1.02] active:scale-[0.98]"
@@ -344,19 +384,32 @@ export default function Landing() {
                 </Link>
 
                 <Link
-                  to="/predictions"
+                  to="/viva"
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 sm:px-5 py-3 rounded-xl bg-zinc-900/90 hover:bg-zinc-800 text-white text-xs sm:text-sm font-bold border border-white/20 transition-all hover:border-white/40"
                 >
-                  <FileCheck2 className="w-4 h-4 text-white" />
-                  <span>5-Yr Final Master Paper</span>
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                  </span>
+                  <Mic className="w-4 h-4 text-white" />
+                  <span>AI Viva Room</span>
+                  <span className="px-1.5 py-0.2 rounded text-[9px] font-black bg-white text-black">LIVE</span>
                 </Link>
 
                 <Link
-                  to="/mentor"
-                  className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-transparent hover:bg-white/5 text-zinc-300 hover:text-white text-xs sm:text-sm font-semibold transition-colors"
+                  to="/tests"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 sm:px-5 py-3 rounded-xl bg-zinc-900/90 hover:bg-zinc-800 text-white text-xs sm:text-sm font-bold border border-white/20 transition-all hover:border-white/40"
                 >
-                  <Sparkles className="w-3.5 h-3.5 text-zinc-400" />
-                  <span>Ask AI Mentor</span>
+                  <ClipboardCheck className="w-4 h-4 text-white" />
+                  <span>Timed Mock Drills</span>
+                </Link>
+
+                <Link
+                  to="/predictions"
+                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-transparent hover:bg-white/5 text-zinc-300 hover:text-white text-xs sm:text-sm font-semibold transition-colors"
+                >
+                  <FileCheck2 className="w-3.5 h-3.5 text-zinc-400" />
+                  <span>5-Yr Master Paper</span>
                 </Link>
               </div>
 
@@ -417,17 +470,21 @@ export default function Landing() {
                   </div>
 
                   <div className="absolute bottom-3.5 left-3.5 bg-black/85 backdrop-blur-md border border-white/20 px-3.5 py-1.5 rounded-xl shadow-lg flex items-center gap-2">
-                    <ShieldCheck className="w-4 h-4 text-white" />
-                    <span className="text-xs sm:text-sm font-bold text-white">St. John's College Curriculum Grounded</span>
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                    </span>
+                    <Mic className="w-4 h-4 text-white" />
+                    <span className="text-xs sm:text-sm font-bold text-white">Oral Viva Voce & Speech AI</span>
                   </div>
 
                   <div className="absolute bottom-3.5 right-3.5">
                     <Link
-                      to="/mentor"
+                      to="/tests"
                       className="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-white text-black shadow-md hover:bg-zinc-200 inline-flex items-center gap-1.5 transition-transform hover:scale-105"
                     >
-                      <span>Try Interactive Mentor</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
+                      <ClipboardCheck className="w-3.5 h-3.5 text-black" />
+                      <span>5M & 10M Mock Drills</span>
                     </Link>
                   </div>
                 </div>
@@ -486,8 +543,8 @@ export default function Landing() {
                   key={module.id}
                   onClick={() => setActiveTourTab(module.id)}
                   className={`px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 shrink-0 transition-all border ${isActive
-                      ? 'bg-white text-black border-white shadow-md'
-                      : 'bg-zinc-950 text-zinc-400 border-white/10 hover:border-white/30 hover:text-white'
+                    ? 'bg-white text-black border-white shadow-md'
+                    : 'bg-zinc-950 text-zinc-400 border-white/10 hover:border-white/30 hover:text-white'
                     }`}
                 >
                   <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />

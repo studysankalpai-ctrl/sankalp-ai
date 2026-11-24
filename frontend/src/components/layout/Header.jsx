@@ -16,6 +16,7 @@ import toast from 'react-hot-toast';
 export default function Header() {
   const {
     sidebarCollapsed,
+    toggleSidebar,
     setMobileNavOpen,
     darkMode,
     toggleTheme,
@@ -40,17 +41,28 @@ export default function Header() {
 
   return (
     <header
-      className={`fixed top-0 right-0 z-30 h-[calc(4rem+env(safe-area-inset-top,0px))] pt-[env(safe-area-inset-top,0px)] bg-white/80 dark:bg-[#111827]/80 backdrop-blur-md border-b border-gray-200/80 dark:border-gray-800/80 transition-all duration-300 flex items-center justify-between px-3 sm:px-6 ${
+      className={`fixed top-0 right-0 z-30 h-[calc(4rem+env(safe-area-inset-top,0px))] pt-[env(safe-area-inset-top,0px)] bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-gray-200/80 dark:border-gray-800/80 transition-all duration-300 flex items-center justify-between px-3 sm:px-6 ${
         sidebarCollapsed ? 'left-0 md:left-20' : 'left-0 md:left-64'
       }`}
     >
-      {/* Left: Mobile hamburger & Global Search bar */}
-      <div className="flex items-center gap-1 sm:gap-3 flex-1 min-w-0 max-w-xs sm:max-w-md">
+      {/* Left: Desktop sidebar toggle + Mobile hamburger + Global Search bar */}
+      <div className="flex items-center gap-1 sm:gap-2 flex-1 min-w-0 max-w-xs sm:max-w-md">
+        {/* Mobile menu button */}
         <button
           onClick={() => setMobileNavOpen(true)}
-          className="p-1.5 sm:p-2 rounded-xl text-gray-500 hover:text-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 md:hidden shrink-0"
+          className="p-1.5 sm:p-2 rounded-xl text-gray-500 hover:text-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 md:hidden shrink-0 cursor-pointer"
+          title="Open Menu"
         >
           <Menu className="w-5 h-5" />
+        </button>
+
+        {/* Desktop Sidebar Toggle Button */}
+        <button
+          onClick={toggleSidebar}
+          className="hidden md:flex p-2 rounded-xl text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors shrink-0 cursor-pointer"
+          title={sidebarCollapsed ? "Expand Sidebar (Ctrl+B)" : "Collapse Sidebar"}
+        >
+          <Menu className="w-4 h-4" />
         </button>
 
         {/* Desktop Search Button */}

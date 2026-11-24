@@ -5,6 +5,8 @@
  *    with localStorage fallback so students never lose their API connection.
  */
 
+import { exportMentorChatPdf } from './pdfExport';
+
 const DB_NAME = 'SankalpMentorDB';
 const DB_VERSION = 3;
 const STORE_NAME = 'subject_chats';
@@ -147,7 +149,7 @@ export async function clearSubjectChat(subjectId) {
     console.warn('IndexedDB delete failed, clearing localStorage:', err);
     try {
       localStorage.removeItem(`sankalp_chat_${subjectId}`);
-    } catch {}
+    } catch { }
   }
 }
 
@@ -184,39 +186,22 @@ export async function getAllSubjectChats() {
 }
 
 /**
- * Export chat transcript to Markdown file for student revision
+ * Export chat transcript to PDF document for student revision
  * @param {string} subjectName
  * @param {string} subjectCode
  * @param {Array} messages
  */
-export function exportChatToMarkdown(subjectName, subjectCode, messages) {
-  if (!messages || messages.length === 0) return;
-
-  let md = `# SANKALP AI — Examination Mentorship Transcript\n`;
-  md += `**Subject:** ${subjectName || 'General'} (${subjectCode || 'N/A'})\n`;
-  md += `**Date:** ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}\n`;
-  md += `**Total Messages:** ${messages.length}\n\n`;
-  md += `---\n\n`;
-
-  messages.forEach((msg, idx) => {
-    const role = msg.role === 'user' ? 'Student' : 'SANKALP AI Mentor';
-    const time = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString() : '';
-    md += `### ${role} ${time ? `(${time})` : ''}\n\n`;
-    md += `${msg.content}\n\n`;
-    md += `---\n\n`;
+export async function exportChatToPdf(subjectName, subjectCode, messages) {
+  if (!messages || messages.length === 0) return false;
+  return await exportMentorChatPdf({
+    subjectName,
+    subjectCode,
+    messages,
   });
-
-  const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  const safeName = (subjectCode || subjectName || 'Subject').replace(/[^a-zA-Z0-9_\-]/g, '_');
-  a.href = url;
-  a.download = `Sankalp_Mentor_Chat_${safeName}_${new Date().toISOString().split('T')[0]}.md`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
 }
+
+// Backwards compatibility alias
+export const exportChatToMarkdown = exportChatToPdf;
 
 // ==========================================
 // IndexedDB Settings & AI API Key Management
@@ -280,7 +265,7 @@ export async function saveSetting(key, value) {
   // Mirror to localStorage for instant synchronous recovery
   try {
     localStorage.setItem(`sankalp_setting_${key}`, JSON.stringify(value));
-  } catch {}
+  } catch { }
 
   try {
     const db = await openDB();
@@ -318,7 +303,7 @@ export async function removeSetting(key) {
 
   try {
     localStorage.removeItem(`sankalp_setting_${key}`);
-  } catch {}
+  } catch { }
 
   try {
     const db = await openDB();

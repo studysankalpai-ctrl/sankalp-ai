@@ -16,6 +16,8 @@ import {
   Check,
   Settings,
   AlertCircle,
+  Download,
+  Loader2,
 } from 'lucide-react';
 import { aiApi } from '../lib/api';
 import useAppStore from '../store/appStore';
@@ -29,6 +31,7 @@ import {
   getSubjectCachedEntries,
 } from '../lib/mentorStorage';
 import toast from 'react-hot-toast';
+import { exportRevisionPdf } from '../lib/pdfExport';
 
 export default function Revision() {
   const {
@@ -51,6 +54,7 @@ export default function Revision() {
   const [cachedTimestamp, setCachedTimestamp] = useState(null);
   const [cachedTabsMap, setCachedTabsMap] = useState({});
   const [cheatSheetOpen, setCheatSheetOpen] = useState(false);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
 
   // Scan IndexedDB to see which revision tabs already exist for current subject
   const refreshCachedTabsMap = async (subjectId) => {
@@ -192,6 +196,39 @@ export default function Revision() {
     }
   }, [selectedSubject?._id, activeTab]);
 
+  const handleExportPdf = async () => {
+    if (!content && flashcards.length === 0) return;
+    setDownloadingPdf(true);
+    const toastId = toast.loading('Preparing official Revision PDF...');
+
+    try {
+      const tabTitle =
+        activeTab === 'notes'
+          ? 'Quick Revision Notes'
+          : activeTab === 'definitions'
+          ? 'Key Definitions'
+          : activeTab === 'flashcards'
+          ? 'Revision Flashcards'
+          : 'Last-Minute Exam Checklist';
+
+      await exportRevisionPdf({
+        subjectName: selectedSubject?.name || 'Subject',
+        subjectCode: selectedSubject?.code || 'N/A',
+        courseName: selectedCourse?.name || 'University Exam',
+        tabTitle,
+        content,
+        flashcards: activeTab === 'flashcards' ? flashcards : [],
+      });
+
+      toast.success('Revision PDF downloaded successfully!', { id: toastId });
+    } catch (err) {
+      console.error('PDF export error:', err);
+      toast.error('Failed to download PDF: ' + err.message, { id: toastId });
+    } finally {
+      setDownloadingPdf(false);
+    }
+  };
+
   const toggleFlip = (index) => {
     setFlippedCards((prev) => ({ ...prev, [index]: !prev[index] }));
   };
@@ -211,7 +248,7 @@ export default function Revision() {
         {selectedSubject && (
           <button
             onClick={() => setCheatSheetOpen(true)}
-            className="self-stretch sm:self-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md hover:scale-102 transition-all shrink-0 w-full sm:w-auto text-center"
+            className="self-stretch sm:self-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-black hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-100 dark:text-black text-xs font-extrabold shadow-sm hover:scale-[1.01] active:scale-[0.99] transition-all shrink-0 w-full sm:w-auto text-center cursor-pointer"
             title="Generate & print 1-page A4 exam revision cheat sheet covering all 5 units"
           >
             <Printer className="w-4 h-4 shrink-0" />
@@ -222,7 +259,7 @@ export default function Revision() {
 
       {/* Subject Quick Selector & IndexedDB Status Bar */}
       {subjects && subjects.length > 0 && (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-2xl bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-800 shadow-2xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-2xl bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-gray-800 shadow-2xs">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs font-mono font-bold uppercase tracking-wider text-gray-400">
               Select Subject:
@@ -233,9 +270,9 @@ export default function Revision() {
                 <button
                   key={sub._id}
                   onClick={() => setSelectedSubject(sub)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                     isSelected
-                      ? 'bg-indigo-600 text-white shadow-2xs'
+                      ? 'bg-black text-white dark:bg-white dark:text-black shadow-xs'
                       : 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                   }`}
                 >
@@ -255,7 +292,7 @@ export default function Revision() {
       )}
 
       {/* Tabs Bar with IndexedDB Saved Badges */}
-      <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-800 shadow-2xs overflow-x-auto">
+      <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-gray-800 shadow-2xs overflow-x-auto">
         <button
           onClick={() => setActiveTab('notes')}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 ${
@@ -331,7 +368,7 @@ export default function Revision() {
       ) : activeTab === 'flashcards' && flashcards.length > 0 ? (
         <div className="space-y-4">
           {/* Header Bar for Flashcards */}
-          <div className="p-4 rounded-2xl bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-800 shadow-2xs flex flex-wrap items-center justify-between gap-3">
+          <div className="p-4 rounded-2xl bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-gray-800 shadow-2xs flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-xs font-bold text-gray-800 dark:text-gray-200">
                 {flashcards.length} Interactive Flashcards
@@ -344,14 +381,30 @@ export default function Revision() {
               )}
             </div>
 
-            <button
-              onClick={() => loadRevisionContent('flashcards', true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-gray-700 dark:text-gray-300 hover:text-indigo-600 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors border border-gray-200 dark:border-gray-700"
-              title="Generate a brand new set of flashcards from Groq AI"
-            >
-              <RotateCcw className="w-3.5 h-3.5 text-indigo-500" />
-              <span>Regenerate Fresh AI</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => loadRevisionContent('flashcards', true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-gray-700 dark:text-gray-300 hover:text-indigo-600 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors border border-gray-200 dark:border-gray-700 cursor-pointer"
+                title="Generate a brand new set of flashcards from Groq AI"
+              >
+                <RotateCcw className="w-3.5 h-3.5 text-indigo-500" />
+                <span>Regenerate Fresh AI</span>
+              </button>
+
+              <button
+                onClick={handleExportPdf}
+                disabled={downloadingPdf}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-black hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-100 dark:text-black transition-all cursor-pointer shadow-xs disabled:opacity-50"
+                title="Download flashcards as an official PDF"
+              >
+                {downloadingPdf ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Download className="w-3.5 h-3.5" />
+                )}
+                <span>{downloadingPdf ? 'Exporting...' : 'Export PDF'}</span>
+              </button>
+            </div>
           </div>
 
           <p className="text-xs text-gray-500">
@@ -368,7 +421,7 @@ export default function Revision() {
                   className={`p-6 rounded-3xl border cursor-pointer min-h-[200px] flex flex-col justify-between transition-all duration-200 shadow-2xs hover:shadow-lg ${
                     isFlipped
                       ? 'bg-indigo-900 text-white border-indigo-700'
-                      : 'bg-white dark:bg-[#111827] border-gray-200 dark:border-gray-800 text-gray-900 dark:text-gray-100'
+                      : 'bg-white dark:bg-[#0a0a0a] border-gray-200 dark:border-gray-800 text-gray-900 dark:text-gray-100'
                   }`}
                 >
                   <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider">
@@ -395,7 +448,7 @@ export default function Revision() {
           </div>
         </div>
       ) : content ? (
-        <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-800 shadow-xs space-y-4">
+        <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-gray-800 shadow-xs space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-gray-100 dark:border-gray-800">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
@@ -417,7 +470,7 @@ export default function Revision() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => loadRevisionContent(activeTab, true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-gray-700 dark:text-gray-300 hover:text-indigo-600 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors border border-gray-200 dark:border-gray-700"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-gray-700 dark:text-gray-300 hover:text-indigo-600 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors border border-gray-200 dark:border-gray-700 cursor-pointer"
                 title="Bypass local IndexedDB and regenerate fresh notes from Groq AI"
               >
                 <RotateCcw className="w-3.5 h-3.5 text-indigo-500" />
@@ -425,11 +478,25 @@ export default function Revision() {
               </button>
 
               <button
+                onClick={handleExportPdf}
+                disabled={downloadingPdf}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-black hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-100 dark:text-black transition-all cursor-pointer shadow-xs disabled:opacity-50"
+                title="Download notes directly as an official PDF document"
+              >
+                {downloadingPdf ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Download className="w-3.5 h-3.5" />
+                )}
+                <span>{downloadingPdf ? 'Exporting...' : 'Export PDF'}</span>
+              </button>
+
+              <button
                 onClick={() => {
                   navigator.clipboard.writeText(content);
                   toast.success('Notes copied to clipboard!');
                 }}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-gray-500 hover:text-indigo-600 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-gray-500 hover:text-indigo-600 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer"
               >
                 <Copy className="w-3.5 h-3.5" />
                 <span>Copy Notes</span>
@@ -441,7 +508,7 @@ export default function Revision() {
         </div>
       ) : (
         /* Empty State: Not yet generated in IndexedDB */
-        <div className="text-center py-12 px-6 rounded-3xl bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-800 shadow-xs max-w-xl mx-auto space-y-4">
+        <div className="text-center py-12 px-6 rounded-3xl bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-gray-800 shadow-xs max-w-xl mx-auto space-y-4">
           <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 flex items-center justify-center text-indigo-600 dark:text-indigo-400 mx-auto">
             <Sparkles className="w-6 h-6" />
           </div>

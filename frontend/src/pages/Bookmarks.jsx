@@ -119,18 +119,20 @@ export default function Bookmarks() {
       />
 
       {/* Required Privacy Notice */}
-      <div className="p-4 rounded-2xl bg-indigo-50/50 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/30 text-xs text-indigo-900 dark:text-indigo-300 leading-relaxed">
-        <strong>Privacy Notice:</strong> Your personal study history is stored locally in this browser. Clearing browser data may remove it. Use the Export Data feature above to backup your saved questions and notes.
+      <div className="p-3.5 rounded-2xl bg-gray-100 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 text-xs text-gray-700 dark:text-gray-300 leading-relaxed flex items-center justify-between gap-3">
+        <p>
+          <strong className="text-gray-950 dark:text-white">Local Privacy:</strong> Saved study data is preserved in your device&apos;s browser storage. Use <strong>Export Data</strong> to back up anytime.
+        </p>
       </div>
 
       {/* Tabs (Smooth horizontal scrolling on mobile) */}
-      <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-800 shadow-2xs overflow-x-auto no-scrollbar">
+      <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-gray-800 shadow-2xs overflow-x-auto no-scrollbar">
         <button
           onClick={() => setActiveTab('questions')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 ${
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
             activeTab === 'questions'
-              ? 'bg-indigo-600 text-white shadow-2xs'
-              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+              ? 'bg-black text-white dark:bg-white dark:text-black shadow-xs'
+              : 'text-gray-600 dark:text-gray-400 hover:text-gray-950 dark:hover:text-white'
           }`}
         >
           <FileQuestion className="w-3.5 h-3.5" />
@@ -139,10 +141,10 @@ export default function Bookmarks() {
 
         <button
           onClick={() => setActiveTab('answers')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 ${
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
             activeTab === 'answers'
-              ? 'bg-indigo-600 text-white shadow-2xs'
-              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+              ? 'bg-black text-white dark:bg-white dark:text-black shadow-xs'
+              : 'text-gray-600 dark:text-gray-400 hover:text-gray-950 dark:hover:text-white'
           }`}
         >
           <Sparkles className="w-3.5 h-3.5" />
@@ -151,10 +153,10 @@ export default function Bookmarks() {
 
         <button
           onClick={() => setActiveTab('tests')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 ${
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
             activeTab === 'tests'
-              ? 'bg-indigo-600 text-white shadow-2xs'
-              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+              ? 'bg-black text-white dark:bg-white dark:text-black shadow-xs'
+              : 'text-gray-600 dark:text-gray-400 hover:text-gray-950 dark:hover:text-white'
           }`}
         >
           <ClipboardCheck className="w-3.5 h-3.5" />
@@ -171,7 +173,7 @@ export default function Bookmarks() {
             savedQuestions.map((q, idx) => (
               <div
                 key={idx}
-                className="p-4 rounded-2xl bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-800 flex items-start justify-between gap-4"
+                className="p-4 rounded-2xl bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-gray-800 flex items-start justify-between gap-4"
               >
                 <div>
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 mr-2">
@@ -205,7 +207,7 @@ export default function Bookmarks() {
             savedAnswers.map((a, idx) => (
               <div
                 key={idx}
-                className="p-5 rounded-2xl bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-800 space-y-2"
+                className="p-5 rounded-2xl bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-gray-800 space-y-2"
               >
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400">{a.subject}</span>
@@ -237,7 +239,7 @@ export default function Bookmarks() {
             savedTests.map((t, idx) => (
               <div
                 key={idx}
-                className="p-4 rounded-2xl bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-800 flex items-center justify-between"
+                className="p-4 rounded-2xl bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-gray-800 flex items-center justify-between"
               >
                 <div>
                   <h4 className="text-sm font-bold text-gray-900 dark:text-gray-100">{t.subjectName}</h4>

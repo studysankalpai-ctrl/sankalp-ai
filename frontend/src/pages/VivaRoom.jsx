@@ -64,6 +64,7 @@ export default function VivaRoom() {
   const [vivaHistory, setVivaHistory] = useState([]);
   const [finalReport, setFinalReport] = useState(null);
   const [examinerFeedback, setExaminerFeedback] = useState('');
+  const [examinerModelAnswer, setExaminerModelAnswer] = useState('');
   const [showSyllabusModal, setShowSyllabusModal] = useState(false);
 
   // Speech Recognition Reference
@@ -83,7 +84,7 @@ export default function VivaRoom() {
       if (recognitionRef.current) {
         try {
           recognitionRef.current.abort();
-        } catch {}
+        } catch { }
       }
     };
   }, []);
@@ -183,7 +184,7 @@ export default function VivaRoom() {
     if (recognitionRef.current) {
       try {
         recognitionRef.current.stop();
-      } catch {}
+      } catch { }
     }
     setIsListening(false);
   }, []);
@@ -220,8 +221,8 @@ export default function VivaRoom() {
       language === 'hindi'
         ? 'ऑडियो परीक्षण सफल रहा। आपकी संकल्प एआई परीक्षक की आवाज़ ठीक से काम कर रही है।'
         : language === 'hinglish'
-        ? 'Audio test successful! SANKALP AI Examiner ki aawaz bilkul clear aa rahi hai.'
-        : 'Audio test successful. Your SANKALP AI Examiner voice is working properly.';
+          ? 'Audio test successful! SANKALP AI Examiner ki aawaz bilkul clear aa rahi hai.'
+          : 'Audio test successful. Your SANKALP AI Examiner voice is working properly.';
     speakExaminerText(testText);
     toast.success('Playing audio test! Ensure phone is not on silent mode and volume is up.');
   };
@@ -265,6 +266,8 @@ export default function VivaRoom() {
         setInterimTranscript('');
         setVivaHistory([]);
         setFinalReport(null);
+        setExaminerFeedback('');
+        setExaminerModelAnswer('');
         setSessionState('in_viva');
 
         const langBadge = language === 'hindi' ? 'हिंदी (Hindi)' : language === 'hinglish' ? 'Hinglish' : 'English';
@@ -275,8 +278,8 @@ export default function VivaRoom() {
           language === 'hindi'
             ? 'प्रश्न संख्या एक:'
             : language === 'hinglish'
-            ? 'Question number 1:'
-            : 'Question number one:';
+              ? 'Question number 1:'
+              : 'Question number one:';
         const initialSpeech = `${data.greeting} ${qLead} ${data.question_text}`;
         speakExaminerText(initialSpeech);
       } else {
@@ -330,26 +333,40 @@ export default function VivaRoom() {
           answer: fullAnswer,
           marks: turnData.marks_awarded,
           feedback: turnData.verbal_feedback,
+          modelAnswer: turnData.model_answer || '',
           missing: turnData.missing_concept,
         };
         const updatedHistory = [...vivaHistory, turnRecord];
         setVivaHistory(updatedHistory);
         setExaminerFeedback(turnData.verbal_feedback);
+        setExaminerModelAnswer(turnData.model_answer || '');
         if (turnData.syllabus_topic_tested) {
           setCurrentQuestionTopic(turnData.syllabus_topic_tested);
         }
+
+        // Spoken model answer phrase ("pehle feedback bataye fir Answer bataye")
+        const modelAnswerLead =
+          language === 'hindi'
+            ? 'इस प्रश्न का सही मौखिक उत्तर है:'
+            : language === 'hinglish'
+              ? 'Is question ka correct viva answer hai:'
+              : 'The ideal viva answer is:';
+        const modelAnswerSpeech = turnData.model_answer
+          ? ` ${modelAnswerLead} ${turnData.model_answer}.`
+          : '';
 
         // CASE A: Examination is Completed -> Show Report Card
         if (turnData.is_final && turnData.report_card) {
           setFinalReport(turnData.report_card);
           setSessionState('report_card');
 
-          const finalSpeech =
+          const finalLead =
             language === 'hindi'
-              ? `${turnData.verbal_feedback} इस प्रकार आपकी मौखिक परीक्षा संपन्न होती है। आपका मूल्यांकन परिणाम स्क्रीन पर उपलब्ध है।`
+              ? 'इस प्रकार आपकी मौखिक परीक्षा संपन्न होती है। आपका मूल्यांकन परिणाम स्क्रीन पर उपलब्ध है।'
               : language === 'hinglish'
-              ? `${turnData.verbal_feedback} Viva exam complete ho gaya hai. Aapka overall scorecard screen par ready hai.`
-              : `${turnData.verbal_feedback} That concludes your oral viva examination. Your overall result is ready on screen.`;
+                ? 'Viva exam complete ho gaya hai. Aapka overall scorecard screen par ready hai.'
+                : 'That concludes your oral viva examination. Your overall result is ready on screen.';
+          const finalSpeech = `${turnData.verbal_feedback}.${modelAnswerSpeech} ${finalLead}`;
           speakExaminerText(finalSpeech);
           return;
         }
@@ -361,20 +378,20 @@ export default function VivaRoom() {
         setQuestionNumber(turnData.next_question_number || questionNumber + 1);
         setIsCrossQuestion(Boolean(turnData.is_cross_question));
 
-        // Speak feedback + next question in appropriate language
+        // Speak: 1. Feedback -> 2. Ideal Viva Answer -> 3. Next Question
         const promptLead =
           language === 'hindi'
             ? turnData.is_cross_question
               ? 'अब इस प्रति-प्रश्न (Cross-Question) का उत्तर दें:'
               : 'अगला प्रश्न:'
             : language === 'hinglish'
-            ? turnData.is_cross_question
-              ? 'Ab is cross-question ka answer dein:'
-              : 'Next question:'
-            : turnData.is_cross_question
-            ? 'Now answer this follow-up:'
-            : 'Next question:';
-        const nextSpeech = `${turnData.verbal_feedback} ${promptLead} ${turnData.next_question_text}`;
+              ? turnData.is_cross_question
+                ? 'Ab is cross-question ka answer dein:'
+                : 'Next question:'
+              : turnData.is_cross_question
+                ? 'Now answer this follow-up:'
+                : 'Next question:';
+        const nextSpeech = `${turnData.verbal_feedback}.${modelAnswerSpeech} ${promptLead} ${turnData.next_question_text}`;
         speakExaminerText(nextSpeech);
       }
     } catch (err) {
@@ -392,8 +409,8 @@ export default function VivaRoom() {
       language === 'hindi'
         ? 'परीक्षक प्रश्न दोहराते हैं:'
         : language === 'hinglish'
-        ? 'Question repeat kar raha hoon:'
-        : 'Let me repeat the question:';
+          ? 'Question repeat kar raha hoon:'
+          : 'Let me repeat the question:';
     speakExaminerText(`${repeatLead} ${currentQuestion}`);
   };
 
@@ -406,37 +423,37 @@ export default function VivaRoom() {
   };
 
   return (
-    <div className="h-full w-full flex flex-col bg-gray-50 dark:bg-[#0B1020] text-gray-950 dark:text-white overflow-hidden font-sans select-none">
+    <div className="h-full w-full flex flex-col bg-gray-50 dark:bg-black text-gray-950 dark:text-white overflow-hidden font-sans select-none">
       {/* ============================================================ */}
       {/* 1. SETUP SCREEN: Configure & Launch Voice Viva Room */}
       {/* ============================================================ */}
       {sessionState === 'setup' && (
-        <div className="flex-1 overflow-y-auto px-4 py-6 sm:py-10 flex justify-center items-start">
-          <div className="w-full max-w-2xl bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-800 rounded-3xl p-6 sm:p-10 shadow-xl space-y-6 my-2 sm:my-4">
+        <div className="flex-1 overflow-y-auto px-3 sm:px-4 py-4 sm:py-8 flex justify-center items-start">
+          <div className="w-full max-w-xl bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-gray-800 rounded-2xl sm:rounded-3xl p-4 sm:p-7 shadow-lg space-y-4 sm:space-y-5 my-1 sm:my-3">
             {/* Header Badge & Title */}
-            <div className="text-center space-y-3 pt-1">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-gray-200 text-xs font-bold tracking-wider shadow-2xs">
-                <span className="relative flex h-2 w-2">
+            <div className="text-center space-y-2 pt-0.5">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-gray-200 text-[10px] sm:text-xs font-bold tracking-wider shadow-2xs">
+                <span className="relative flex h-1.5 w-1.5">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
                 </span>
                 <span>AI Oral Viva Voce</span>
-                <span className="px-1.5 py-0.5 bg-black dark:bg-white text-white dark:text-black rounded text-[9px] font-black">
+                <span className="px-1.5 py-0.2 bg-black dark:bg-white text-white dark:text-black rounded text-[8px] sm:text-[9px] font-black">
                   NEW
                 </span>
               </div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-950 dark:text-white tracking-tight">
+              <h1 className="text-xl sm:text-2xl font-extrabold text-gray-950 dark:text-white tracking-tight">
                 AI Viva-Voce Room
               </h1>
-              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 max-w-lg mx-auto leading-relaxed">
-                Step into a live virtual university oral exam. Speak your answers naturally — the AI Examiner listens, evaluates your conceptual depth, and asks real cross-questions.
+              <p className="text-[11px] sm:text-xs text-gray-600 dark:text-gray-400 max-w-md mx-auto leading-relaxed">
+                Step into a live virtual university oral exam. Speak your answers naturally  the AI Examiner listens, evaluates your conceptual depth, and asks real cross-questions.
               </p>
             </div>
 
             {/* Subject & Semester Selector */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div className="space-y-1">
+                <label className="text-[11px] sm:text-xs font-bold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
                   <BookOpen className="w-3.5 h-3.5 text-gray-700 dark:text-gray-300" /> Subject
                 </label>
                 <select
@@ -445,7 +462,7 @@ export default function VivaRoom() {
                     const found = subjects.find((s) => s._id === e.target.value);
                     if (found) setSelectedSubject(found);
                   }}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-xs sm:text-sm text-gray-950 dark:text-white font-semibold focus:outline-none focus:border-black dark:focus:border-white cursor-pointer"
+                  className="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-[11px] sm:text-xs text-gray-950 dark:text-white font-semibold focus:outline-none focus:border-black dark:focus:border-white cursor-pointer"
                 >
                   {subjects.map((s) => (
                     <option key={s._id} value={s._id} className="bg-white dark:bg-gray-800 text-gray-950 dark:text-white">
@@ -456,14 +473,14 @@ export default function VivaRoom() {
               </div>
 
               {/* Unit Focus */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
+              <div className="space-y-1">
+                <label className="text-[11px] sm:text-xs font-bold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
                   <Layers className="w-3.5 h-3.5 text-gray-700 dark:text-gray-300" /> Syllabus Scope
                 </label>
                 <select
                   value={selectedUnitNumber}
                   onChange={(e) => setSelectedUnitNumber(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-xs sm:text-sm text-gray-950 dark:text-white font-semibold focus:outline-none focus:border-black dark:focus:border-white cursor-pointer"
+                  className="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-[11px] sm:text-xs text-gray-950 dark:text-white font-semibold focus:outline-none focus:border-black dark:focus:border-white cursor-pointer"
                 >
                   <option value="" className="bg-white dark:bg-gray-800 text-gray-950 dark:text-white">
                     Full Practical Syllabus
@@ -484,69 +501,67 @@ export default function VivaRoom() {
               );
               if (!activeUnit) return null;
               return (
-                <div className="p-4 rounded-2xl bg-gray-50 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 text-xs space-y-2">
+                <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-gray-50 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 text-[11px] sm:text-xs space-y-1.5">
                   <div className="flex items-center justify-between flex-wrap gap-1">
                     <span className="font-bold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
-                      <BookOpen className="w-3.5 h-3.5 text-gray-700 dark:text-gray-300" />
-                      Unit {activeUnit.number} Syllabus Provided to AI Examiner:
+                      <BookOpen className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-700 dark:text-gray-300" />
+                      Unit {activeUnit.number} Syllabus Provided to Examiner:
                     </span>
-                    <span className="px-2 py-0.5 rounded-md bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-[10px] font-bold">
-                      ✓ Connected to Viva
+                    <span className="px-2 py-0.2 rounded-md bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-[9px] sm:text-[10px] font-bold">
+                      Connected to Viva
                     </span>
                   </div>
-                  <div className="p-3 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-[11px] max-h-32 overflow-y-auto leading-relaxed">
-                    <p className="font-semibold text-gray-950 dark:text-white mb-1">
+                  <div className="p-2.5 rounded-lg sm:rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-[10px] sm:text-[11px] max-h-28 overflow-y-auto leading-relaxed">
+                    <p className="font-bold text-gray-950 dark:text-white mb-0.5">
                       {activeUnit.name}
                     </p>
                     <p className="text-gray-600 dark:text-gray-400 whitespace-pre-line">
                       {activeUnit.description || (activeUnit.topics || []).join(', ') || 'Core concepts and working mechanisms of ' + activeUnit.name}
                     </p>
                   </div>
-                  <p className="text-[10px] text-gray-500 dark:text-gray-400 italic">
-                    💡 The AI Examiner will ask oral viva questions strictly based on these unit topics.
+                  <p className="text-[9px] sm:text-[10px] text-gray-500 dark:text-gray-400">
+                    The AI Examiner will formulate oral viva questions based on these prescribed unit topics.
                   </p>
                 </div>
               );
             })() : (
-              <div className="p-3 rounded-2xl bg-gray-50 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 text-[11px] text-gray-600 dark:text-gray-400 flex items-center justify-between">
-                <span>📚 Full Syllabus Mode: Examiner will test questions across all 5 units.</span>
-                <span className="text-[10px] font-bold text-gray-700 dark:text-gray-300">5 Units Connected</span>
+              <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-gray-50 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 text-[10px] sm:text-[11px] text-gray-600 dark:text-gray-400 flex items-center justify-between">
+                <span>Full Syllabus Mode: Examiner will test questions across all 5 units.</span>
+                <span className="text-[9px] sm:text-[10px] font-bold text-gray-700 dark:text-gray-300">5 Units Connected</span>
               </div>
             )}
 
             {/* Viva Voce Language Selector (English, Hindi, Hinglish) */}
-            <div className="space-y-1.5">
+            <div className="space-y-1">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
+                <label className="text-[11px] sm:text-xs font-bold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
                   <Languages className="w-3.5 h-3.5 text-gray-700 dark:text-gray-300" /> Viva Voce Language
                 </label>
-                <span className="text-[10px] text-gray-500 dark:text-gray-400 font-medium">
-                  Examiner asks & transcribes in this language
+                <span className="text-[9px] sm:text-[10px] text-gray-500 dark:text-gray-400 font-medium">
+                  Examiner asks in this language
                 </span>
               </div>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
                 {[
-                  { id: 'english', label: '🇬🇧 English', sub: 'Academic English' },
-                  { id: 'hindi', label: '🇮🇳 हिंदी', sub: 'शुद्ध व सरल हिंदी' },
-                  { id: 'hinglish', label: '🗣️ Hinglish', sub: 'Hindi + English Mix' },
+                  { id: 'english', label: 'English', sub: 'Academic English' },
+                  { id: 'hindi', label: 'हिंदी', sub: 'सरल हिंदी' },
+                  { id: 'hinglish', label: 'Hinglish', sub: 'Mix Mode' },
                 ].map((l) => (
                   <button
                     key={l.id}
                     type="button"
                     onClick={() => setLanguage(l.id)}
-                    className={`px-3 py-2.5 rounded-xl text-xs font-bold border transition-all flex flex-col items-center gap-0.5 cursor-pointer ${
-                      language === l.id
-                        ? 'bg-black text-white dark:bg-white dark:text-black border-black dark:border-white shadow-xs'
+                    className={`px-2 py-2 rounded-xl text-[11px] sm:text-xs font-bold border transition-all flex flex-col items-center gap-0.5 cursor-pointer ${language === l.id
+                        ? 'bg-black text-white dark:bg-white dark:text-black border-black dark:border-white shadow-2xs'
                         : 'bg-gray-50 dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100 hover:border-gray-400'
-                    }`}
-                  >
-                    <span className="text-xs">{l.label}</span>
-                    <span
-                      className={`text-[9px] font-normal ${
-                        language === l.id
-                          ? 'text-gray-300 dark:text-gray-700'
-                          : 'text-gray-600 dark:text-gray-400'
                       }`}
+                  >
+                    <span className="text-[11px] sm:text-xs">{l.label}</span>
+                    <span
+                      className={`text-[8px] sm:text-[9px] font-normal ${language === l.id
+                          ? 'text-gray-300 dark:text-gray-700'
+                          : 'text-gray-500 dark:text-gray-400'
+                        }`}
                     >
                       {l.sub}
                     </span>
@@ -556,38 +571,36 @@ export default function VivaRoom() {
             </div>
 
             {/* Examiner Persona & Viva Length */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               {/* Persona */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
+              <div className="space-y-1">
+                <label className="text-[11px] sm:text-xs font-bold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
                   <ShieldCheck className="w-3.5 h-3.5 text-gray-700 dark:text-gray-300" /> Examiner Persona
                 </label>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
                   <button
                     type="button"
                     onClick={() => setDifficulty('strict')}
-                    className={`px-3 py-2.5 rounded-xl text-xs font-bold border transition-all flex flex-col items-center gap-1 cursor-pointer ${
-                      difficulty === 'strict'
-                        ? 'bg-black text-white dark:bg-white dark:text-black border-black dark:border-white shadow-xs'
+                    className={`px-2 py-2 rounded-xl text-[11px] sm:text-xs font-bold border transition-all flex flex-col items-center gap-0.5 cursor-pointer ${difficulty === 'strict'
+                        ? 'bg-black text-white dark:bg-white dark:text-black border-black dark:border-white shadow-2xs'
                         : 'bg-gray-50 dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100 hover:border-gray-400'
-                    }`}
+                      }`}
                   >
                     <span>Strict External</span>
-                    <span className={`text-[10px] font-normal ${difficulty === 'strict' ? 'text-gray-300 dark:text-gray-700' : 'text-gray-600 dark:text-gray-400'}`}>
-                      Asks cross-questions
+                    <span className={`text-[8px] sm:text-[9px] font-normal ${difficulty === 'strict' ? 'text-gray-300 dark:text-gray-700' : 'text-gray-500 dark:text-gray-400'}`}>
+                      Cross-questions
                     </span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setDifficulty('friendly')}
-                    className={`px-3 py-2.5 rounded-xl text-xs font-bold border transition-all flex flex-col items-center gap-1 cursor-pointer ${
-                      difficulty === 'friendly'
-                        ? 'bg-black text-white dark:bg-white dark:text-black border-black dark:border-white shadow-xs'
+                    className={`px-2 py-2 rounded-xl text-[11px] sm:text-xs font-bold border transition-all flex flex-col items-center gap-0.5 cursor-pointer ${difficulty === 'friendly'
+                        ? 'bg-black text-white dark:bg-white dark:text-black border-black dark:border-white shadow-2xs'
                         : 'bg-gray-50 dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100 hover:border-gray-400'
-                    }`}
+                      }`}
                   >
                     <span>Friendly Prof</span>
-                    <span className={`text-[10px] font-normal ${difficulty === 'friendly' ? 'text-gray-300 dark:text-gray-700' : 'text-gray-600 dark:text-gray-400'}`}>
+                    <span className={`text-[8px] sm:text-[9px] font-normal ${difficulty === 'friendly' ? 'text-gray-300 dark:text-gray-700' : 'text-gray-500 dark:text-gray-400'}`}>
                       Encouraging & calm
                     </span>
                   </button>
@@ -595,21 +608,20 @@ export default function VivaRoom() {
               </div>
 
               {/* Length */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
+              <div className="space-y-1">
+                <label className="text-[11px] sm:text-xs font-bold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
                   <Clock className="w-3.5 h-3.5 text-gray-700 dark:text-gray-300" /> Viva Length
                 </label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
                   {[3, 5, 8].map((n) => (
                     <button
                       key={n}
                       type="button"
                       onClick={() => setTotalQuestions(n)}
-                      className={`py-2.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
-                        totalQuestions === n
-                          ? 'bg-black text-white dark:bg-white dark:text-black border-black dark:border-white shadow-xs'
+                      className={`py-2 rounded-xl text-[11px] sm:text-xs font-bold border transition-all cursor-pointer ${totalQuestions === n
+                          ? 'bg-black text-white dark:bg-white dark:text-black border-black dark:border-white shadow-2xs'
                           : 'bg-gray-50 dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100 hover:border-gray-400'
-                      }`}
+                        }`}
                     >
                       {n} Questions
                     </button>
@@ -619,59 +631,60 @@ export default function VivaRoom() {
             </div>
 
             {/* Mobile Audio Test & Tip */}
-            <div className="flex items-center justify-between p-3.5 rounded-2xl bg-gray-50 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 text-xs">
+            <div className="flex items-center justify-between p-2.5 sm:p-3 rounded-xl bg-gray-50 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 text-[10px] sm:text-xs">
               <div className="flex items-center gap-2">
-                <Volume2 className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
-                <span className="text-gray-700 dark:text-gray-300 text-[11px] font-semibold">
-                  iPhone / Android Speaker Check:
+                <Volume2 className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
+                <span className="text-gray-700 dark:text-gray-300 text-[10px] sm:text-[11px] font-semibold">
+                  Speaker Voice Check:
                 </span>
               </div>
               <button
                 type="button"
                 onClick={handleTestMobileAudio}
-                className="px-3 py-1.5 rounded-xl bg-black hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-black font-bold text-[10px] transition-colors cursor-pointer shadow-2xs"
+                className="px-2.5 py-1 rounded-lg bg-black hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-black font-bold text-[9px] sm:text-[10px] transition-colors cursor-pointer shadow-2xs flex items-center gap-1"
               >
-                🔊 Test Voice
+                <Volume2 className="w-3 h-3" />
+                <span>Test Audio</span>
               </button>
             </div>
 
             {/* Launch Button (Black in Light Theme, White in Dark Theme - No Gradient) */}
-            <div className="pt-2">
+            <div className="pt-1">
               <button
                 type="button"
                 onClick={handleStartViva}
                 disabled={loading}
-                className="w-full py-4 rounded-2xl bg-black hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-100 text-white dark:text-black font-extrabold text-sm sm:text-base tracking-wide flex items-center justify-center gap-2 shadow-md transition-all hover:scale-[1.005] active:scale-[0.99] cursor-pointer disabled:opacity-50"
+                className="w-full py-3 sm:py-3.5 rounded-xl sm:rounded-2xl bg-black hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-100 text-white dark:text-black font-extrabold text-xs sm:text-sm tracking-wide flex items-center justify-center gap-2 shadow-sm transition-all hover:scale-[1.005] active:scale-[0.99] cursor-pointer disabled:opacity-50"
               >
                 {loading ? (
                   <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <Loader2 className="w-4 h-4 animate-spin" />
                     <span>Preparing Examination Desk...</span>
                   </>
                 ) : (
                   <>
-                    <Mic className="w-5 h-5" />
+                    <Mic className="w-4 h-4" />
                     <span>Start Oral Viva Examination</span>
-                    <ArrowRight className="w-4 h-4 ml-1" />
+                    <ArrowRight className="w-3.5 h-3.5 ml-0.5" />
                   </>
                 )}
               </button>
             </div>
 
-            <p className="text-[10px] text-center text-gray-500 dark:text-gray-400">
-              📱 <strong>iPhone & Mobile Notice:</strong> Turn OFF the physical silent switch on the side of your iPhone and turn volume UP so examiner voice plays clearly.
+            <p className="text-[9px] sm:text-[10px] text-center text-gray-500 dark:text-gray-400">
+              iPhone & Mobile: Turn OFF the physical silent switch and keep speaker volume UP so examiner voice plays clearly.
             </p>
 
             {/* Feature Badges */}
-            <div className="flex flex-wrap items-center justify-center gap-4 pt-2 text-[11px] text-gray-700 dark:text-gray-300 border-t border-gray-200 dark:border-gray-800">
+            <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-4 pt-2 text-[10px] sm:text-[11px] text-gray-700 dark:text-gray-300 border-t border-gray-200 dark:border-gray-800">
               <span className="flex items-center gap-1 font-medium">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> Zero Typing Needed
+                <CheckCircle2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-600 dark:text-emerald-400" /> Zero Typing
               </span>
               <span className="flex items-center gap-1 font-medium">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> Real University Cross-Questions
+                <CheckCircle2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-600 dark:text-emerald-400" /> University Cross-Questions
               </span>
               <span className="flex items-center gap-1 font-medium">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> Instant Report Card & Grade
+                <CheckCircle2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-600 dark:text-emerald-400" /> Instant Scorecard
               </span>
             </div>
           </div>
@@ -682,32 +695,45 @@ export default function VivaRoom() {
       {/* 2. ACTIVE VIVA SCREEN: Voice-First Oral Exam Call Desk */}
       {/* ============================================================ */}
       {sessionState === 'in_viva' && (
-        <div className="flex-1 flex flex-col h-full overflow-hidden bg-gray-50 dark:bg-[#0B1020]">
-          {/* Top Status Bar */}
-          <div className="h-14 sm:h-16 px-4 sm:px-8 border-b border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md flex items-center justify-between shrink-0">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <span className="px-2.5 py-1 rounded-full bg-rose-50 dark:bg-rose-950/40 border border-rose-300 dark:border-rose-700 text-rose-700 dark:text-rose-300 text-[11px] font-bold flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-rose-600 animate-ping" />
-                Live Viva: Q{questionNumber} of {totalQuestions}
+        <div className="flex-1 flex flex-col h-full overflow-hidden bg-gray-50 dark:bg-black">
+          {/* Top Status Bar (Responsive, No Text Wrapping, Mobile-Optimized) */}
+          <div className="h-13 sm:h-16 px-2.5 sm:px-6 md:px-8 border-b border-gray-200 dark:border-neutral-800 bg-white/95 dark:bg-black/95 backdrop-blur-md flex items-center justify-between gap-1.5 sm:gap-3 shrink-0 overflow-x-auto scrollbar-none">
+            {/* Left Status Badges */}
+            <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0 shrink-0">
+              <span className="px-2 sm:px-2.5 py-1 rounded-full bg-rose-50 dark:bg-rose-950/40 border border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-[10px] sm:text-[11px] font-bold flex items-center gap-1.5 whitespace-nowrap shrink-0">
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-600 animate-ping shrink-0" />
+                <span className="sm:hidden font-mono">Q{questionNumber}/{totalQuestions}</span>
+                <span className="hidden sm:inline">Live Viva: Q{questionNumber} of {totalQuestions}</span>
               </span>
-              <span className="px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-gray-200 text-[10px] font-bold">
-                {language === 'hindi' ? '🇮🇳 हिंदी' : language === 'hinglish' ? '🗣️ Hinglish' : '🇬🇧 English'}
+
+              <span className="px-1.5 sm:px-2 py-0.5 rounded-full bg-gray-100 dark:bg-neutral-900 border border-gray-300 dark:border-neutral-800 text-gray-800 dark:text-gray-200 text-[10px] font-bold whitespace-nowrap shrink-0">
+                <span className="sm:hidden">
+                  {language === 'hindi' ? '🇮🇳 HI' : language === 'hinglish' ? '🗣️ HING' : '🇬🇧 EN'}
+                </span>
+                <span className="hidden sm:inline">
+                  {language === 'hindi' ? '🇮🇳 हिंदी' : language === 'hinglish' ? '🗣️ Hinglish' : '🇬🇧 English'}
+                </span>
               </span>
+
               {isCrossQuestion && (
-                <span className="px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-300 text-[10px] font-bold">
-                  ⚠️ Cross-Question
+                <span className="px-1.5 sm:px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-300 text-[10px] font-bold whitespace-nowrap shrink-0 flex items-center gap-1">
+                  <span>⚠️</span>
+                  <span className="sm:hidden">Cross</span>
+                  <span className="hidden sm:inline">Cross-Question</span>
                 </span>
               )}
-              <span className="hidden sm:inline text-xs font-semibold text-gray-700 dark:text-gray-300 truncate max-w-[200px]">
+
+              <span className="hidden md:inline text-xs font-semibold text-gray-700 dark:text-gray-300 truncate max-w-[180px] whitespace-nowrap">
                 {selectedSubject?.name}
               </span>
             </div>
 
-            <div className="flex items-center gap-2">
+            {/* Right Action Controls */}
+            <div className="flex items-center gap-1 sm:gap-2 shrink-0">
               <button
                 type="button"
                 onClick={() => setShowSyllabusModal(true)}
-                className="px-2.5 py-1.5 rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100 text-xs font-semibold flex items-center gap-1.5 border border-gray-300 dark:border-gray-700 transition-colors cursor-pointer"
+                className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg sm:rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-neutral-900 dark:hover:bg-neutral-800 text-gray-900 dark:text-gray-100 text-xs font-semibold flex items-center gap-1.5 border border-gray-300 dark:border-neutral-800 transition-colors cursor-pointer shrink-0"
                 title="View Prescribed Syllabus Topics"
               >
                 <BookOpen className="w-3.5 h-3.5 text-gray-700 dark:text-gray-300" />
@@ -716,7 +742,7 @@ export default function VivaRoom() {
               <button
                 type="button"
                 onClick={handleRepeatQuestion}
-                className="px-2.5 py-1.5 rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100 text-xs font-semibold flex items-center gap-1.5 border border-gray-300 dark:border-gray-700 transition-colors cursor-pointer"
+                className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg sm:rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-neutral-900 dark:hover:bg-neutral-800 text-gray-900 dark:text-gray-100 text-xs font-semibold flex items-center gap-1.5 border border-gray-300 dark:border-neutral-800 transition-colors cursor-pointer shrink-0"
                 title="Repeat Examiner Question"
               >
                 <RotateCcw className="w-3.5 h-3.5 text-gray-700 dark:text-gray-300" />
@@ -725,11 +751,11 @@ export default function VivaRoom() {
               <button
                 type="button"
                 onClick={handleEndVivaEarly}
-                className="px-2.5 py-1.5 rounded-xl bg-red-50 hover:bg-red-100 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg sm:rounded-xl bg-red-50 hover:bg-red-100 dark:bg-red-950/30 border border-red-200 dark:border-red-900/60 text-red-600 dark:text-red-400 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer shrink-0"
                 title="Conclude Examination"
               >
                 <Square className="w-3.5 h-3.5 fill-current" />
-                <span>End</span>
+                <span className="hidden sm:inline">End</span>
               </button>
             </div>
           </div>
@@ -737,13 +763,13 @@ export default function VivaRoom() {
           {/* Center Stage: The Live Voice Examination Orb & Audio Wave */}
           <div className="flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col items-center justify-between max-w-3xl mx-auto w-full space-y-6">
             {/* Examiner Question Box */}
-            <div className="w-full p-4 sm:p-6 rounded-3xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm space-y-3 text-center animate-in fade-in duration-200">
+            <div className="w-full p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm space-y-2.5 text-center animate-in fade-in duration-200">
               <div className="flex items-center justify-between gap-2 flex-wrap pb-1 border-b border-gray-100 dark:border-gray-800">
-                <div className="flex items-center gap-2 text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-widest flex-wrap">
-                  <Volume2 className="w-4 h-4 animate-pulse text-indigo-600 dark:text-indigo-400" />
-                  <span>External Examiner Asks</span>
+                <div className="flex items-center gap-1.5 text-[10px] sm:text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider flex-wrap">
+                  <Volume2 className="w-3.5 h-3.5 animate-pulse text-indigo-600 dark:text-indigo-400" />
+                  <span>External Examiner Question</span>
                   {currentQuestionTopic && (
-                    <span className="px-2 py-0.5 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 text-[10px] font-bold normal-case">
+                    <span className="px-2 py-0.2 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 text-[9px] sm:text-[10px] font-bold normal-case">
                       • {currentQuestionTopic}
                     </span>
                   )}
@@ -761,56 +787,75 @@ export default function VivaRoom() {
                       speakExaminerText(currentQuestion);
                     }
                   }}
-                  className="px-2.5 py-1 rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer border border-gray-200 dark:border-gray-700"
+                  className="px-2 py-0.5 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100 text-[10px] sm:text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer border border-gray-200 dark:border-gray-700"
                   title="Play / Replay Examiner Voice on Mobile"
                 >
                   {examinerSpeaking ? (
                     <>
-                      <VolumeX className="w-3.5 h-3.5 text-rose-500" />
+                      <VolumeX className="w-3 h-3 text-rose-500" />
                       <span>Stop Voice</span>
                     </>
                   ) : (
                     <>
-                      <Volume2 className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                      <Volume2 className="w-3 h-3 text-indigo-600 dark:text-indigo-400" />
                       <span>Hear Voice</span>
                     </>
                   )}
                 </button>
               </div>
 
-              <h2 className="text-base sm:text-xl font-bold text-gray-950 dark:text-white leading-relaxed">
+              <h2 className="text-xs sm:text-base font-bold text-gray-950 dark:text-white leading-relaxed">
                 "{currentQuestion}"
               </h2>
               {examinerFeedback && (
-                <p className="text-xs text-amber-800 dark:text-amber-300 pt-2 border-t border-gray-200 dark:border-gray-800">
-                  <strong>Examiner's Reaction:</strong> {examinerFeedback}
-                </p>
+                <div className="pt-2 border-t border-gray-200 dark:border-neutral-800 space-y-2 text-left animate-in fade-in duration-150">
+                  <div className="p-2 sm:p-2.5 rounded-xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/50">
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-800 dark:text-amber-400 block mb-0.5">
+                      1. Examiner Feedback:
+                    </span>
+                    <p className="text-[11px] sm:text-xs text-amber-950 dark:text-amber-200 leading-relaxed font-medium">
+                      {examinerFeedback}
+                    </p>
+                  </div>
+
+                  {examinerModelAnswer && (
+                    <div className="p-2 sm:p-2.5 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-800/50">
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-800 dark:text-emerald-400 flex items-center gap-1 mb-0.5">
+                        <Sparkles className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                        2. Ideal Viva Answer:
+                      </span>
+                      <p className="text-[11px] sm:text-xs text-emerald-950 dark:text-emerald-200 leading-relaxed font-medium">
+                        {examinerModelAnswer}
+                      </p>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
 
             {/* ChatGPT-Style AI Glowing Voice Orb */}
-            <div className="flex flex-col items-center justify-center py-4 sm:py-6 space-y-4">
+            <div className="flex flex-col items-center justify-center py-2 sm:py-5 space-y-3">
               <div className="relative flex items-center justify-center">
                 {/* 1. Atmospheric Glowing Ambient Aura (ChatGPT Voice Style) */}
                 {examinerSpeaking ? (
-                  <div className="absolute w-56 h-56 sm:w-64 sm:h-64 rounded-full bg-indigo-500/30 blur-2xl animate-ai-breathe pointer-events-none" />
+                  <div className="absolute w-44 h-44 sm:w-60 sm:h-60 rounded-full bg-indigo-500/30 blur-2xl animate-ai-breathe pointer-events-none" />
                 ) : isListening ? (
-                  <div className="absolute w-56 h-56 sm:w-64 sm:h-64 rounded-full bg-emerald-500/30 blur-2xl animate-ai-breathe pointer-events-none" />
+                  <div className="absolute w-44 h-44 sm:w-60 sm:h-60 rounded-full bg-emerald-500/30 blur-2xl animate-ai-breathe pointer-events-none" />
                 ) : (
-                  <div className="absolute w-48 h-48 sm:w-56 sm:h-56 rounded-full bg-gray-400/20 dark:bg-white/10 blur-xl animate-ai-breathe pointer-events-none" />
+                  <div className="absolute w-40 h-40 sm:w-52 sm:h-52 rounded-full bg-gray-400/20 dark:bg-white/10 blur-xl animate-ai-breathe pointer-events-none" />
                 )}
 
                 {/* 2. Concentric Ethereal Ripple Wave Rings */}
                 {isListening && (
                   <>
-                    <span className="absolute w-52 h-52 sm:w-60 sm:h-60 rounded-full border border-emerald-400/40 animate-ai-ripple pointer-events-none" />
-                    <span className="absolute w-44 h-44 sm:w-52 sm:h-52 rounded-full border border-emerald-500/30 animate-ai-ripple-delayed pointer-events-none" />
+                    <span className="absolute w-40 h-40 sm:w-56 sm:h-56 rounded-full border border-emerald-400/40 animate-ai-ripple pointer-events-none" />
+                    <span className="absolute w-32 h-32 sm:w-48 sm:h-48 rounded-full border border-emerald-500/30 animate-ai-ripple-delayed pointer-events-none" />
                   </>
                 )}
                 {examinerSpeaking && (
                   <>
-                    <span className="absolute w-52 h-52 sm:w-60 sm:h-60 rounded-full border border-indigo-400/40 animate-ai-ripple pointer-events-none" />
-                    <span className="absolute w-44 h-44 sm:w-52 sm:h-52 rounded-full border border-indigo-500/30 animate-ai-ripple-delayed pointer-events-none" />
+                    <span className="absolute w-40 h-40 sm:w-56 sm:h-56 rounded-full border border-indigo-400/40 animate-ai-ripple pointer-events-none" />
+                    <span className="absolute w-32 h-32 sm:w-48 sm:h-48 rounded-full border border-indigo-500/30 animate-ai-ripple-delayed pointer-events-none" />
                   </>
                 )}
 
@@ -819,60 +864,59 @@ export default function VivaRoom() {
                   type="button"
                   onClick={() => (isListening ? stopListening() : startListening())}
                   disabled={loading}
-                  className={`relative w-28 h-28 sm:w-36 sm:h-36 rounded-full flex flex-col items-center justify-center transition-all duration-300 shadow-2xl cursor-pointer select-none active:scale-95 ${
-                    isListening
-                      ? 'bg-emerald-600 text-white ring-4 ring-emerald-300 dark:ring-emerald-400/70 shadow-[0_0_45px_rgba(16,185,129,0.45)] scale-105'
+                  className={`relative w-24 h-24 sm:w-32 sm:h-32 rounded-full flex flex-col items-center justify-center transition-all duration-300 shadow-xl cursor-pointer select-none active:scale-95 ${isListening
+                      ? 'bg-emerald-600 text-white ring-4 ring-emerald-300 dark:ring-emerald-400/70 shadow-[0_0_40px_rgba(16,185,129,0.45)] scale-105'
                       : examinerSpeaking
-                      ? 'bg-indigo-600 text-white ring-4 ring-indigo-300 dark:ring-indigo-400/70 shadow-[0_0_45px_rgba(99,102,241,0.45)] scale-105'
-                      : 'bg-black hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-black ring-4 ring-gray-200 dark:ring-gray-700 shadow-lg'
-                  }`}
+                        ? 'bg-indigo-600 text-white ring-4 ring-indigo-300 dark:ring-indigo-400/70 shadow-[0_0_40px_rgba(99,102,241,0.45)] scale-105'
+                        : 'bg-black hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-black ring-4 ring-gray-200 dark:ring-gray-700 shadow-md'
+                    }`}
                 >
                   {loading ? (
                     <>
-                      <Loader2 className="w-8 h-8 animate-spin text-white" />
-                      <span className="text-[10px] font-bold mt-1 tracking-wider uppercase text-gray-300">
+                      <Loader2 className="w-6 h-6 animate-spin text-white" />
+                      <span className="text-[9px] font-bold mt-1 tracking-wider uppercase text-gray-300">
                         Thinking...
                       </span>
                     </>
                   ) : isListening ? (
                     <>
                       {/* Live Animated Voice Equalizer Waveform */}
-                      <div className="flex items-center justify-center gap-1 h-8">
+                      <div className="flex items-center justify-center gap-1 h-6">
                         <span className="w-1 bg-emerald-200 rounded-full animate-ai-bar-2" />
                         <span className="w-1 bg-white rounded-full animate-ai-bar-4" />
-                        <Mic className="w-7 h-7 text-white animate-pulse mx-0.5" />
+                        <Mic className="w-6 h-6 text-white animate-pulse mx-0.5" />
                         <span className="w-1 bg-white rounded-full animate-ai-bar-3" />
                         <span className="w-1 bg-emerald-200 rounded-full animate-ai-bar-1" />
                       </div>
-                      <span className="text-[10px] font-extrabold mt-1 tracking-wider uppercase text-emerald-100">
+                      <span className="text-[9px] font-extrabold mt-0.5 tracking-wider uppercase text-emerald-100">
                         Listening
                       </span>
                     </>
                   ) : examinerSpeaking ? (
                     <>
                       {/* ChatGPT Voice Frequency Waves */}
-                      <div className="flex items-center justify-center gap-1.5 h-8">
+                      <div className="flex items-center justify-center gap-1 h-6">
                         <span className="w-1 bg-indigo-200 rounded-full animate-ai-bar-1" />
                         <span className="w-1.5 bg-white rounded-full animate-ai-bar-2" />
                         <span className="w-1.5 bg-white rounded-full animate-ai-bar-3" />
                         <span className="w-1.5 bg-white rounded-full animate-ai-bar-4" />
                         <span className="w-1 bg-indigo-200 rounded-full animate-ai-bar-5" />
                       </div>
-                      <span className="text-[10px] font-extrabold mt-1 tracking-wider uppercase text-indigo-100">
+                      <span className="text-[9px] font-extrabold mt-0.5 tracking-wider uppercase text-indigo-100">
                         Examiner
                       </span>
                     </>
                   ) : (
                     <>
                       {/* Idle ChatGPT AI Voice Circle */}
-                      <div className="flex items-center justify-center gap-1 h-8">
+                      <div className="flex items-center justify-center gap-1 h-6">
                         <span className="w-1 h-2 bg-gray-400 dark:bg-gray-500 rounded-full" />
-                        <span className="w-1 h-3.5 bg-gray-300 dark:bg-gray-400 rounded-full" />
-                        <Mic className="w-7 h-7 text-white dark:text-black mx-1" />
-                        <span className="w-1 h-3.5 bg-gray-300 dark:bg-gray-400 rounded-full" />
+                        <span className="w-1 h-3 bg-gray-300 dark:bg-gray-400 rounded-full" />
+                        <Mic className="w-6 h-6 text-white dark:text-black mx-0.5" />
+                        <span className="w-1 h-3 bg-gray-300 dark:bg-gray-400 rounded-full" />
                         <span className="w-1 h-2 bg-gray-400 dark:bg-gray-500 rounded-full" />
                       </div>
-                      <span className="text-[10px] font-black mt-1 tracking-wider uppercase text-white dark:text-black">
+                      <span className="text-[9px] font-black mt-0.5 tracking-wider uppercase text-white dark:text-black">
                         Tap to Speak
                       </span>
                     </>
@@ -882,70 +926,45 @@ export default function VivaRoom() {
 
               {/* Status Hint with AI Glowing State Dot */}
               <div className="flex flex-col items-center justify-center space-y-1">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-2xs">
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-2xs">
                   <span
-                    className={`w-2 h-2 rounded-full ${
-                      isListening
+                    className={`w-1.5 h-1.5 rounded-full ${isListening
                         ? 'bg-emerald-500 animate-ping'
                         : examinerSpeaking
-                        ? 'bg-indigo-500 animate-pulse'
-                        : 'bg-gray-400'
-                    }`}
+                          ? 'bg-indigo-500 animate-pulse'
+                          : 'bg-gray-400'
+                      }`}
                   />
-                  <span className="text-xs font-bold text-gray-950 dark:text-white">
+                  <span className="text-[10px] sm:text-xs font-bold text-gray-950 dark:text-white">
                     {isListening
-                      ? language === 'hindi'
-                        ? 'परीक्षक आपकी आवाज़ सुन रहे हैं... उत्तर बोलें'
-                        : language === 'hinglish'
-                        ? 'Listening... Apna answer bolein'
-                        : 'Listening to candidate response...'
+                      ? 'Listening to your response... Speak naturally'
                       : examinerSpeaking
-                      ? language === 'hindi'
-                        ? 'परीक्षक बोल रहे हैं... ध्यान से सुनें'
-                        : language === 'hinglish'
-                        ? 'Examiner bol rahe hain... Dhyan se sunein'
-                        : 'Examiner speaking... Listen carefully'
-                      : language === 'hindi'
-                      ? 'मौखिक परीक्षा सक्रिय • बोलने के लिए घेरे को स्पर्श करें'
-                      : language === 'hinglish'
-                      ? 'AI Viva Ready • Bolne ke liye orb tap karein'
-                      : 'AI Viva Voice Ready • Tap orb to answer'}
+                        ? 'Examiner speaking... Listen carefully'
+                        : 'Voice Ready • Tap orb to speak answer'}
                   </span>
                 </div>
-                <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                <p className="text-[9px] sm:text-[10px] text-gray-500 dark:text-gray-400">
                   {isListening
-                    ? language === 'hindi'
-                      ? 'माइक्रोफ़ोन में स्पष्ट बोलें, फिर नीचे "उत्तर सबमिट करें" दबाएं'
-                      : language === 'hinglish'
-                      ? 'Mic me clearly bolein, fir niche Submit button dabayein'
-                      : 'Speak clearly into your microphone, then click Submit below'
-                    : language === 'hindi'
-                    ? 'जब भी आप उत्तर देने के लिए तैयार हों, ऊपर ग्लोइंग सर्कल पर टैप करें'
-                    : language === 'hinglish'
-                    ? 'Jab bhi bolne ke liye ready hon, glowing circle tap karein'
-                    : 'Tap the glowing circle above whenever you are ready to speak'}
+                    ? 'Speak clearly into your microphone, then click Submit below'
+                    : 'Tap the glowing circle above whenever you are ready to answer'}
                 </p>
               </div>
             </div>
 
             {/* Candidate Live Spoken Transcript Display */}
-            <div className="w-full space-y-3">
-              <div className="p-4 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-xs min-h-[90px] max-h-48 overflow-y-auto">
-                <div className="flex items-center justify-between text-[11px] text-gray-600 dark:text-gray-400 mb-2 font-semibold flex-wrap gap-1">
+            <div className="w-full space-y-2.5">
+              <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-xs min-h-[75px] max-h-40 overflow-y-auto">
+                <div className="flex items-center justify-between text-[10px] sm:text-[11px] text-gray-600 dark:text-gray-400 mb-1.5 font-semibold flex-wrap gap-1">
                   <span className="flex items-center gap-1.5 font-bold text-gray-900 dark:text-gray-100">
-                    <Mic className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                    <Mic className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-600 dark:text-emerald-400" />
                     {typingMode
-                      ? language === 'hindi'
-                        ? 'आपका उत्तर (टाइपिंग मोड):'
-                        : 'Your Response (Typing Mode):'
-                      : language === 'hindi'
-                      ? 'आपका मौखिक उत्तर (लाइव ट्रांसक्रिप्ट):'
+                      ? 'Your Response (Typing Mode):'
                       : 'Your Spoken Response (Live Transcript):'}
                   </span>
                   <div className="flex items-center gap-2">
                     {isListening && (
-                      <span className="text-emerald-600 dark:text-emerald-400 font-bold animate-pulse text-[10px]">
-                        ● {language === 'hindi' ? 'आवाज़ रिकॉर्ड हो रही है' : 'Recording Voice'}
+                      <span className="text-emerald-600 dark:text-emerald-400 font-bold animate-pulse text-[9px] sm:text-[10px]">
+                        ● Recording
                       </span>
                     )}
                     <button
@@ -954,18 +973,10 @@ export default function VivaRoom() {
                         if (isListening) stopListening();
                         setTypingMode(!typingMode);
                       }}
-                      className="px-2 py-0.5 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 text-[10px] font-bold transition-colors cursor-pointer flex items-center gap-1"
+                      className="px-2 py-0.5 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 text-[9px] sm:text-[10px] font-bold transition-colors cursor-pointer flex items-center gap-1"
                     >
-                      <Edit3 className="w-3 h-3" />
-                      <span>
-                        {typingMode
-                          ? language === 'hindi'
-                            ? '🎙️ माइक मोड'
-                            : '🎙️ Mic Mode'
-                          : language === 'hindi'
-                          ? '⌨️ लिखकर उत्तर दें'
-                          : '⌨️ Type Answer'}
-                      </span>
+                      {typingMode ? <Mic className="w-3 h-3" /> : <Edit3 className="w-3 h-3" />}
+                      <span>{typingMode ? 'Voice Mode' : 'Type Mode'}</span>
                     </button>
                   </div>
                 </div>
@@ -974,24 +985,14 @@ export default function VivaRoom() {
                   <textarea
                     value={transcript}
                     onChange={(e) => setTranscript(e.target.value)}
-                    placeholder={
-                      language === 'hindi'
-                        ? 'यहाँ अपना मौखिक उत्तर टाइप करें यदि कमरे में शोर है या फ़ोन का माइक काम नहीं कर रहा है...'
-                        : language === 'hinglish'
-                        ? 'Yahan apna viva answer type karein...'
-                        : 'Type your oral answer here if you are in a noisy room or if microphone is restricted on your phone...'
-                    }
-                    className="w-full h-20 p-2.5 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-xs sm:text-sm text-gray-950 dark:text-white focus:outline-none focus:border-black dark:focus:border-white resize-none"
+                    placeholder="Type your answer here if in a noisy room or if microphone is restricted on your phone..."
+                    className="w-full h-16 p-2 rounded-lg sm:rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-[11px] sm:text-xs text-gray-950 dark:text-white focus:outline-none focus:border-black dark:focus:border-white resize-none"
                   />
                 ) : (
-                  <p className="text-xs sm:text-sm text-gray-950 dark:text-white leading-relaxed italic font-medium">
+                  <p className="text-[11px] sm:text-xs text-gray-950 dark:text-white leading-relaxed italic font-medium">
                     {transcript || interimTranscript
                       ? `${transcript} ${interimTranscript}`
-                      : language === 'hindi'
-                      ? 'जैसे ही आप बोलेंगे, आपके शब्द वास्तविक समय में यहाँ दिखाई देंगे... (शोर होने पर "⌨️ लिखकर उत्तर दें" चुनें)'
-                      : language === 'hinglish'
-                      ? 'Aapke bole gaye words yahan real-time me dikhenge... (Noise hone par "⌨️ Type Answer" use karein)'
-                      : 'Your spoken words will appear here in real-time as you speak... (Tap "⌨️ Type Answer" if in a noisy area)'}
+                      : 'Your spoken words will appear here in real-time as you speak... (Tap "Type Mode" if in a noisy area)'}
                   </p>
                 )}
               </div>
@@ -1001,27 +1002,17 @@ export default function VivaRoom() {
                 type="button"
                 onClick={handleSubmitSpokenAnswer}
                 disabled={loading || (!transcript.trim() && !interimTranscript.trim())}
-                className="w-full py-3.5 rounded-xl bg-black hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-black text-xs sm:text-sm font-extrabold flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                className="w-full py-2.5 sm:py-3.5 rounded-xl bg-black hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-black text-xs sm:text-sm font-extrabold flex items-center justify-center gap-2 shadow-xs transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>
-                      {language === 'hindi'
-                        ? 'परीक्षक आपके उत्तर का मूल्यांकन कर रहे हैं...'
-                        : 'Examiner is Evaluating Your Response...'}
-                    </span>
+                    <span>Examiner is Evaluating Your Response...</span>
                   </>
                 ) : (
                   <>
-                    <Send className="w-4 h-4" />
-                    <span>
-                      {language === 'hindi'
-                        ? 'परीक्षक को मौखिक उत्तर सबमिट करें'
-                        : language === 'hinglish'
-                        ? 'Examiner ko Answer Submit Karein'
-                        : 'Submit Spoken Answer to Examiner'}
-                    </span>
+                    <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <span>Submit Response to Examiner</span>
                   </>
                 )}
               </button>
@@ -1034,40 +1025,40 @@ export default function VivaRoom() {
       {/* 3. POST-VIVA REPORT CARD: Comprehensive University Evaluation */}
       {/* ============================================================ */}
       {sessionState === 'report_card' && finalReport && (
-        <div className="flex-1 overflow-y-auto px-4 py-6 sm:py-10 flex justify-center items-start">
-          <div className="w-full max-w-3xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-3xl p-6 sm:p-10 shadow-xl space-y-6 animate-in zoom-in-95 duration-200 my-2 sm:my-4">
+        <div className="flex-1 overflow-y-auto px-3 sm:px-4 py-4 sm:py-8 flex justify-center items-start">
+          <div className="w-full max-w-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl sm:rounded-3xl p-4 sm:p-7 shadow-lg space-y-4 sm:space-y-5 animate-in zoom-in-95 duration-200 my-1 sm:my-3">
             {/* Header / Grade Badge (No Gradients) */}
-            <div className="text-center space-y-2 pb-4 border-b border-gray-200 dark:border-gray-800">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-gray-200 text-xs font-bold uppercase tracking-wider">
-                <Award className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <div className="text-center space-y-1.5 pb-3 border-b border-gray-200 dark:border-gray-800">
+              <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-gray-200 text-[10px] sm:text-xs font-bold uppercase tracking-wider">
+                <Award className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                 <span>Official Oral Viva Scorecard</span>
               </div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-950 dark:text-white">
+              <h2 className="text-xl sm:text-2xl font-extrabold text-gray-950 dark:text-white">
                 Viva Voce Assessment Complete
               </h2>
-              <div className="flex items-center justify-center gap-3 pt-2">
-                <span className="text-3xl sm:text-4xl font-black text-gray-950 dark:text-white">
+              <div className="flex items-center justify-center gap-2.5 pt-1">
+                <span className="text-2xl sm:text-3xl font-black text-gray-950 dark:text-white">
                   {finalReport.overall_score} / {finalReport.max_possible_score}
                 </span>
-                <span className="px-3 py-1 rounded-xl bg-black dark:bg-white text-white dark:text-black font-extrabold text-xs sm:text-sm shadow-xs">
+                <span className="px-2.5 py-0.5 rounded-lg bg-black dark:bg-white text-white dark:text-black font-extrabold text-xs sm:text-sm shadow-2xs">
                   {finalReport.grade}
                 </span>
               </div>
-              <p className="text-xs text-gray-700 dark:text-gray-300 max-w-lg mx-auto italic pt-1">
+              <p className="text-[11px] sm:text-xs text-gray-700 dark:text-gray-300 max-w-md mx-auto italic pt-1">
                 "{finalReport.verdict}"
               </p>
             </div>
 
             {/* Strengths & Weaknesses 2-Column Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {/* Strengths */}
-              <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 space-y-2">
-                <h4 className="text-xs font-bold text-emerald-800 dark:text-emerald-400 flex items-center gap-1.5 uppercase tracking-wider">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> Demonstrated Strengths
+              <div className="p-3 sm:p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 space-y-1.5">
+                <h4 className="text-[11px] sm:text-xs font-bold text-emerald-800 dark:text-emerald-400 flex items-center gap-1.5 uppercase tracking-wider">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> Demonstrated Strengths
                 </h4>
-                <ul className="space-y-1.5 text-xs text-emerald-900 dark:text-emerald-200">
+                <ul className="space-y-1 text-[11px] sm:text-xs text-emerald-900 dark:text-emerald-200">
                   {(finalReport.strengths || []).map((s, idx) => (
-                    <li key={idx} className="flex items-start gap-1.5">
+                    <li key={idx} className="flex items-start gap-1.5 leading-relaxed">
                       <span className="text-emerald-600 dark:text-emerald-400 font-bold">•</span>
                       <span>{s}</span>
                     </li>
@@ -1076,13 +1067,13 @@ export default function VivaRoom() {
               </div>
 
               {/* Weaknesses / Revision Checklist */}
-              <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 space-y-2">
-                <h4 className="text-xs font-bold text-amber-800 dark:text-amber-400 flex items-center gap-1.5 uppercase tracking-wider">
-                  <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" /> Concepts to Revise Before Real Exam
+              <div className="p-3 sm:p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 space-y-1.5">
+                <h4 className="text-[11px] sm:text-xs font-bold text-amber-800 dark:text-amber-400 flex items-center gap-1.5 uppercase tracking-wider">
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" /> Concepts to Revise Before Real Exam
                 </h4>
-                <ul className="space-y-1.5 text-xs text-amber-900 dark:text-amber-200">
+                <ul className="space-y-1 text-[11px] sm:text-xs text-amber-900 dark:text-amber-200">
                   {(finalReport.weaknesses || []).map((w, idx) => (
-                    <li key={idx} className="flex items-start gap-1.5">
+                    <li key={idx} className="flex items-start gap-1.5 leading-relaxed">
                       <span className="text-amber-600 dark:text-amber-400 font-bold">•</span>
                       <span>{w}</span>
                     </li>
@@ -1092,14 +1083,15 @@ export default function VivaRoom() {
             </div>
 
             {/* Top Tricky Trap Questions */}
-            <div className="p-4 rounded-2xl bg-gray-50 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700/80 space-y-2">
-              <h4 className="text-xs font-bold text-rose-700 dark:text-rose-400 flex items-center gap-1.5 uppercase tracking-wider">
-                <Sparkles className="w-4 h-4 text-rose-600 dark:text-rose-400" /> 🎯 3 Trap Questions Examiners Love in this Subject
+            <div className="p-3 sm:p-3.5 rounded-xl bg-gray-50 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700/80 space-y-2">
+              <h4 className="text-[11px] sm:text-xs font-bold text-rose-700 dark:text-rose-400 flex items-center gap-1.5 uppercase tracking-wider">
+                <Sparkles className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
+                <span>Examiner Trap Questions in this Subject</span>
               </h4>
               <div className="space-y-1.5">
                 {(finalReport.examiner_trap_questions || []).map((q, idx) => (
-                  <div key={idx} className="flex items-start gap-2 text-xs text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-900/80 p-2.5 rounded-xl border border-gray-200 dark:border-gray-800">
-                    <span className="w-5 h-5 rounded-full bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-gray-100 flex items-center justify-center font-bold text-[10px] shrink-0">
+                  <div key={idx} className="flex items-start gap-2 text-[11px] sm:text-xs text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-900/80 p-2 rounded-lg border border-gray-200 dark:border-gray-800">
+                    <span className="w-4 h-4 rounded-full bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-gray-100 flex items-center justify-center font-bold text-[9px] shrink-0">
                       {idx + 1}
                     </span>
                     <span>{q}</span>
@@ -1108,22 +1100,81 @@ export default function VivaRoom() {
               </div>
             </div>
 
+            {/* Question-by-Question Viva Review & Model Answers */}
+            {vivaHistory.length > 0 && (
+              <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-gray-50 dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 space-y-3">
+                <h4 className="text-[11px] sm:text-xs font-bold text-gray-950 dark:text-white uppercase tracking-wider flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                    Question-by-Question Review & Model Answers
+                  </span>
+                  <span className="text-[10px] text-gray-500 font-mono">
+                    {vivaHistory.length} Questions
+                  </span>
+                </h4>
+
+                <div className="space-y-3">
+                  {vivaHistory.map((item, idx) => (
+                    <div
+                      key={idx}
+                      className="p-3 rounded-xl bg-white dark:bg-black border border-gray-200 dark:border-neutral-800 space-y-2 text-xs"
+                    >
+                      <div className="flex items-center justify-between gap-2 border-b border-gray-100 dark:border-neutral-800 pb-1.5">
+                        <span className="font-bold text-gray-900 dark:text-gray-100">
+                          Q{idx + 1}: {item.question}
+                        </span>
+                        <span className="px-2 py-0.5 rounded-md bg-gray-100 dark:bg-neutral-800 text-[10px] font-bold text-gray-800 dark:text-gray-200 shrink-0">
+                          {item.marks} / 5 Marks
+                        </span>
+                      </div>
+
+                      <div className="text-[11px] text-gray-700 dark:text-gray-300">
+                        <span className="font-bold text-gray-900 dark:text-gray-100 block text-[10px] uppercase tracking-wide">
+                          Your Spoken Answer:
+                        </span>
+                        <p className="italic bg-gray-50 dark:bg-neutral-900/60 p-2 rounded border border-gray-200 dark:border-neutral-800 mt-0.5">
+                          "{item.answer || 'Unattempted'}"
+                        </p>
+                      </div>
+
+                      <div className="text-[11px] text-amber-900 dark:text-amber-200 bg-amber-50/60 dark:bg-amber-950/20 p-2 rounded border border-amber-200/60 dark:border-amber-800/40">
+                        <span className="font-bold text-amber-800 dark:text-amber-400 block text-[10px] uppercase tracking-wide">
+                          1. Examiner Feedback:
+                        </span>
+                        <p className="mt-0.5">{item.feedback}</p>
+                      </div>
+
+                      {item.modelAnswer && (
+                        <div className="text-[11px] text-emerald-900 dark:text-emerald-200 bg-emerald-50/70 dark:bg-emerald-950/25 p-2 rounded border border-emerald-200/60 dark:border-emerald-800/40">
+                          <span className="font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-1 text-[10px] uppercase tracking-wide">
+                            <Sparkles className="w-3 h-3" />
+                            2. Ideal Viva Answer:
+                          </span>
+                          <p className="mt-0.5 font-medium">{item.modelAnswer}</p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Action Buttons (Solid Black / Contrast - No Gradient) */}
-            <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
+            <div className="flex flex-col sm:flex-row items-center gap-2.5 pt-1">
               <button
                 type="button"
                 onClick={() => setSessionState('setup')}
-                className="w-full sm:flex-1 py-3.5 rounded-xl bg-black hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-black font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-xs"
+                className="w-full sm:flex-1 py-2.5 sm:py-3 rounded-xl bg-black hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-black font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-2xs"
               >
-                <RotateCcw className="w-4 h-4" />
+                <RotateCcw className="w-3.5 h-3.5" />
                 <span>Practice Another Viva Session</span>
               </button>
               <button
                 type="button"
                 onClick={() => window.print()}
-                className="w-full sm:w-auto px-5 py-3.5 rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-700 font-semibold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                className="w-full sm:w-auto px-4 py-2.5 sm:py-3 rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-700 font-semibold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
               >
-                <Printer className="w-4 h-4" />
+                <Printer className="w-3.5 h-3.5" />
                 <span>Print Scorecard</span>
               </button>
             </div>

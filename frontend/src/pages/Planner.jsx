@@ -159,7 +159,7 @@ export default function Planner() {
       />
 
       {/* Configuration Box (Hidden in Print) */}
-      <div className="p-4 sm:p-8 rounded-3xl bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-800 shadow-xs space-y-6 print:hidden">
+      <div className="p-4 sm:p-8 rounded-3xl bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-gray-800 shadow-xs space-y-6 print:hidden">
         {/* Semester Context & Plan Scope Toggle */}
         <div className="space-y-4 pb-6 border-b border-gray-100 dark:border-gray-800">
           <div className="flex items-center justify-between flex-wrap gap-3">
@@ -322,7 +322,7 @@ export default function Planner() {
           <button
             onClick={handleGeneratePlan}
             disabled={loading}
-            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-600/30 transition-all hover:scale-[1.02] disabled:opacity-50 w-full sm:w-auto text-center"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl text-xs font-bold bg-black hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-100 dark:text-black shadow-sm transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 w-full sm:w-auto text-center cursor-pointer"
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin shrink-0" /> : <Sparkles className="w-4 h-4 shrink-0" />}
             <span>
@@ -340,7 +340,7 @@ export default function Planner() {
       {studyPlan && (
         <div className="space-y-6">
           {/* Header Summary & Progress Card */}
-          <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-800 shadow-xs space-y-4">
+          <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-gray-800 shadow-xs space-y-4">
             <div className="flex items-center justify-between flex-wrap gap-3">
               <div>
                 <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
@@ -355,7 +355,7 @@ export default function Planner() {
               <div className="w-full sm:w-64 space-y-1.5">
                 <div className="h-3 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-indigo-500 to-emerald-500 rounded-full transition-all duration-300"
+                    className="h-full bg-emerald-500 rounded-full transition-all duration-300"
                     style={{ width: `${progressPercent}%` }}
                   />
                 </div>
@@ -407,7 +407,7 @@ export default function Planner() {
                   className={`p-4 sm:p-5 rounded-2xl border transition-all flex items-start gap-4 ${
                     isDone
                       ? 'border-emerald-200 bg-emerald-50/30 dark:bg-emerald-950/10 dark:border-emerald-900'
-                      : 'border-gray-200 dark:border-gray-800 bg-white dark:bg-[#111827]'
+                      : 'border-gray-200 dark:border-gray-800 bg-white dark:bg-[#0a0a0a]'
                   }`}
                 >
                   <button
@@ -470,7 +470,7 @@ export default function Planner() {
 
           {/* Final Revision Checklist */}
           {studyPlan.final_revision_checklist?.length > 0 && (
-            <div className="p-6 rounded-3xl bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-800 shadow-xs space-y-3">
+            <div className="p-6 rounded-3xl bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-gray-800 shadow-xs space-y-3">
               <h4 className="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
                 <Target className="w-4 h-4 text-emerald-500" />
                 <span>Pre-Exam Revision Checklist</span>

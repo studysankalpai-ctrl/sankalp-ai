@@ -1,5 +1,5 @@
-import React from 'react';
-import { NavLink, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { NavLink, Link, useLocation } from 'react-router-dom';
 import {
   Home,
   FolderTree,
@@ -15,6 +15,7 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   GraduationCap,
   Sparkles,
   X,
@@ -47,6 +48,7 @@ const ICONS = {
 };
 
 export default function Sidebar() {
+  const location = useLocation();
   const {
     sidebarCollapsed,
     toggleSidebar,
@@ -68,36 +70,71 @@ export default function Sidebar() {
 
   const { isInstallable, isInstalled, isIos, promptInstall } = usePwaStore();
 
-  const navSections = [
+  // Top-Level Flagship Links (1-Click Core Access)
+  const primaryLinks = [
+    { label: 'AI Viva Room', path: '/viva', icon: 'Mic', highlight: true, badge: 'NEW', isNew: true },
+    { label: 'Exam Desk (Home)', path: '/dashboard', icon: 'Home' },
+    { label: 'AI Exam Mentor', path: '/mentor', icon: 'Bot', highlight: true, badge: 'AI' },
+  ];
+
+  // Collapsible Sub-link Groups (Zero Clutter, 100% Links Preserved)
+  const subLinkGroups = [
     {
-      title: 'Voice Viva & Study',
+      id: 'papers',
+      title: 'Exam Papers & Syllabus',
+      icon: 'FolderTree',
       items: [
-        { label: 'AI Viva Room', path: '/viva', icon: 'Mic', highlight: true, badge: 'NEW', isNew: true },
-        { label: 'Dashboard', path: '/dashboard', icon: 'Home' },
-        { label: 'AI Exam Mentor', path: '/mentor', icon: 'Bot', highlight: true, badge: 'AI' },
+        { label: '5-Year Final Paper', path: '/predictions', icon: 'TrendingUp', badge: '5-Yr' },
+        { label: 'Important Topics', path: '/topics', icon: 'Star' },
         { label: 'Papers & Syllabus', path: '/library', icon: 'FolderTree' },
       ],
     },
     {
-      title: 'Exam Preparation',
+      id: 'practice',
+      title: 'Practice & Mock Tests',
+      icon: 'PenTool',
       items: [
-        { label: '5-Year Final Paper', path: '/predictions', icon: 'TrendingUp', badge: '5-Year' },
-        { label: 'Important Topics', path: '/topics', icon: 'Star' },
         { label: 'Practice Questions', path: '/practice', icon: 'PenTool' },
-        { label: 'Mock Tests', path: '/tests', icon: 'ClipboardCheck' },
+        { label: 'Timed Mock Tests', path: '/tests', icon: 'ClipboardCheck' },
         { label: 'Study Planner', path: '/planner', icon: 'Calendar' },
       ],
     },
     {
-      title: 'Notes & Help',
+      id: 'notes',
+      title: 'Revision & Help',
+      icon: 'Bookmark',
       items: [
-        { label: 'Quick Revision', path: '/revision', icon: 'RotateCcw' },
+        { label: '1-Page Revision', path: '/revision', icon: 'RotateCcw' },
         { label: 'Saved Notes', path: '/bookmarks', icon: 'Bookmark' },
-        { label: 'User Guide & Manual', path: '/guide', icon: 'BookOpen', badge: 'Guide' },
+        { label: 'User Guide', path: '/guide', icon: 'BookOpen', badge: 'Guide' },
         { label: 'Settings', path: '/settings', icon: 'Settings' },
       ],
     },
   ];
+
+  // Expand / Collapse State for Groups
+  const [openGroups, setOpenGroups] = useState({
+    papers: true,
+    practice: true,
+    notes: false,
+  });
+
+  const toggleGroup = (groupId) => {
+    setOpenGroups((prev) => ({
+      ...prev,
+      [groupId]: !prev[groupId],
+    }));
+  };
+
+  // Keep group auto-open when user is visiting a link inside it
+  useEffect(() => {
+    const currentPath = location.pathname;
+    subLinkGroups.forEach((group) => {
+      if (group.items.some((item) => currentPath.startsWith(item.path))) {
+        setOpenGroups((prev) => ({ ...prev, [group.id]: true }));
+      }
+    });
+  }, [location.pathname]);
 
   return (
     <>
@@ -111,14 +148,14 @@ export default function Sidebar() {
 
       {/* Main Sidebar */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-40 flex flex-col bg-white dark:bg-[#111827] border-r border-gray-200 dark:border-gray-800 transition-all duration-300 ease-in-out pt-[env(safe-area-inset-top,0px)] md:pt-0 pb-[env(safe-area-inset-bottom,0px)] md:pb-0 ${
+        className={`fixed top-0 bottom-0 left-0 z-40 flex flex-col bg-white dark:bg-black border-r border-gray-200 dark:border-gray-800 transition-all duration-300 ease-in-out pt-[env(safe-area-inset-top,0px)] md:pt-0 pb-[env(safe-area-inset-bottom,0px)] md:pb-0 ${
           sidebarCollapsed ? 'w-20' : 'w-64'
         } ${
           mobileNavOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}
       >
         {/* Logo Section */}
-        <div className="h-16 flex items-center justify-between px-4 border-b border-gray-100 dark:border-gray-800 shrink-0">
+        <div className={`h-16 flex items-center ${sidebarCollapsed ? 'justify-center px-0' : 'justify-between px-4'} border-b border-gray-100 dark:border-gray-800 shrink-0`}>
           <Link
             to="/"
             onClick={() => setMobileNavOpen(false)}
@@ -225,103 +262,254 @@ export default function Sidebar() {
             </div>
           )}
 
-          {navSections.map((sec, secIdx) => (
-            <div key={sec.title || secIdx} className="space-y-1">
-              {!sidebarCollapsed && (
+          {/* Main Navigation: Primary Links + Collapsible Sub-link Groups */}
+          {!sidebarCollapsed ? (
+            <div className="space-y-4">
+              {/* Primary 1-Click Core Tools */}
+              <div className="space-y-1">
                 <p className="px-3 pt-1 pb-1 text-[10px] font-bold tracking-wider uppercase text-gray-400 dark:text-gray-500">
-                  {sec.title}
+                  Core Desk
                 </p>
-              )}
-              {sec.items.map((item) => {
-                const Icon = ICONS[item.icon] || Home;
-                return (
-                  <NavLink
-                    key={item.path}
-                    to={item.path}
-                    end={item.path === '/'}
-                    onClick={() => setMobileNavOpen(false)}
-                    className={({ isActive }) =>
-                      `flex items-center gap-3 px-3 py-2 rounded-xl font-medium text-xs sm:text-sm transition-all duration-150 group relative ${
-                        isActive
-                          ? 'bg-gray-950 dark:bg-white text-white dark:text-gray-950 shadow-sm'
-                          : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800/60 hover:text-gray-900 dark:hover:text-gray-100'
-                      } ${sidebarCollapsed ? 'justify-center px-0' : ''}`
-                    }
-                    title={sidebarCollapsed ? item.label : undefined}
-                  >
-                    {({ isActive }) => (
-                      <>
-                        <Icon
-                          className={`w-4 h-4 sm:w-5 sm:h-5 shrink-0 transition-transform group-hover:scale-105 ${
-                            isActive
-                              ? 'text-white dark:text-gray-950'
-                              : item.highlight
-                              ? 'text-indigo-600 dark:text-indigo-400'
-                              : 'text-gray-500 dark:text-gray-400'
-                          }`}
-                        />
-                        {!sidebarCollapsed && (
-                          <span className="truncate flex-1 font-semibold">{item.label}</span>
-                        )}
-                        {!sidebarCollapsed && item.badge && (
-                          <span
-                            className={`px-1.5 py-0.5 rounded-md text-[9px] font-extrabold tracking-wider uppercase transition-all ${
-                              item.isNew
-                                ? 'bg-black dark:bg-white text-white dark:text-black font-extrabold shadow-xs ring-1 ring-gray-400/40'
-                                : isActive
-                                ? 'bg-white/20 dark:bg-black/10 text-white dark:text-gray-950'
+                {primaryLinks.map((item) => {
+                  const Icon = ICONS[item.icon] || Home;
+                  return (
+                    <NavLink
+                      key={item.path}
+                      to={item.path}
+                      end={item.path === '/'}
+                      onClick={() => setMobileNavOpen(false)}
+                      className={({ isActive }) =>
+                        `flex items-center gap-3 px-3 py-2 rounded-xl font-medium text-xs sm:text-sm transition-all duration-150 group relative cursor-pointer ${
+                          isActive
+                            ? 'bg-black text-white dark:bg-white dark:text-black shadow-xs font-bold'
+                            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800/60 hover:text-gray-950 dark:hover:text-white'
+                        }`
+                      }
+                    >
+                      {({ isActive }) => (
+                        <>
+                          <Icon
+                            className={`w-4 h-4 sm:w-5 sm:h-5 shrink-0 transition-transform group-hover:scale-105 ${
+                              isActive
+                                ? 'text-white dark:text-black'
                                 : item.highlight
-                                ? 'bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400'
-                                : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
+                                ? 'text-indigo-600 dark:text-indigo-400'
+                                : 'text-gray-500 dark:text-gray-400'
                             }`}
-                          >
-                            {item.badge}
+                          />
+                          <span className="truncate flex-1 font-semibold">{item.label}</span>
+                          {item.badge && (
+                            <span
+                              className={`px-1.5 py-0.5 rounded-md text-[9px] font-extrabold tracking-wider uppercase transition-all ${
+                                item.isNew
+                                  ? 'bg-emerald-500 text-white font-black shadow-2xs'
+                                  : isActive
+                                  ? 'bg-white/20 dark:bg-black/10 text-white dark:text-black'
+                                  : item.highlight
+                                  ? 'bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400'
+                                  : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
+                              }`}
+                            >
+                              {item.badge}
+                            </span>
+                          )}
+                        </>
+                      )}
+                    </NavLink>
+                  );
+                })}
+              </div>
+
+              {/* Collapsible Sub-link Groups */}
+              <div className="pt-1 space-y-2.5">
+                <p className="px-3 text-[10px] font-bold tracking-wider uppercase text-gray-400 dark:text-gray-500">
+                  Study Modules
+                </p>
+                {subLinkGroups.map((group) => {
+                  const GroupIcon = ICONS[group.icon] || FolderTree;
+                  const isOpen = openGroups[group.id];
+                  const hasActiveChild = group.items.some((item) =>
+                    location.pathname.startsWith(item.path)
+                  );
+
+                  return (
+                    <div key={group.id} className="space-y-1">
+                      {/* Accordion Group Header */}
+                      <button
+                        type="button"
+                        onClick={() => toggleGroup(group.id)}
+                        className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer select-none ${
+                          hasActiveChild
+                            ? 'text-gray-950 dark:text-white bg-gray-100/80 dark:bg-gray-800/60 font-extrabold'
+                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-950 dark:hover:text-white hover:bg-gray-100/60 dark:hover:bg-gray-800/40'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 truncate">
+                          <GroupIcon
+                            className={`w-4 h-4 shrink-0 ${
+                              hasActiveChild
+                                ? 'text-black dark:text-white'
+                                : 'text-gray-400 dark:text-gray-500'
+                            }`}
+                          />
+                          <span className="truncate">{group.title}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <span className="text-[10px] px-1.5 py-0.2 rounded-md bg-gray-200/60 dark:bg-gray-800 text-gray-600 dark:text-gray-400 font-semibold">
+                            {group.items.length}
                           </span>
-                        )}
-                      </>
-                    )}
-                  </NavLink>
-                );
-              })}
+                          <ChevronDown
+                            className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 ${
+                              isOpen ? 'rotate-180' : ''
+                            }`}
+                          />
+                        </div>
+                      </button>
+
+                      {/* Sub-links with clean connector border */}
+                      {isOpen && (
+                        <div className="ml-4 pl-3 border-l-2 border-gray-200 dark:border-gray-800 space-y-0.5 py-1 animate-in fade-in duration-150">
+                          {group.items.map((sub) => {
+                            const SubIcon = ICONS[sub.icon] || Star;
+                            return (
+                              <NavLink
+                                key={sub.path}
+                                to={sub.path}
+                                onClick={() => setMobileNavOpen(false)}
+                                className={({ isActive }) =>
+                                  `flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                                    isActive
+                                      ? 'bg-black text-white dark:bg-white dark:text-black font-bold shadow-2xs'
+                                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-950 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800/50'
+                                  }`
+                                }
+                              >
+                                {({ isActive }) => (
+                                  <>
+                                    <SubIcon
+                                      className={`w-3.5 h-3.5 shrink-0 ${
+                                        isActive
+                                          ? 'text-white dark:text-black'
+                                          : 'text-gray-400 dark:text-gray-500'
+                                      }`}
+                                    />
+                                    <span className="truncate flex-1">{sub.label}</span>
+                                    {sub.badge && (
+                                      <span
+                                        className={`px-1.5 py-0.2 rounded text-[8px] font-extrabold uppercase ${
+                                          isActive
+                                            ? 'bg-white/20 dark:bg-black/10 text-white dark:text-black'
+                                            : 'bg-gray-100 dark:bg-gray-800 text-gray-500'
+                                        }`}
+                                      >
+                                        {sub.badge}
+                                      </span>
+                                    )}
+                                  </>
+                                )}
+                              </NavLink>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          ))}
+          ) : (
+            /* Mini Icon Sidebar (when collapsed on desktop) */
+            <div className="space-y-3">
+              <div className="space-y-1">
+                {primaryLinks.map((item) => {
+                  const Icon = ICONS[item.icon] || Home;
+                  return (
+                    <NavLink
+                      key={item.path}
+                      to={item.path}
+                      end={item.path === '/'}
+                      className={({ isActive }) =>
+                        `flex items-center justify-center p-2.5 rounded-xl transition-all ${
+                          isActive
+                            ? 'bg-black text-white dark:bg-white dark:text-black shadow-xs'
+                            : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800/60 hover:text-gray-950 dark:hover:text-white'
+                        }`
+                      }
+                      title={item.label}
+                    >
+                      <Icon className="w-5 h-5 shrink-0" />
+                    </NavLink>
+                  );
+                })}
+              </div>
+              <div className="border-t border-gray-200 dark:border-gray-800 pt-2 space-y-1">
+                {subLinkGroups.flatMap((g) => g.items).map((item) => {
+                  const Icon = ICONS[item.icon] || Star;
+                  return (
+                    <NavLink
+                      key={item.path}
+                      to={item.path}
+                      className={({ isActive }) =>
+                        `flex items-center justify-center p-2.5 rounded-xl transition-all ${
+                          isActive
+                            ? 'bg-black text-white dark:bg-white dark:text-black shadow-xs'
+                            : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800/60 hover:text-gray-950 dark:hover:text-white'
+                        }`
+                      }
+                      title={item.label}
+                    >
+                      <Icon className="w-4 h-4 shrink-0" />
+                    </NavLink>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* AI Key Status Card (bottom of sidebar - Clean Neutral) */}
+        {/* AI Key Status & Support Card (bottom of sidebar - Compact, Sleek AMOLED Black) */}
         {!sidebarCollapsed && (
-          <div className="p-3 mx-3 mb-2 rounded-xl bg-gray-50 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700/60">
-            <div className="flex items-center gap-2 mb-1.5">
-              <span className={`w-2 h-2 rounded-full ${isAiConnected ? 'bg-emerald-500 animate-pulse' : 'bg-gray-400'}`} />
-              <span className="text-xs font-semibold text-gray-800 dark:text-gray-200">
-                {isAiConnected ? 'SANKALP AI Active' : 'SANKALP AI Offline'}
-              </span>
+          <div className="mx-3 mb-2 p-3 rounded-2xl bg-gray-50 dark:bg-[#0a0a0a] border border-gray-200 dark:border-neutral-800 shadow-2xs space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="relative flex h-2 w-2 shrink-0">
+                  {isAiConnected && (
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  )}
+                  <span
+                    className={`relative inline-flex rounded-full h-2 w-2 ${
+                      isAiConnected ? 'bg-emerald-500' : 'bg-amber-400'
+                    }`}
+                  />
+                </span>
+                <span className="text-xs font-bold text-gray-900 dark:text-white truncate">
+                  {isAiConnected ? 'SANKALP AI Active' : 'AI Key Required'}
+                </span>
+              </div>
+              <Link
+                to="/settings"
+                className="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-gray-200/70 hover:bg-gray-200 dark:bg-neutral-900 dark:hover:bg-neutral-800 text-gray-800 dark:text-gray-200 border border-gray-300/60 dark:border-neutral-800 transition-colors shrink-0"
+              >
+                {isAiConnected ? 'Settings' : 'Connect'}
+              </Link>
             </div>
-            <p className="text-[11px] text-gray-500 dark:text-gray-400 line-clamp-2 mb-2">
-              {isAiConnected
-                ? 'Your SANKALP AI exam mentor is active and ready.'
-                : 'Connect your AI key in Settings to activate SANKALP AI.'}
-            </p>
-            <Link
-              to="/settings"
-              className="text-[11px] font-semibold text-gray-900 dark:text-gray-100 hover:underline flex items-center gap-1"
-            >
-              <Sparkles className="w-3 h-3 text-gray-600 dark:text-gray-400" />
-              {isAiConnected ? 'AI Settings' : 'Connect Key'}
-            </Link>
-          </div>
-        )}
 
-        {/* Enquiry / Support Link in Sidebar */}
-        {!sidebarCollapsed && (
-          <div className="px-3 pb-1">
-            <a
-              href="mailto:study.sankalp.ai@gmail.com"
-              className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-[11px] font-medium text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
-              title="Queries & Enquiry"
-            >
-              <Mail className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-              <span className="truncate">study.sankalp.ai@gmail.com</span>
-            </a>
+            <p className="text-[11px] text-gray-500 dark:text-gray-400 leading-snug">
+              {isAiConnected
+                ? 'Exam mentor & oral viva room ready.'
+                : 'Connect Groq API key in Settings to activate AI.'}
+            </p>
+
+            <div className="pt-2 border-t border-gray-200/60 dark:border-neutral-800/80">
+              <a
+                href="mailto:study.sankalp.ai@gmail.com"
+                className="flex items-center gap-1.5 text-[11px] font-medium text-gray-500 hover:text-black dark:text-gray-400 dark:hover:text-white transition-colors truncate"
+                title="Support & Queries"
+              >
+                <Mail className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                <span className="truncate">study.sankalp.ai@gmail.com</span>
+              </a>
+            </div>
           </div>
         )}
 
@@ -378,7 +566,8 @@ export default function Sidebar() {
           <div className="hidden md:flex">
             <button
               onClick={toggleSidebar}
-              className="w-full flex items-center justify-center gap-2 py-2 text-xs font-medium text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              className="w-full flex items-center justify-center gap-2 py-2 text-xs font-medium text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+              title={sidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
             >
               {sidebarCollapsed ? (
                 <ChevronRight className="w-4 h-4" />

@@ -317,7 +317,9 @@ YOUR TASK:
 2. Formulate your spoken verbal reaction (~1-2 short sentences strictly adhering to the LANGUAGE REQUIREMENT above):
    - Mention what was technically accurate.
    - Point out what critical technical detail, equation, keyword or mechanism was missed according to university standards.
-3. DECIDE NEXT STEP:
+3. Formulate the IDEAL/MODEL VIVA ANSWER for this question ("model_answer"):
+   - Provide a concise, crisp 1-2 sentence university viva answer explaining exactly what the candidate should say to score full 5/5 marks (with exact technical definition, keywords, and core concept).
+4. DECIDE NEXT STEP:
    - CASE A (Cross-Question): If the answer was weak, shallow, or incomplete AND this was NOT already a cross-question AND ${!shouldCheckForFinal}:
      Ask a sharp, targeted CROSS-QUESTION directly on the missing concept from the syllabus.
      Set "is_cross_question": true, "is_final": false.
@@ -333,6 +335,7 @@ OUTPUT FORMAT (Respond with strictly valid JSON ONLY):
   "marks_awarded": number (between 0 and 5),
   "max_marks": 5,
   "verbal_feedback": "Short spoken response by examiner explaining accuracy & missing details",
+  "model_answer": "Concise 1-2 sentence ideal viva answer containing the exact university definition and technical keywords",
   "missing_concept": "Key technical keyword or concept omitted by candidate",
   "is_cross_question": boolean,
   "is_final": boolean,
@@ -372,6 +375,8 @@ OUTPUT FORMAT (Respond with strictly valid JSON ONLY):
         max_marks: 5,
         verbal_feedback:
           'Fair response, but make sure to emphasize the underlying working mechanism and precise definitions.',
+        model_answer:
+          'The ideal viva answer should state the fundamental definition, key mechanism or formula, and its primary real-world application.',
         missing_concept: 'Underlying hardware execution and edge cases',
         is_cross_question: false,
         is_final: shouldCheckForFinal,

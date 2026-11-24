@@ -220,7 +220,7 @@ export default function Practice() {
       />
 
       {/* Generator Control Panel */}
-      <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-800 shadow-xs space-y-4">
+      <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-gray-800 shadow-xs space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-indigo-500 shrink-0" />
@@ -302,7 +302,7 @@ export default function Practice() {
           <button
             onClick={handleGenerateQuestions}
             disabled={generating}
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs transition-colors disabled:opacity-50 w-full sm:w-auto text-center"
+            className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-xs font-bold bg-black hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-100 dark:text-black shadow-xs transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 w-full sm:w-auto text-center cursor-pointer"
           >
             <Sparkles className="w-4 h-4 shrink-0" />
             {generating ? 'Generating Questions...' : 'Generate 5 Practice Questions'}
@@ -329,7 +329,7 @@ export default function Practice() {
             return (
               <div
                 key={q._id || idx}
-                className={`p-6 rounded-3xl bg-white dark:bg-[#111827] border transition-all ${
+                className={`p-6 rounded-3xl bg-white dark:bg-[#0a0a0a] border transition-all ${
                   isCompleted
                     ? 'border-emerald-200 dark:border-emerald-950/60 bg-emerald-50/20 dark:bg-emerald-950/10'
                     : 'border-gray-200 dark:border-gray-800 shadow-2xs hover:shadow-md'

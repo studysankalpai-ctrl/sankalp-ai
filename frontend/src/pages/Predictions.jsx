@@ -65,7 +65,7 @@ export default function Predictions() {
         } else {
           setMasterPaper(null);
         }
-      } catch {}
+      } catch { }
     }
     loadAnalysis();
   }, [selectedSubject]);
@@ -97,7 +97,7 @@ export default function Predictions() {
           const savedPapers = JSON.parse(localStorage.getItem('sankalp_saved_final_papers') || '{}');
           savedPapers[selectedSubject._id] = res.data.data;
           localStorage.setItem('sankalp_saved_final_papers', JSON.stringify(savedPapers));
-        } catch {}
+        } catch { }
 
         toast.success(`Generated: ${res.data.data.paper_title}`);
       }
@@ -135,14 +135,14 @@ export default function Predictions() {
     <div className="space-y-6">
       <PageHeader
         title="5-Year Final Exam Paper"
-        description="Studies 5 years of previous question papers to extract repeated questions and build a complete final examination paper with solutions."
+        description="Syllabus-grounded question trends from 5-year archives synthesized into a full examination paper with model solutions."
         badge={selectedSubject ? `${selectedSubject.code} • Final Paper` : 'Select Subject in Header'}
         actions={
           selectedSubject && isAiConnected && (
             <button
               onClick={handleGenerateFreshPredictions}
               disabled={generating}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs transition-colors disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-black hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-100 dark:text-black shadow-xs transition-colors disabled:opacity-50 cursor-pointer"
             >
               <Sparkles className="w-3.5 h-3.5" />
               {generating ? 'Analyzing Trends...' : 'Refresh AI Questions'}
@@ -169,7 +169,7 @@ export default function Predictions() {
                 <span>5-Year Multi-Paper Analysis</span>
               </div>
               <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
-                Final Paper — {selectedSubject.name}
+                Final Paper  {selectedSubject.name}
               </h2>
               <p className="text-xs sm:text-sm text-gray-300 leading-relaxed">
                 Our AI analyzes all 5 years of past question papers together, extracts the questions asked continuously, and compiles an authentic university examination paper with model solutions.
@@ -201,8 +201,8 @@ export default function Predictions() {
                   {generatingFinalPaper
                     ? 'Analyzing 5-Yr Papers...'
                     : masterPaper
-                    ? 'Regenerate Final Paper'
-                    : 'Generate Final Paper Now'}
+                      ? 'Regenerate Final Paper'
+                      : 'Generate Final Paper Now'}
                 </span>
               </button>
             </div>
@@ -229,7 +229,7 @@ export default function Predictions() {
         <div className="space-y-6">
           {/* Summary Banner if Available */}
           {analysis?.analysis_data?.summary && (
-            <div className="p-6 rounded-3xl bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-800 shadow-xs">
+            <div className="p-6 rounded-3xl bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-gray-800 shadow-xs">
               <h3 className="text-sm font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 mb-2 flex items-center gap-2">
                 <BookOpen className="w-4 h-4" /> Examination Trend Summary
               </h3>
@@ -249,7 +249,7 @@ export default function Predictions() {
             {predictionsList.map((item, idx) => (
               <div
                 key={idx}
-                className="p-6 rounded-3xl bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-800 shadow-2xs hover:shadow-lg transition-all flex flex-col justify-between"
+                className="p-6 rounded-3xl bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-gray-800 shadow-2xs hover:shadow-lg transition-all flex flex-col justify-between"
               >
                 <div>
                   <div className="flex items-center justify-between gap-2 mb-3">
@@ -300,7 +300,7 @@ export default function Predictions() {
 
                 <Link
                   to={`/mentor?topic=${encodeURIComponent(item.topic_or_question || item.topic)}&subjectId=${selectedSubject?._id}`}
-                  className="w-full inline-flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs transition-colors"
+                  className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold bg-black hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-100 dark:text-black shadow-xs transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
                 >
                   <Sparkles className="w-3.5 h-3.5" />
                   Practice Answer with SANKALP AI

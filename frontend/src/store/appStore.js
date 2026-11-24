@@ -55,9 +55,9 @@ const useAppStore = create((set, get) => {
     academicLoading: false,
 
     // Theme & Navigation
-    theme: localStorage.getItem('sankalp_theme') || 'light',
-    darkMode: localStorage.getItem('sankalp_theme') === 'dark',
-    sidebarCollapsed: false,
+    theme: localStorage.getItem('sankalp_theme') || 'dark',
+    darkMode: localStorage.getItem('sankalp_theme') !== 'light',
+    sidebarCollapsed: true, // Default to auto-collapsed
     mobileNavOpen: false,
 
     // Bring Your Own Groq Key
@@ -318,7 +318,7 @@ const useAppStore = create((set, get) => {
     initAiCredentials: async () => {},
 
     initTheme: () => {
-      const saved = localStorage.getItem('sankalp_theme') || 'light';
+      const saved = localStorage.getItem('sankalp_theme') || 'dark';
       get().setTheme(saved);
     },
   };

@@ -20,6 +20,7 @@ import { aiApi } from '../../lib/api';
 import useAppStore from '../../store/appStore';
 import { getCachedResponse, saveCachedResponse } from '../../lib/mentorStorage';
 import toast from 'react-hot-toast';
+import { exportCheatsheetPdf } from '../../lib/pdfExport';
 
 export default function CheatSheetModal({ isOpen, onClose, subject, course, semester }) {
   const { groqApiKey, groqModel, isAiConnected } = useAppStore();
@@ -111,60 +112,28 @@ export default function CheatSheetModal({ isOpen, onClose, subject, course, seme
   const handleDownloadPdf = async () => {
     if (!content) return;
     setDownloadingPdf(true);
-    const toastId = toast.loading('Rendering high-density A4 PDF...');
+    const toastId = toast.loading('Generating official high-density A4 PDF...');
 
     try {
-      const element = document.getElementById('cheatsheet-print-container');
-      if (!element) throw new Error('Cheatsheet DOM element not found');
+      await exportCheatsheetPdf({
+        subjectName: subject?.name || 'Examination Subject',
+        subjectCode: subject?.code || 'N/A',
+        courseName: course?.name || 'Degree Program',
+        semesterName: semester?.name || 'Semester',
+        content,
+      });
 
-      const html2pdfModule = await import('html2pdf.js');
-      const html2pdf = html2pdfModule.default || html2pdfModule;
-
-      const safeName = (subject?.code || subject?.name || 'Subject')
-        .replace(/[^a-zA-Z0-9_\-]/g, '_');
-      const filename = `SANKALP_Cheatsheet_${safeName}.pdf`;
-
-      const opt = {
-        margin: [8, 8, 8, 8],
-        filename: filename,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: {
-          scale: 2,
-          useCORS: true,
-          logging: false,
-          scrollY: 0,
-        },
-        jsPDF: {
-          unit: 'mm',
-          format: 'a4',
-          orientation: 'portrait',
-        },
-        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
-      };
-
-      await html2pdf().set(opt).from(element).save();
       toast.success('Cheat sheet PDF downloaded!', { id: toastId });
     } catch (err) {
       console.error('PDF generation error:', err);
-      toast.error('Direct download encountered an issue, opening print dialog...', { id: toastId });
-      window.print();
+      toast.error('Failed to download PDF: ' + err.message, { id: toastId });
     } finally {
       setDownloadingPdf(false);
     }
   };
 
   const handleDownload = () => {
-    if (!content) return;
-    const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `SANKALP_Cheatsheet_${(subject.code || subject.name || 'Subject').replace(/\s+/g, '_')}.md`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    toast.success('Downloaded Cheatsheet Markdown file');
+    handleDownloadPdf();
   };
 
   return (
@@ -261,20 +230,10 @@ export default function CheatSheetModal({ isOpen, onClose, subject, course, seme
               onClick={handleCopy}
               disabled={loading || !content}
               className="hidden sm:inline-flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 text-xs font-semibold transition-colors disabled:opacity-50"
-              title="Copy Cheatsheet Markdown"
+              title="Copy Cheatsheet Text"
             >
               {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
               <span>{copied ? 'Copied' : 'Copy'}</span>
-            </button>
-
-            <button
-              onClick={handleDownload}
-              disabled={loading || !content}
-              className="hidden md:inline-flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 text-xs font-semibold transition-colors disabled:opacity-50"
-              title="Download as .md file"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>.md</span>
             </button>
 
             <button
