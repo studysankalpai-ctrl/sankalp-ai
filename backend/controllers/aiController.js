@@ -567,6 +567,75 @@ FORMATTING REQUIREMENTS:
   }
 };
 
+// POST /api/ai/generate-analogy
+// Generate an unforgettable, witty, real-life Indian analogy for any academic topic
+const generateAnalogy = async (req, res, next) => {
+  try {
+    const {
+      apiKey,
+      topic,
+      contextText,
+      model = 'openai/gpt-oss-120b',
+      language = 'hinglish',
+    } = req.body;
+
+    if (!apiKey) return errorResponse(res, 'Groq API key required', 401);
+    if (!topic && !contextText) return errorResponse(res, 'Topic or context text required', 400);
+
+    const prompt = `You are a legendary Indian university professor and friendly college senior known for explaining complex technical and theoretical concepts through unforgettable, hilarious, and crystal-clear real-life Indian analogies.
+
+Target Topic / Concept: "${topic || 'Core Concept'}"
+Context Information:
+"""
+${(contextText || '').substring(0, 1200)}
+"""
+
+YOUR TASK:
+Explain this exact concept using an intuitive, relatable, everyday Indian real-life scenario (e.g., Indian weddings/shaadi arrangements, chai ki tapri, railway tatkal ticket booking, Indian kitchen ke masale dabba, colony house addresses, cricket team captain/bowler rotation, WhatsApp group admins, etc.).
+
+OUTPUT FORMAT (Clean Markdown):
+### 💡 Real-Life Desi Analogy: [Creative Catchy Title]
+
+**The Story / Everyday Scenario:**
+[Write 2 short, lively paragraphs in natural, warm Hinglish (Roman script) explaining the situation with humor and zero boring academic jargon].
+
+---
+
+### 🎯 Real-Life vs Technical Concept Mapping:
+| Real-Life Scenario Element | Technical Concept Meaning |
+| :--- | :--- |
+| **[Real Life Element 1]** | [Technical equivalent & why it behaves this way] |
+| **[Real Life Element 2]** | [Technical equivalent & why it behaves this way] |
+| **[Real Life Element 3]** | [Technical equivalent & why it behaves this way] |
+
+---
+
+> 🧠 **Exam Memory Hack (Ratna Mana Hai):**  
+> *[One crisp, punchy punchline that ensures the student never forgets this concept during university examinations!]*
+
+RULES:
+- Respond in natural, conversational Hinglish (Roman script).
+- Zero robotic filler or greetings. Start immediately with the analogy.
+- Keep it punchy, vivid, and memorable (~200-280 words).`;
+
+    const completion = await chatCompletion({
+      apiKey,
+      messages: [{ role: 'user', content: prompt }],
+      model,
+      temperature: 0.6,
+      max_tokens: 1500,
+    });
+
+    return successResponse(res, {
+      topic: topic || 'Concept',
+      analogy: completion.content,
+      model: completion.model,
+    }, 'Real-life analogy generated successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
 // POST /api/ai/evaluate
 // Evaluate student's descriptive mock test answer
 const evaluateAnswer = async (req, res, next) => {
@@ -1092,6 +1161,7 @@ module.exports = {
   mentorChat,
   generateQuestions,
   generateAnswer,
+  generateAnalogy,
   evaluateAnswer,
   generateStudyPlan,
   generatePredictions,

@@ -23,6 +23,7 @@ import {
   Mail,
   Download,
   Smartphone,
+  Mic,
 } from 'lucide-react';
 import useAppStore from '../../store/appStore';
 import { usePwaStore } from '../../store/pwaStore';
@@ -42,6 +43,7 @@ const ICONS = {
   RotateCcw,
   Bookmark,
   Settings,
+  Mic,
 };
 
 export default function Sidebar() {
@@ -68,8 +70,9 @@ export default function Sidebar() {
 
   const navSections = [
     {
-      title: 'Study & Papers',
+      title: 'Voice Viva & Study',
       items: [
+        { label: 'AI Viva Room', path: '/viva', icon: 'Mic', highlight: true, badge: 'NEW', isNew: true },
         { label: 'Dashboard', path: '/dashboard', icon: 'Home' },
         { label: 'AI Exam Mentor', path: '/mentor', icon: 'Bot', highlight: true, badge: 'AI' },
         { label: 'Papers & Syllabus', path: '/library', icon: 'FolderTree' },
@@ -262,8 +265,10 @@ export default function Sidebar() {
                         )}
                         {!sidebarCollapsed && item.badge && (
                           <span
-                            className={`px-1.5 py-0.5 rounded-md text-[9px] font-bold tracking-wide uppercase ${
-                              isActive
+                            className={`px-1.5 py-0.5 rounded-md text-[9px] font-extrabold tracking-wider uppercase transition-all ${
+                              item.isNew
+                                ? 'bg-black dark:bg-white text-white dark:text-black font-extrabold shadow-xs ring-1 ring-gray-400/40'
+                                : isActive
                                 ? 'bg-white/20 dark:bg-black/10 text-white dark:text-gray-950'
                                 : item.highlight
                                 ? 'bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400'

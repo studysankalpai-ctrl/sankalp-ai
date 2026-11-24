@@ -146,6 +146,7 @@ export const aiApi = {
   chat: (payload) => api.post('/ai/chat', payload),
   generateQuestions: (payload) => api.post('/ai/generate-questions', payload),
   generateAnswer: (payload) => api.post('/ai/generate-answer', payload),
+  generateAnalogy: (payload) => api.post('/ai/generate-analogy', payload),
   evaluate: (payload) => api.post('/ai/evaluate', payload),
   generateStudyPlan: (payload) => api.post('/ai/study-plan', payload),
   generatePredictions: (payload) => api.post('/ai/predictions', payload),
@@ -153,6 +154,8 @@ export const aiApi = {
   generateFlashcards: (payload) => api.post('/ai/flashcards', payload),
   generateFinalPaper: (payload) => api.post('/ai/generate-final-paper', payload),
   generateTopics: (payload) => api.post('/ai/generate-topics', payload),
+  startViva: (payload) => api.post('/ai/viva/start', payload),
+  respondViva: (payload) => api.post('/ai/viva/respond', payload),
 };
 
 export default api;

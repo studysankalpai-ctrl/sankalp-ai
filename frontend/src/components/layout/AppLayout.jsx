@@ -14,7 +14,8 @@ export default function AppLayout() {
   const location = useLocation();
   const isPdfPage = location.pathname.startsWith('/pdf/');
   const isMentorPage = location.pathname.startsWith('/mentor');
-  const isFullBleedPage = isPdfPage || isMentorPage;
+  const isVivaPage = location.pathname.startsWith('/viva');
+  const isFullBleedPage = isPdfPage || isMentorPage || isVivaPage;
 
   useEffect(() => {
     initTheme();

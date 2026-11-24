@@ -12,6 +12,7 @@ const Home = lazy(() => import('./pages/Home'));
 const Library = lazy(() => import('./pages/Library'));
 const PdfViewerPage = lazy(() => import('./pages/PdfViewerPage'));
 const Subjects = lazy(() => import('./pages/Subjects'));
+const VivaRoom = lazy(() => import('./pages/VivaRoom'));
 const Mentor = lazy(() => import('./pages/Mentor'));
 const Topics = lazy(() => import('./pages/Topics'));
 const Predictions = lazy(() => import('./pages/Predictions'));
@@ -80,6 +81,7 @@ export default function App() {
             <Route path="/library" element={<Library />} />
             <Route path="/pdf/:fileId" element={<PdfViewerPage />} />
             <Route path="/subjects" element={<Subjects />} />
+            <Route path="/viva" element={<VivaRoom />} />
             <Route path="/mentor" element={<Mentor />} />
             <Route path="/topics" element={<Topics />} />
             <Route path="/predictions" element={<Predictions />} />

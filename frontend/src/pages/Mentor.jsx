@@ -27,6 +27,12 @@ import {
   Zap,
   FileText,
   Printer,
+  Volume2,
+  VolumeX,
+  Pause,
+  Play,
+  Square,
+  Lightbulb,
 } from 'lucide-react';
 import { aiApi, publicApi } from '../lib/api';
 import useAppStore from '../store/appStore';
@@ -35,6 +41,15 @@ import MarkdownRenderer from '../components/common/MarkdownRenderer';
 import toast from 'react-hot-toast';
 import ConfirmDialog from '../components/common/ConfirmDialog';
 import CheatSheetModal from '../components/exam/CheatSheetModal';
+import {
+  playSpeech,
+  pauseSpeech,
+  resumeSpeech,
+  stopSpeech,
+  setSpeechRate,
+  registerSpeechListener,
+  unregisterSpeechListener,
+} from '../lib/speechVoice';
 import {
   getSubjectChat,
   saveSubjectChat,
@@ -87,7 +102,23 @@ export default function Mentor() {
   const [savedSubjectsList, setSavedSubjectsList] = useState([]);
   const [copiedIndex, setCopiedIndex] = useState(null);
   const [cheatSheetOpen, setCheatSheetOpen] = useState(false);
+  const [analogyLoadingId, setAnalogyLoadingId] = useState(null);
+  const [speechState, setSpeechState] = useState({
+    isPlaying: false,
+    isPaused: false,
+    activeMessageId: null,
+    rate: 1.0,
+  });
   const messagesEndRef = useRef(null);
+
+  // Register Expressive Speech Listener (cleans up automatically on unmount)
+  useEffect(() => {
+    registerSpeechListener((st) => setSpeechState(st));
+    return () => {
+      stopSpeech();
+      unregisterSpeechListener();
+    };
+  }, []);
 
   // Automatically show connect popup when visiting SANKALP AI while offline
   useEffect(() => {
@@ -491,6 +522,86 @@ Instructions:
     toast.success('Answer saved to your Bookmarks!');
   };
 
+  // Toggle Human-Voice Audio Read Aloud
+  const handleToggleSpeech = (msg) => {
+    if (speechState.activeMessageId === msg.id && speechState.isPlaying) {
+      pauseSpeech();
+    } else if (speechState.activeMessageId === msg.id && speechState.isPaused) {
+      resumeSpeech();
+    } else {
+      playSpeech({
+        messageId: msg.id,
+        content: msg.content,
+        rate: speechState.rate,
+        onFinish: () => toast.success('Audio finished listening'),
+      });
+      toast.success('Audio playback started (Human Voice)');
+    }
+  };
+
+  // Change Speech Playback Speed (1x -> 1.25x -> 1.5x)
+  const handleCycleSpeed = () => {
+    const rates = [1.0, 1.25, 1.5];
+    const nextRate = rates[(rates.indexOf(speechState.rate) + 1) % rates.length];
+    setSpeechRate(nextRate);
+    toast.success(`Speech speed: ${nextRate}x`);
+  };
+
+  // Toggle or Generate Desi Real-Life Analogy
+  const handleToggleAnalogy = async (msg, index) => {
+    if (msg.analogy) {
+      // Toggle card visibility
+      const updated = [...messages];
+      updated[index] = {
+        ...msg,
+        showAnalogy: !msg.showAnalogy,
+      };
+      setMessages(updated);
+      await saveSubjectChat(selectedSubject?._id || 'general', selectedSubject, updated);
+      return;
+    }
+
+    if (!isAiConnected) {
+      setConnectModalOpen(true);
+      toast.error('Connect your API key in Settings to activate AI');
+      return;
+    }
+
+    setAnalogyLoadingId(msg.id);
+    try {
+      const prevUserMsg = messages
+        .slice(0, index)
+        .reverse()
+        .find((m) => m.role === 'user');
+      const topic = prevUserMsg ? prevUserMsg.content : selectedSubject?.name || 'Academic Concept';
+
+      const res = await aiApi.generateAnalogy({
+        apiKey: groqApiKey,
+        topic: topic.substring(0, 120),
+        contextText: msg.content.substring(0, 1200),
+        model: groqModel,
+      });
+
+      if (res.data?.success && res.data.data?.analogy) {
+        const updated = [...messages];
+        updated[index] = {
+          ...msg,
+          analogy: res.data.data.analogy,
+          showAnalogy: true,
+        };
+        setMessages(updated);
+        await saveSubjectChat(selectedSubject?._id || 'general', selectedSubject, updated);
+        toast.success('💡 Desi real-life analogy generated!');
+      } else {
+        toast.error('Could not generate analogy');
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || err.message || 'Analogy generation failed');
+    } finally {
+      setAnalogyLoadingId(null);
+    }
+  };
+
   // Count user questions stored for this subject
   const userQCount = messages.filter((m) => m.role === 'user').length;
 
@@ -821,6 +932,93 @@ Instructions:
                               </div>
                             )}
                             <MarkdownRenderer content={msg.content} className="text-[13px] sm:text-sm leading-relaxed" />
+
+                            {/* Active Speech Mini-Player Bar */}
+                            {speechState.activeMessageId === msg.id && (
+                              <div className="mt-3.5 p-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 flex items-center justify-between gap-2 animate-in fade-in slide-in-from-top-1 duration-150">
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <span className="relative flex h-2.5 w-2.5 shrink-0">
+                                    <span className={`animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75 ${speechState.isPaused ? 'hidden' : ''}`} />
+                                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-indigo-600 dark:bg-indigo-400" />
+                                  </span>
+                                  <span className="text-[11px] sm:text-xs font-bold text-indigo-900 dark:text-indigo-200 truncate">
+                                    {speechState.isPaused ? 'Audio Paused' : '🔊 Speaking: Human Lecture Pace...'}
+                                  </span>
+                                </div>
+
+                                <div className="flex items-center gap-1.5 shrink-0">
+                                  <button
+                                    type="button"
+                                    onClick={() => (speechState.isPaused ? resumeSpeech() : pauseSpeech())}
+                                    className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold flex items-center gap-1 transition-colors shadow-2xs cursor-pointer"
+                                  >
+                                    {speechState.isPaused ? <Play className="w-3 h-3 fill-white" /> : <Pause className="w-3 h-3 fill-white" />}
+                                    <span>{speechState.isPaused ? 'Resume' : 'Pause'}</span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={handleCycleSpeed}
+                                    className="px-2 py-1 rounded-lg bg-white dark:bg-gray-800 border border-indigo-200 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300 text-[10px] font-mono font-bold hover:bg-indigo-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+                                    title="Change Speed (1x, 1.25x, 1.5x)"
+                                  >
+                                    {speechState.rate}x
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={stopSpeech}
+                                    className="p-1 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors cursor-pointer"
+                                    title="Stop Audio"
+                                  >
+                                    <Square className="w-3.5 h-3.5 fill-current" />
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Desi Real-Life Analogy Card */}
+                            {msg.analogy && msg.showAnalogy && (
+                              <div className="mt-4 p-3.5 sm:p-5 rounded-2xl bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-yellow-500/10 border border-amber-300 dark:border-amber-700/60 shadow-xs animate-in fade-in slide-in-from-top-2 duration-200">
+                                <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-amber-200 dark:border-amber-800/60">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-7 h-7 rounded-lg bg-amber-500 text-white flex items-center justify-center font-bold shadow-2xs">
+                                      <Lightbulb className="w-4 h-4 fill-white" />
+                                    </div>
+                                    <div>
+                                      <h4 className="text-xs sm:text-sm font-bold text-amber-900 dark:text-amber-200">
+                                        Desi Real-Life Analogy (Daily-Life Example)
+                                      </h4>
+                                      <p className="text-[10px] text-amber-700/80 dark:text-amber-400">
+                                        Complex concept connected with everyday relatable situations
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-1.5">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleCopy(msg.analogy, `analogy-${index}`)}
+                                      className="px-2 py-1 rounded-lg text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-[11px] font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                                      title="Copy Analogy"
+                                    >
+                                      {copiedIndex === `analogy-${index}` ? (
+                                        <Check className="w-3 h-3 text-emerald-600" />
+                                      ) : (
+                                        <Copy className="w-3 h-3" />
+                                      )}
+                                      <span>{copiedIndex === `analogy-${index}` ? 'Copied' : 'Copy'}</span>
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleToggleAnalogy(msg, index)}
+                                      className="p-1 rounded-lg text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors cursor-pointer"
+                                      title="Hide Analogy"
+                                    >
+                                      <X className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                </div>
+                                <MarkdownRenderer content={msg.analogy} className="text-[12.5px] sm:text-xs leading-relaxed text-amber-950 dark:text-amber-100" />
+                              </div>
+                            )}
                           </div>
                         )}
 
@@ -838,11 +1036,66 @@ Instructions:
                                 </span>
                               )}
                             </div>
-                            <div className="flex items-center gap-1.5 sm:gap-2">
+                            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                              {/* 1. Desi Analogy Button */}
+                              <button
+                                type="button"
+                                onClick={() => handleToggleAnalogy(msg, index)}
+                                disabled={analogyLoadingId === msg.id}
+                                className={`px-2.5 py-1 rounded-xl font-bold flex items-center gap-1 text-[11px] transition-all shadow-2xs cursor-pointer ${
+                                  msg.showAnalogy
+                                    ? 'bg-amber-500 text-white shadow-amber-500/20'
+                                    : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 hover:bg-amber-100 dark:hover:bg-amber-900/50'
+                                }`}
+                                title="Explain this topic with a fun, memorable Indian real-life analogy (shaadi, chai, train, kitchen, etc.)"
+                              >
+                                {analogyLoadingId === msg.id ? (
+                                  <>
+                                    <Loader2 className="w-3 h-3 animate-spin text-amber-600" />
+                                    <span>Thinking Analogy...</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Lightbulb className={`w-3.5 h-3.5 ${msg.showAnalogy ? 'fill-white' : 'text-amber-500 fill-amber-500'}`} />
+                                    <span>{msg.showAnalogy ? 'Hide Analogy' : '💡 Desi Example'}</span>
+                                  </>
+                                )}
+                              </button>
+
+                              {/* 2. Audio Read Aloud Button */}
+                              <button
+                                type="button"
+                                onClick={() => handleToggleSpeech(msg)}
+                                className={`px-2.5 py-1 rounded-xl font-bold flex items-center gap-1 text-[11px] transition-all shadow-2xs cursor-pointer ${
+                                  speechState.activeMessageId === msg.id
+                                    ? 'bg-indigo-600 text-white shadow-indigo-500/20'
+                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700'
+                                }`}
+                                title="Listen to this explanation with natural human lecture voice"
+                              >
+                                {speechState.activeMessageId === msg.id && speechState.isPlaying ? (
+                                  <>
+                                    <Volume2 className="w-3.5 h-3.5 text-white animate-pulse" />
+                                    <span>Playing</span>
+                                  </>
+                                ) : speechState.activeMessageId === msg.id && speechState.isPaused ? (
+                                  <>
+                                    <VolumeX className="w-3.5 h-3.5 text-white" />
+                                    <span>Paused</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Volume2 className="w-3.5 h-3.5 text-indigo-500" />
+                                    <span>🔊 Suno</span>
+                                  </>
+                                )}
+                              </button>
+
                               {msg.cachedPrompt && (
                                 <button
+                                  type="button"
                                   onClick={() => executePrompt(msg.cachedPrompt, { forceFresh: true })}
-                                  className="px-2 py-1 rounded-lg text-gray-500 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition-colors flex items-center gap-1 text-[11px]"
+                                  className="px-2 py-1 rounded-lg text-gray-500 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition-colors flex items-center gap-1 text-[11px] cursor-pointer"
                                   title="Bypass local cache and regenerate a fresh answer directly from Groq AI"
                                 >
                                   <RotateCcw className="w-3 h-3 text-amber-500" />
@@ -850,8 +1103,9 @@ Instructions:
                                 </button>
                               )}
                               <button
+                                type="button"
                                 onClick={() => handleCopy(msg.content, index)}
-                                className="p-1 hover:text-indigo-600 dark:hover:text-indigo-400 rounded transition-colors flex items-center gap-1"
+                                className="p-1 hover:text-indigo-600 dark:hover:text-indigo-400 rounded transition-colors flex items-center gap-1 cursor-pointer"
                                 title="Copy Answer"
                               >
                                 {copiedIndex === index ? (
@@ -862,8 +1116,9 @@ Instructions:
                                 <span className="text-[11px]">{copiedIndex === index ? 'Copied' : 'Copy'}</span>
                               </button>
                               <button
+                                type="button"
                                 onClick={() => handleSaveToBookmarks(msg.content)}
-                                className="p-1 hover:text-indigo-600 dark:hover:text-indigo-400 rounded transition-colors flex items-center gap-1"
+                                className="p-1 hover:text-indigo-600 dark:hover:text-indigo-400 rounded transition-colors flex items-center gap-1 cursor-pointer"
                                 title="Save to Bookmarks"
                               >
                                 <Bookmark className="w-3.5 h-3.5" />
