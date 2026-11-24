@@ -1,9 +1,12 @@
 /**
  * SANKALP AI Expressive Speech Engine
  * Human-like Audio Read Aloud for University Students
+ * - Resilient across Mobile Devices (iPhone / iOS Safari & Android Chrome)
+ * - Audio-context unlocker for iOS strict autoplay policies
+ * - Prevents JavaScript Garbage Collection cancellations
  * - Cleans markdown artifacts so speech sounds natural
  * - Prioritizes Natural / Neural Indian English & Hindi voices
- * - Chunks long text to bypass browser speech synthesis timeouts
+ * - Chunks long text to bypass mobile browser speech synthesis timeouts
  */
 
 let activeUtteranceQueue = [];
@@ -13,6 +16,55 @@ let isPausedState = false;
 let activeMessageId = null;
 let currentRate = 1.0;
 let onStateChangeCallback = null;
+let cachedVoices = [];
+
+// Pre-load and cache voices
+function loadVoices() {
+  if (typeof window === 'undefined' || !window.speechSynthesis) return;
+  try {
+    cachedVoices = window.speechSynthesis.getVoices() || [];
+  } catch (_) {}
+}
+
+if (typeof window !== 'undefined' && window.speechSynthesis) {
+  loadVoices();
+  if (window.speechSynthesis.onvoiceschanged !== undefined) {
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+}
+
+/**
+ * Mobile Audio Unlocker for iOS Safari and Android Chrome
+ * Must be called inside a synchronous user interaction (tap / click event)
+ */
+export function unlockMobileAudio() {
+  if (typeof window === 'undefined' || !window.speechSynthesis) return;
+  try {
+    // 1. Resume speechSynthesis if stuck in paused state (frequent iOS bug)
+    if (window.speechSynthesis.paused) {
+      window.speechSynthesis.resume();
+    }
+
+    // 2. Play a microscopic silent utterance to prime the audio output engine
+    const silent = new SpeechSynthesisUtterance(' ');
+    silent.volume = 0.01;
+    silent.rate = 10;
+    window.speechSynthesis.speak(silent);
+
+    // 3. Prime Web Audio Context if supported
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (AudioCtx) {
+      if (!window._sankalpAudioCtx) {
+        window._sankalpAudioCtx = new AudioCtx();
+      }
+      if (window._sankalpAudioCtx.state === 'suspended') {
+        window._sankalpAudioCtx.resume();
+      }
+    }
+  } catch (e) {
+    console.warn('[Mobile Audio Unlock]:', e);
+  }
+}
 
 export function registerSpeechListener(callback) {
   onStateChangeCallback = callback;
@@ -91,12 +143,14 @@ export function cleanTextForSpeech(markdown) {
  */
 export function getBestNaturalVoice() {
   if (typeof window === 'undefined' || !window.speechSynthesis) return null;
-  const voices = window.speechSynthesis.getVoices();
+  const voices = cachedVoices.length > 0 ? cachedVoices : window.speechSynthesis.getVoices();
   if (!voices || voices.length === 0) return null;
 
   // 1. Natural / Neural Indian English Voice (e.g. Edge Neerja, Prabhat, Rishi Enhanced)
   const indianNatural = voices.find(
-    (v) => (v.lang === 'en-IN' || v.lang === 'en_IN') && /(natural|neural|online|enhanced)/i.test(v.name)
+    (v) =>
+      (v.lang === 'en-IN' || v.lang === 'en_IN') &&
+      /(natural|neural|online|enhanced|siri)/i.test(v.name)
   );
   if (indianNatural) return indianNatural;
 
@@ -106,7 +160,9 @@ export function getBestNaturalVoice() {
 
   // 3. Natural Hindi Voice
   const hindiNatural = voices.find(
-    (v) => (v.lang === 'hi-IN' || v.lang === 'hi_IN') && /(natural|neural|online|enhanced|google)/i.test(v.name)
+    (v) =>
+      (v.lang === 'hi-IN' || v.lang === 'hi_IN') &&
+      /(natural|neural|online|enhanced|google|siri)/i.test(v.name)
   );
   if (hindiNatural) return hindiNatural;
 
@@ -114,14 +170,20 @@ export function getBestNaturalVoice() {
   const hindi = voices.find((v) => v.lang === 'hi-IN' || v.lang === 'hi_IN');
   if (hindi) return hindi;
 
-  // 5. High-quality UK / US English Natural Voice
+  // 5. High-quality UK / US English Natural Voice (Siri Samantha, Daniel, Google US)
   const englishNatural = voices.find(
-    (v) => /(natural|neural|enhanced|google)/i.test(v.name) && v.lang.startsWith('en')
+    (v) =>
+      /(natural|neural|enhanced|google|siri|premium)/i.test(v.name) &&
+      v.lang.startsWith('en')
   );
   if (englishNatural) return englishNatural;
 
-  // 6. Fallback to any English voice
-  return voices.find((v) => v.lang.startsWith('en')) || voices[0];
+  // 6. Device Default English voice
+  const defaultEnglish = voices.find((v) => v.lang.startsWith('en'));
+  if (defaultEnglish) return defaultEnglish;
+
+  // 7. Fallback to any voice available
+  return voices[0] || null;
 }
 
 /**
@@ -130,13 +192,12 @@ export function getBestNaturalVoice() {
  */
 function splitIntoSentences(text) {
   if (!text) return [];
-  // Split on punctuation (. ? ! \n)
   const rawParts = text.match(/[^.!?]+[.!?]+(\s+|$)|[^.!?]+$/g) || [text];
   const chunks = [];
   let current = '';
 
   for (const part of rawParts) {
-    if ((current + ' ' + part).length > 200 && current.length > 0) {
+    if ((current + ' ' + part).length > 180 && current.length > 0) {
       chunks.push(current.trim());
       current = part;
     } else {
@@ -155,7 +216,12 @@ export function playSpeech({ messageId, content, rate = currentRate, onFinish })
     return false;
   }
 
-  // If already playing this message, resume if paused
+  // Ensure speech synthesis is awake and unpaused
+  if (window.speechSynthesis.paused) {
+    window.speechSynthesis.resume();
+  }
+
+  // If already playing this message and paused, resume
   if (activeMessageId === messageId && isPausedState) {
     window.speechSynthesis.resume();
     isPausedState = false;
@@ -189,14 +255,26 @@ export function playSpeech({ messageId, content, rate = currentRate, onFinish })
     const chunkText = activeUtteranceQueue[currentChunkIndex];
     const utterance = new SpeechSynthesisUtterance(chunkText);
 
+    // Keep global reference on window to prevent Garbage Collection on iOS / Android
+    window._sankalpActiveUtterance = utterance;
+
     const voice = getBestNaturalVoice();
-    if (voice) utterance.voice = voice;
+    if (voice) {
+      utterance.voice = voice;
+      utterance.lang = voice.lang;
+    } else {
+      // Safe fallback language supported on all iPhones and Androids
+      const deviceLang =
+        typeof navigator !== 'undefined' && navigator.language ? navigator.language : 'en-US';
+      utterance.lang = deviceLang.startsWith('en') ? deviceLang : 'en-US';
+    }
 
     utterance.rate = currentRate;
-    utterance.pitch = 1.02; // warm, natural conversational pitch
-    utterance.lang = voice?.lang || 'en-IN';
+    utterance.pitch = 1.0;
+    utterance.volume = 1.0; // explicit volume
 
     utterance.onend = () => {
+      window._sankalpActiveUtterance = null;
       currentChunkIndex++;
       if (isSpeakingActive) {
         speakNextChunk();
@@ -204,17 +282,25 @@ export function playSpeech({ messageId, content, rate = currentRate, onFinish })
     };
 
     utterance.onerror = (e) => {
-      // Ignore user-triggered cancellation
+      window._sankalpActiveUtterance = null;
       if (e.error === 'canceled' || e.error === 'interrupted') return;
       currentChunkIndex++;
       if (isSpeakingActive) speakNextChunk();
     };
 
-    window.speechSynthesis.speak(utterance);
+    try {
+      window.speechSynthesis.speak(utterance);
+    } catch (err) {
+      console.warn('[SpeechSynthesis speak error]:', err);
+    }
     notifyStateChange();
   }
 
-  speakNextChunk();
+  // 35ms timeout avoids the iOS Safari cancel() race condition
+  setTimeout(() => {
+    if (isSpeakingActive) speakNextChunk();
+  }, 35);
+
   return true;
 }
 
@@ -222,7 +308,12 @@ export function playSpeech({ messageId, content, rate = currentRate, onFinish })
  * Pause Speech
  */
 export function pauseSpeech() {
-  if (typeof window !== 'undefined' && window.speechSynthesis && isSpeakingActive && !isPausedState) {
+  if (
+    typeof window !== 'undefined' &&
+    window.speechSynthesis &&
+    isSpeakingActive &&
+    !isPausedState
+  ) {
     window.speechSynthesis.pause();
     isPausedState = true;
     notifyStateChange();
@@ -233,7 +324,12 @@ export function pauseSpeech() {
  * Resume Speech
  */
 export function resumeSpeech() {
-  if (typeof window !== 'undefined' && window.speechSynthesis && isSpeakingActive && isPausedState) {
+  if (
+    typeof window !== 'undefined' &&
+    window.speechSynthesis &&
+    isSpeakingActive &&
+    isPausedState
+  ) {
     window.speechSynthesis.resume();
     isPausedState = false;
     notifyStateChange();
@@ -245,8 +341,11 @@ export function resumeSpeech() {
  */
 export function stopSpeech() {
   if (typeof window !== 'undefined' && window.speechSynthesis) {
-    window.speechSynthesis.cancel();
+    try {
+      window.speechSynthesis.cancel();
+    } catch (_) {}
   }
+  window._sankalpActiveUtterance = null;
   activeUtteranceQueue = [];
   currentChunkIndex = 0;
   isSpeakingActive = false;
