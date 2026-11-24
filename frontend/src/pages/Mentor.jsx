@@ -86,12 +86,12 @@ export default function Mentor() {
   const [learnByBook, setLearnByBook] = useState(initialLearnByBook || false);
   const [selectedBookId, setSelectedBookId] = useState(initialBookId || '');
   const [language, setLanguage] = useState('english');
-  const [answerStyle, setAnswerStyle] = useState('detailed');
-  const [marksFormat, setMarksFormat] = useState(15);
+  const [answerStyle, setAnswerStyle] = useState('exam');
+  const [marksFormat, setMarksFormat] = useState(5);
   const [selectedUnitNumber, setSelectedUnitNumber] = useState(null);
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState(
-    initialTopic ? `Explain ${initialTopic} with a detailed technical 15-mark answer and real-world example.` : ''
+    initialTopic ? `Explain ${initialTopic} with an exam-ready definition and clear example.` : ''
   );
   const [loading, setLoading] = useState(false);
   const [dbLoading, setDbLoading] = useState(true);
