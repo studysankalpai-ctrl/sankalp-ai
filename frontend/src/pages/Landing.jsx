@@ -182,8 +182,8 @@ export default function Landing() {
         <div className="hidden sm:block absolute bottom-10 left-1/3 w-[800px] h-[400px] bg-gradient-to-t from-white/5 to-transparent blur-3xl pointer-events-none" />
       </div>
 
-      {/* Top Navbar (Monochrome Black & White, Responsive Mobile Height & Text, No Admin Button) */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-black/95 sm:bg-black/85 sm:backdrop-blur-xl border-b border-white/10 transition-all">
+      {/* Top Navbar (Monochrome Black & White, Responsive Mobile Height & Text, iPhone Notch Protection) */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-black/95 sm:bg-black/85 sm:backdrop-blur-xl border-b border-white/10 transition-all pt-[env(safe-area-inset-top,0px)]">
         <div className="w-full max-w-[1560px] mx-auto px-3.5 sm:px-6 md:px-8 lg:px-12 h-16 sm:h-20 flex items-center justify-between">
           {/* Logo & Brand Identity */}
           <Link to="/" className="flex items-center gap-2 sm:gap-3.5 group shrink-0">
@@ -310,7 +310,7 @@ export default function Landing() {
       </header>
 
       {/* 2-Column Hero Section: Left (Copy & CTAs) + Right (Live Software Frame) */}
-      <section className="relative pt-24 pb-12 sm:pt-36 sm:pb-20 z-10">
+      <section className="relative pt-[calc(6rem+env(safe-area-inset-top,0px))] pb-12 sm:pt-36 sm:pb-20 z-10">
         <div className="w-full max-w-[1560px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 xl:gap-16 items-center">
             {/* Left Column (Headline, Natural Human-Centric Copy & CTAs - Immediate Paint on Mobile) */}

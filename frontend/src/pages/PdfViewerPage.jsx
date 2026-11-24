@@ -301,7 +301,7 @@ Answer directly with deep, textbook-grade clarity and structure:
   return (
     <div
       id="pdf-viewer-container"
-      className={`fixed top-16 bottom-0 right-0 ${
+      className={`fixed top-[calc(4rem+env(safe-area-inset-top,0px))] bottom-[env(safe-area-inset-bottom,0px)] md:bottom-0 right-0 ${
         sidebarCollapsed ? 'left-0 md:left-20' : 'left-0 md:left-64'
       } flex flex-col bg-gray-100 dark:bg-gray-950 overflow-hidden z-20 transition-all duration-300`}
     >

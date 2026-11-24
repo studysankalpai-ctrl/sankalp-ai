@@ -40,7 +40,7 @@ export default function Header() {
 
   return (
     <header
-      className={`fixed top-0 right-0 z-30 h-16 bg-white/80 dark:bg-[#111827]/80 backdrop-blur-md border-b border-gray-200/80 dark:border-gray-800/80 transition-all duration-300 flex items-center justify-between px-3 sm:px-6 ${
+      className={`fixed top-0 right-0 z-30 h-[calc(4rem+env(safe-area-inset-top,0px))] pt-[env(safe-area-inset-top,0px)] bg-white/80 dark:bg-[#111827]/80 backdrop-blur-md border-b border-gray-200/80 dark:border-gray-800/80 transition-all duration-300 flex items-center justify-between px-3 sm:px-6 ${
         sidebarCollapsed ? 'left-0 md:left-20' : 'left-0 md:left-64'
       }`}
     >

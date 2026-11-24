@@ -108,7 +108,7 @@ export default function Sidebar() {
 
       {/* Main Sidebar */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-40 flex flex-col bg-white dark:bg-[#111827] border-r border-gray-200 dark:border-gray-800 transition-all duration-300 ease-in-out ${
+        className={`fixed top-0 bottom-0 left-0 z-40 flex flex-col bg-white dark:bg-[#111827] border-r border-gray-200 dark:border-gray-800 transition-all duration-300 ease-in-out pt-[env(safe-area-inset-top,0px)] md:pt-0 pb-[env(safe-area-inset-bottom,0px)] md:pb-0 ${
           sidebarCollapsed ? 'w-20' : 'w-64'
         } ${
           mobileNavOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'

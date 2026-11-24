@@ -896,8 +896,8 @@ Instructions:
             </div>
           )}
 
-          {/* Message Input Box */}
-          <div className="p-2.5 sm:p-4 bg-white dark:bg-[#111827] border-t border-gray-200 dark:border-gray-800 shrink-0">
+          {/* Message Input Box (With iPhone Safe Area Bottom Protection) */}
+          <div className="p-2.5 sm:p-4 pb-[max(0.625rem,calc(env(safe-area-inset-bottom,0px)+0.25rem))] bg-white dark:bg-[#111827] border-t border-gray-200 dark:border-gray-800 shrink-0">
             {/* Active Book Ribbon if Learn by Book Mode is On */}
             {learnByBook && (
               <div className="max-w-4xl mx-auto px-3 py-1.5 sm:px-4 sm:py-2 mb-2 rounded-xl bg-emerald-50/90 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 flex items-center justify-between text-xs text-emerald-950 dark:text-emerald-200 shadow-2xs">

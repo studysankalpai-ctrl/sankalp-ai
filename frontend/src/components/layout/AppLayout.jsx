@@ -34,8 +34,8 @@ export default function AppLayout() {
       <main
         className={`flex-1 min-w-0 transition-all duration-300 ${
           isFullBleedPage
-            ? 'h-[calc(100vh-4rem)] mt-16 flex flex-col overflow-hidden p-0 m-0'
-            : 'h-[calc(100vh-4rem)] mt-16 overflow-y-auto overflow-x-hidden flex flex-col justify-between'
+            ? 'h-[calc(100vh-4rem-env(safe-area-inset-top,0px))] mt-[calc(4rem+env(safe-area-inset-top,0px))] flex flex-col overflow-hidden p-0 m-0'
+            : 'h-[calc(100vh-4rem-env(safe-area-inset-top,0px))] mt-[calc(4rem+env(safe-area-inset-top,0px))] overflow-y-auto overflow-x-hidden flex flex-col justify-between'
         } ${sidebarCollapsed ? 'pl-0 md:pl-20' : 'pl-0 md:pl-64'}`}
       >
         <div

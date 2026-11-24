@@ -74,7 +74,7 @@ export default function AdminSidebar() {
   };
 
   const sidebarContent = (
-    <div className="flex flex-col h-full bg-slate-900 text-slate-100 border-r border-slate-800">
+    <div className="flex flex-col h-full bg-slate-900 text-slate-100 border-r border-slate-800 pt-[env(safe-area-inset-top,0px)] lg:pt-0 pb-[env(safe-area-inset-bottom,0px)] lg:pb-0">
       {/* Brand Header */}
       <div className="h-16 flex items-center justify-between px-5 border-b border-slate-800 shrink-0">
         <Link to="/admin" onClick={() => setMobileSidebarOpen(false)} className="flex items-center gap-2.5 group">
