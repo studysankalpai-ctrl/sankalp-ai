@@ -112,22 +112,49 @@ const buildVivaSyllabusContext = async (subjectId, unitNumber = null, topic = nu
 };
 
 /**
+ * Helper to enforce simple, clear, student-friendly language
+ * Eliminates archaic, pompous GRE-level vocabulary (e.g., elucidate, delineate, concomitant)
+ */
+const getSimplicityDirectives = () => `
+LANGUAGE CLARITY & SIMPLICITY RULES (MANDATORY):
+- Use SIMPLE, CLEAR, EVERYDAY conversational language that undergraduate students can easily understand on first hearing.
+- NEVER use pompous, overly academic, or archaic vocabulary:
+  * FORBIDDEN WORDS: "elucidate", "delineate", "concomitant", "rudimentary", "engendered", "dichotomy", "paradigm", "postulate", "demarcation", "explicate", "juxtaposition", "commensurate", "underpinning", "substantiate", "efficacious", "quintessential", "perusal", "discrepancy", "manifestation".
+  * INSTEAD USE SIMPLE WORDS: "explain", "describe", "what is", "how does it work", "why do we use", "what is the main difference between", "what happens when", "give a quick example".
+- Keep technical terms (e.g. "Pointer", "Semaphore", "Deadlock", "Process", "Thread", "Primary Key", "Stack") 100% accurate, but make the framing, sentence structure, and questions simple and direct.
+- Spoken questions MUST be short (1-2 sentences maximum) so they sound natural and easy when spoken by text-to-speech.
+- Examiner verbal reactions must be kind, clear, and constructive: explain what was good and what was missed in simple words.
+- Model answers ("model_answer") must be clean, 1-2 sentence textbook-authentic answers that a student can easily remember and say out loud.
+`;
+
+/**
  * Helper to build language instructions for Hindi, Hinglish, or English
  */
 const getLanguageGuidance = (language = 'english') => {
+  const simplicity = getSimplicityDirectives();
+
   if (language === 'hindi') {
-    return `CRITICAL LANGUAGE REQUIREMENT (HINDI - हिंदी):
-- You MUST speak, greet, formulate all viva questions, provide spoken feedback, and interact STRICTLY in natural, clear, standard university examination Hindi (हिंदी).
-- Keep core technical keywords in English/Hinglish brackets if helpful (e.g. "पॉइंटर (Pointer)", "मेमोरी एलोकेशन (Memory Allocation)", "एरे (Array)", "फंक्शन (Function)"), but all spoken sentences, greetings, feedback, and questions MUST be in natural Hindi.
-- Example spoken question: "नमस्ते उम्मीदवार। आपकी मौखिक परीक्षा शुरू होती है। पहला प्रश्न: सी भाषा में पॉइंटर (Pointer) क्या होता है और यह मेमोरी में वेरिएबल्स का एड्रेस कैसे स्टोर करता है?"`;
+    return `${simplicity}
+CRITICAL LANGUAGE REQUIREMENT (HINDI - सरल हिंदी):
+- You MUST speak, greet, ask viva questions, and provide feedback in simple, natural, conversational Hindi (सरल और स्पष्ट हिंदी).
+- DO NOT use archaic, hyper-formal, or heavy Sanskritized words (e.g. avoid "अभिकलित्र", "समवर्ती प्रक्रम", "प्रत्यक्षीकरण").
+- Write standard technical keywords in English/Hinglish brackets for 100% clarity (e.g. "पॉइंटर (Pointer)", "मेमोरी (Memory)", "ऑपरेटिंग सिस्टम (Operating System)", "प्राइमरी की (Primary Key)").
+- Example spoken question: "नमस्ते उम्मीदवार। आपकी मौखिक परीक्षा शुरू होती है। पहला सवाल: सी भाषा में पॉइंटर (Pointer) क्या होता है और हम इसका मुख्य उपयोग क्यों करते हैं?"`;
   }
+
   if (language === 'hinglish') {
-    return `CRITICAL LANGUAGE REQUIREMENT (HINGLISH):
-- You MUST speak, greet, ask viva questions, and give feedback in natural Indian University Hinglish (conversational mix of Hindi & English as professors speak in university oral exams).
-- Example spoken question: "Namaste candidate. Aapka oral viva start ho raha hai. First question: C language me Pointer kya hota hai aur ye memory me variable ka address kaise store karta hai?"`;
+    return `${simplicity}
+CRITICAL LANGUAGE REQUIREMENT (HINGLISH - सरल कॉलेज मिक्स):
+- You MUST speak, greet, ask viva questions, and give feedback in natural, friendly Indian College Hinglish (the conversational mix of Hindi & English that professors use to make students comfortable).
+- Keep sentences short, smooth, and friendly without complex English tongue-twisters.
+- Example spoken question: "Namaste candidate. Aapka oral viva start ho raha hai. First question: C language me Pointer kya hota hai aur iska main use kya hai?"`;
   }
-  return `CRITICAL LANGUAGE REQUIREMENT (ENGLISH):
-- Formulate all questions, greetings, and verbal feedback in clear, authoritative university examination English.`;
+
+  return `${simplicity}
+CRITICAL LANGUAGE REQUIREMENT (ENGLISH - SIMPLE & DIRECT):
+- Use clean, simple, student-friendly conversational English.
+- Avoid big, flowery, or complex words. Make questions direct and easy to comprehend on first listen.
+- Example spoken question: "Welcome candidate! Let's start your oral viva exam. Question 1: What is a pointer in C, and why do we use it in programming?"`;
 };
 
 /**
@@ -154,14 +181,14 @@ const startVivaSession = async (req, res, next) => {
     const { subjectName, subjectCode, scopeDesc, syllabusDetails, activeUnit } =
       await buildVivaSyllabusContext(subjectId, unitNumber, topic);
 
-    const prompt = `You are a distinguished University External Examiner conducting an official, real-time Oral Viva-Voce examination for college students.
+    const prompt = `You are a university professor conducting an official, real-time Oral Viva-Voce examination for college students.
 
 SUBJECT: ${subjectName} ${subjectCode ? `(${subjectCode})` : ''}
 EXAMINATION SCOPE: ${scopeDesc}
 EXAMINER PERSONA: ${
       difficulty === 'strict'
-        ? 'Strict, authoritative University External Examiner who tests conceptual depth, catches memorization/bluffing, and expects precise technical terms and internal mechanisms'
-        : 'Supportive University Professor who encourages the candidate and tests core practical understanding'
+        ? 'Strict but fair External Examiner: Evaluates conceptual depth and accuracy, but formulates questions in SIMPLE, DIRECT, student-friendly language. Strictly avoids hard, rare, or pompous vocabulary.'
+        : 'Supportive University Professor: Encouraging and patient, asking clear questions in simple, everyday conversational language.'
     }
 
 ${getLanguageGuidance(language)}
@@ -172,16 +199,16 @@ ${syllabusDetails}
 CRITICAL EXAMINER INSTRUCTIONS:
 1. You MUST formulate Question 1 STRICTLY derived from the syllabus provided above. Do NOT ask generic, vague, or out-of-syllabus questions.
 2. Question 1 must test a high-yield foundational concept directly from this specific unit syllabus (e.g. definitions, differences between concepts, internal working principles, memory behavior, or purpose of specific keywords/routines).
-3. Keep the spoken question crisp, clear, and specifically tailored for oral viva answering (1-2 sentences maximum).
-4. Provide a natural verbal greeting (~1-2 sentences) introducing the viva and the specific syllabus unit scope.
+3. LANGUAGE CLARITY (MANDATORY): The question MUST be formulated in simple, clear, conversational words (1-2 sentences maximum). Strictly NO high-level or archaic vocabulary like "elucidate", "delineate", "concomitant", "rudimentary", "dichotomy". Keep it so clear that any undergraduate student grasps it immediately on first hearing.
+4. Provide a warm, brief verbal opening greeting (~1 sentence) introducing the viva and the unit scope in simple words.
 
 OUTPUT FORMAT:
 Respond with a strictly valid JSON object ONLY:
 {
-  "greeting": "Verbal opening greeting spoken by examiner mentioning the subject and unit",
+  "greeting": "Verbal opening greeting spoken by examiner in simple, natural words",
   "question_number": 1,
   "total_questions": ${totalQuestions},
-  "question_text": "The crisp oral viva question spoken to the candidate",
+  "question_text": "The simple, clear oral viva question spoken to the candidate",
   "syllabus_topic_tested": "Specific syllabus topic tested",
   "expected_keywords": ["keyword 1", "keyword 2", "keyword 3"]
 }`;
@@ -202,20 +229,20 @@ Respond with a strictly valid JSON object ONLY:
       resultJson = {
         greeting:
           language === 'hindi'
-            ? `नमस्ते उम्मीदवार। ${subjectName} के लिए आपकी आधिकारिक मौखिक परीक्षा शुरू हो रही है। कृपया स्पष्ट बोलें।`
+            ? `नमस्ते उम्मीदवार! ${subjectName} की मौखिक परीक्षा शुरू हो रही है। कृपया स्पष्ट बोलें।`
             : language === 'hinglish'
-            ? `Welcome candidate. ${subjectName} ke liye oral viva exam start ho raha hai. Please answer clearly.`
-            : `Welcome, candidate. We are now commencing your official oral viva examination for ${subjectName} covering ${scopeDesc}. Please answer clearly.`,
+            ? `Welcome candidate! ${subjectName} ke liye oral viva start ho raha hai. Please answer clearly.`
+            : `Welcome candidate! We are starting your oral viva exam for ${subjectName} covering ${scopeDesc}. Please answer clearly.`,
         question_number: 1,
         total_questions: totalQuestions,
         question_text:
           language === 'hindi'
-            ? `${activeUnit ? activeUnit.name : subjectName} की मुख्य संकल्पना और कार्यप्रणाली को विस्तार से समझाएं।`
+            ? `${activeUnit ? activeUnit.name : subjectName} क्या होता है और इसका मुख्य उद्देश्य क्या है?`
             : language === 'hinglish'
-            ? `${activeUnit ? activeUnit.name : subjectName} ka fundamental concept aur practical working mechanism explain karein.`
-            : `To start off, explain the primary concept of ${
+            ? `${activeUnit ? activeUnit.name : subjectName} kya hota hai aur iska main use kya hai?`
+            : `To start off, what is ${
                 activeUnit ? activeUnit.name : subjectName
-              } and its practical working in university examinations.`,
+              }, and what is its main practical use?`,
         syllabus_topic_tested: activeUnit ? activeUnit.name : 'Core Concepts',
         expected_keywords: ['definition', 'working principle', 'practical application'],
       };
@@ -279,11 +306,11 @@ const respondVivaTurn = async (req, res, next) => {
       Number(questionNumber) >= Number(totalQuestions) && isCrossQuestion;
     const shouldCheckForFinal = Number(questionNumber) >= Number(totalQuestions);
 
-    const prompt = `You are a distinguished University External Examiner conducting an official viva-voce for college students.
+    const prompt = `You are a university examiner conducting an official viva-voce examination for college students.
 Examiner Persona: ${
       difficulty === 'strict'
-        ? 'Strict, authoritative external examiner who expects sharp accuracy and precise technical keywords'
-        : 'Friendly, supportive university professor'
+        ? 'Strict but fair External Examiner: Grades accurately on conceptual depth, but speaks in SIMPLE, CLEAR, direct language without any pompous or hard words'
+        : 'Friendly, supportive university professor who speaks in simple, encouraging everyday words'
     }
 
 ${getLanguageGuidance(language)}
@@ -313,47 +340,48 @@ CURRENT EXAM STATE:
   }
 
 YOUR TASK:
-1. Grade the candidate's answer for this question out of 5 marks (e.g. 4.5/5).
-2. Formulate your spoken verbal reaction (~1-2 short sentences strictly adhering to the LANGUAGE REQUIREMENT above):
-   - Mention what was technically accurate.
-   - Point out what critical technical detail, equation, keyword or mechanism was missed according to university standards.
-3. Formulate the IDEAL/MODEL VIVA ANSWER for this question ("model_answer"):
-   - Provide a concise, crisp 1-2 sentence university viva answer explaining exactly what the candidate should say to score full 5/5 marks (with exact technical definition, keywords, and core concept).
+1. Grade the candidate's answer for this question out of 5 marks (e.g. 4/5).
+2. Formulate your spoken verbal reaction (~1-2 short sentences in SIMPLE, conversational words):
+   - Mention what was correct in plain, friendly terms.
+   - Point out what key detail or keyword was missed without using heavy or archaic words.
+3. Formulate the IDEAL/MODEL VIVA ANSWER ("model_answer"):
+   - Provide a clear, simple 1-2 sentence model answer using plain language that directly explains the concept with key technical terms. A student should be able to easily understand and remember it for their university exams!
 4. DECIDE NEXT STEP:
-   - CASE A (Cross-Question): If the answer was weak, shallow, or incomplete AND this was NOT already a cross-question AND ${!shouldCheckForFinal}:
-     Ask a sharp, targeted CROSS-QUESTION directly on the missing concept from the syllabus.
+   - CASE A (Cross-Question): If the answer was weak or incomplete AND this was NOT already a cross-question AND ${!shouldCheckForFinal}:
+     Ask a simple, targeted follow-up question directly on the missing concept.
+     Keep the question short, direct, and easy to understand (NO hard words).
      Set "is_cross_question": true, "is_final": false.
    - CASE B (Next Question): If the answer was sufficient OR was already a cross-question, AND question_number < ${totalQuestions}:
      Advance to NEXT official viva question (Question ${Number(questionNumber) + 1}).
-     CRITICAL: This next question MUST be strictly chosen from an UNTESTED topic in the prescribed syllabus provided above! Do NOT repeat topics already covered in previous questions!
+     CRITICAL: This next question MUST be strictly chosen from an UNTESTED topic in the prescribed syllabus provided above! Do NOT repeat topics! Keep the question short, direct, and simple!
      Set "is_cross_question": false, "is_final": false.
    - CASE C (Final Assessment): If question_number >= ${totalQuestions}:
-     Complete the viva exam. Set "is_final": true, and generate the comprehensive university Report Card based on all questions and answers.
+     Complete the viva exam. Set "is_final": true, and generate the university Report Card in clear, simple language.
 
 OUTPUT FORMAT (Respond with strictly valid JSON ONLY):
 {
   "marks_awarded": number (between 0 and 5),
   "max_marks": 5,
-  "verbal_feedback": "Short spoken response by examiner explaining accuracy & missing details",
-  "model_answer": "Concise 1-2 sentence ideal viva answer containing the exact university definition and technical keywords",
+  "verbal_feedback": "Short spoken response in simple, clear words explaining what was good & what was missed",
+  "model_answer": "Concise 1-2 sentence ideal viva answer using simple, clear words with core technical terms",
   "missing_concept": "Key technical keyword or concept omitted by candidate",
   "is_cross_question": boolean,
   "is_final": boolean,
   "next_question_number": ${Number(questionNumber) + (isCrossQuestion ? 0 : 1)},
-  "next_question_text": "Next spoken question or cross-question (null if is_final is true)",
+  "next_question_text": "Next simple spoken question or cross-question (null if is_final is true)",
   "syllabus_topic_tested": "Specific syllabus topic tested in next question",
   "report_card": { // ONLY IF is_final is true, otherwise null
     "overall_score": number, // out of total (e.g. 23)
     "max_possible_score": ${Number(totalQuestions) * 5},
-    "grade": "string (e.g. Grade A - Distinction / Grade B - Solid / Grade C - Needs Work)",
+    "grade": "string (e.g. Grade A - Distinction / Grade B - Solid / Grade C - Needs Practice)",
     "strengths": ["Strong area 1", "Strong area 2"],
-    "weaknesses": ["Concept to revise 1", "Concept to revise 2"],
+    "weaknesses": ["Area to revise 1", "Area to revise 2"],
     "examiner_trap_questions": [
-      "Top tricky question 1 examiners love asking in this specific syllabus unit",
-      "Top tricky question 2 examiners love asking in this specific syllabus unit",
-      "Top tricky question 3 examiners love asking in this specific syllabus unit"
+      "Common viva question 1 examiners ask on this unit",
+      "Common viva question 2 examiners ask on this unit",
+      "Common viva question 3 examiners ask on this unit"
     ],
-    "verdict": "2-sentence overall evaluation of candidate's oral performance based on syllabus depth"
+    "verdict": "2-sentence overall evaluation of candidate's oral performance in clear, simple language"
   }
 }`;
 
@@ -374,16 +402,16 @@ OUTPUT FORMAT (Respond with strictly valid JSON ONLY):
         marks_awarded: 3.5,
         max_marks: 5,
         verbal_feedback:
-          'Fair response, but make sure to emphasize the underlying working mechanism and precise definitions.',
+          'Good attempt! You covered the basics well, but make sure to mention the core working principle and give a quick example.',
         model_answer:
-          'The ideal viva answer should state the fundamental definition, key mechanism or formula, and its primary real-world application.',
-        missing_concept: 'Underlying hardware execution and edge cases',
+          'In simple terms, explain the exact definition, how it functions step-by-step, and state one clear real-world use case.',
+        missing_concept: 'Key working principle and practical example',
         is_cross_question: false,
         is_final: shouldCheckForFinal,
         next_question_number: Number(questionNumber) + 1,
         next_question_text: shouldCheckForFinal
           ? null
-          : 'Moving on to the next syllabus concept. Explain the core mechanism in practical applications.',
+          : 'Moving to the next syllabus concept. Can you explain how it works and where we use it?',
         syllabus_topic_tested: 'Core Syllabus Topics',
         report_card: shouldCheckForFinal
           ? {
@@ -391,20 +419,20 @@ OUTPUT FORMAT (Respond with strictly valid JSON ONLY):
               max_possible_score: Number(totalQuestions) * 5,
               grade: 'Grade A - University Ready',
               strengths: [
-                'Clear spoken communication',
-                'Sound conceptual foundation in prescribed syllabus',
+                'Clear spoken answers',
+                'Good basic understanding of the prescribed syllabus',
               ],
               weaknesses: [
-                'Revise edge cases and technical definitions',
-                'Practice deeper conceptual trade-offs',
+                'Remember to include key technical terms',
+                'Practice giving short, direct examples',
               ],
               examiner_trap_questions: [
-                'What is the fundamental working difference between these two core operations?',
-                'How does the system handle boundary conditions internally?',
-                'Explain why this architecture is preferred in practical deployments.',
+                'What is the main difference between these two operations?',
+                'How does the system handle this step internally?',
+                'Why do we prefer this method over the alternative?',
               ],
               verdict:
-                'Candidate demonstrated commendable conceptual understanding of the syllabus topics.',
+                'Good oral performance! The candidate explained the core concepts clearly in simple language.',
             }
           : null,
       };

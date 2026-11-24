@@ -631,7 +631,354 @@ export async function exportMockTestScorecardPdf(res) {
 }
 
 /**
- * 2. Export Revision Notes, Definitions, Checklist & Flashcards PDF
+ * 2. Export Official Oral Viva Voce Scorecard PDF
+ * (Executive Summary, Marks Table, Spoken Transcripts, Examiner Feedback & Model Answers)
+ * 
+ * @param {Object} options
+ * @returns {Promise<boolean>}
+ */
+export async function exportVivaScorecardPdf({
+  finalReport,
+  vivaHistory = [],
+  selectedSubject = null,
+  selectedCourse = null,
+  language = 'English',
+  persona = 'Strict University External Examiner',
+}) {
+  if (!finalReport) return false;
+
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a4',
+  });
+
+  const subjectName = selectedSubject?.name || 'General Subject';
+  const subjectCode = selectedSubject?.code || 'N/A';
+  const safeSubject = (subjectCode || subjectName).replace(/[^a-zA-Z0-9_\-]/g, '_');
+  const filename = `SANKALP_VivaVoce_Scorecard_${safeSubject}_${new Date().toISOString().split('T')[0]}.pdf`;
+
+  let y = renderDocumentHeader(
+    doc,
+    'OFFICIAL ORAL VIVA VOCE EXAMINATION SCORECARD',
+    `${subjectName} (${subjectCode}) • ${selectedCourse?.name || 'University Examination'}`,
+    `Date Evaluated: ${new Date().toLocaleDateString()} | Examiner Persona: ${persona} | Mode: ${language.toUpperCase()}`
+  );
+
+  // 1. Executive Performance Scorecard Card
+  doc.setFillColor(248, 250, 252);
+  doc.setDrawColor(203, 213, 225);
+  doc.setLineWidth(0.4);
+  doc.roundedRect(MARGIN_LEFT, y, USABLE_WIDTH, 23, 2, 2, 'FD');
+
+  const totalScore = finalReport.overall_score || 0;
+  const maxScore = finalReport.max_possible_score || (vivaHistory.length * 5) || 15;
+  const percentage = Math.round((totalScore / maxScore) * 100);
+
+  // Big Score Text
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(16);
+  doc.setTextColor(15, 23, 42);
+  doc.text(`${totalScore} / ${maxScore}`, MARGIN_LEFT + 6, y + 10);
+
+  doc.setFontSize(8);
+  doc.setTextColor(100, 116, 139);
+  doc.text(`OVERALL SCORE: ${percentage}% TOTAL`, MARGIN_LEFT + 6, y + 16.5);
+
+  // Grade Pill
+  doc.setFillColor(15, 23, 42);
+  doc.roundedRect(MARGIN_LEFT + 60, y + 4.5, 26, 14, 2, 2, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9.5);
+  doc.setTextColor(255, 255, 255);
+  const cleanGrade = (finalReport.grade || 'Grade A').replace(/^Grade\s+/i, '');
+  doc.text(cleanGrade.substring(0, 14), MARGIN_LEFT + 73, y + 13.5, { align: 'center' });
+
+  // Status / Division
+  const division =
+    percentage >= 75
+      ? 'Distinction / Exemplary'
+      : percentage >= 60
+      ? 'First Division / Competent'
+      : percentage >= 50
+      ? 'Second Division / Satisfactory'
+      : 'Requires Further Preparation';
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9.5);
+  doc.setTextColor(percentage >= 50 ? 21 : 220, percentage >= 50 ? 128 : 38, percentage >= 50 ? 61 : 38);
+  doc.text(`Oral Verdict: ${division}`, MARGIN_LEFT + 92, y + 10);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(71, 85, 105);
+  doc.text(`Total Questions Answered: ${vivaHistory.length} Viva Turns`, MARGIN_LEFT + 92, y + 16.5);
+
+  y += 28;
+
+  // Examiner Verdict Callout
+  if (finalReport.verdict) {
+    if (y + 18 > MAX_Y) { doc.addPage(); y = HEADER_START_Y + 6; }
+    doc.setFillColor(241, 245, 249);
+    doc.setDrawColor(203, 213, 225);
+    doc.setLineWidth(0.3);
+    const verdictLines = doc.splitTextToSize(`"${cleanMarkdownText(finalReport.verdict)}"`, USABLE_WIDTH - 14);
+    const verdictBoxH = 8 + verdictLines.length * 4.2;
+    doc.roundedRect(MARGIN_LEFT, y, USABLE_WIDTH, verdictBoxH, 1.5, 1.5, 'FD');
+    doc.setFillColor(99, 102, 241);
+    doc.rect(MARGIN_LEFT, y, 2.5, verdictBoxH, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.setTextColor(30, 41, 59);
+    doc.text('OFFICIAL EXTERNAL EXAMINER REMARKS:', MARGIN_LEFT + 6, y + 5);
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(8);
+    doc.setTextColor(71, 85, 105);
+    let vY = y + 9.5;
+    for (let l of verdictLines) {
+      doc.text(l, MARGIN_LEFT + 6, vY);
+      vY += 4.2;
+    }
+    y += verdictBoxH + 5;
+  }
+
+  // 2. Official Viva Voce Questions Summary Marksheet Table
+  if (vivaHistory && vivaHistory.length > 0) {
+    if (y + 20 > MAX_Y) { doc.addPage(); y = HEADER_START_Y + 6; }
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9.5);
+    doc.setTextColor(15, 23, 42);
+    doc.text('I. ORAL VIVA MARKSHEET SUMMARY TABLE', MARGIN_LEFT, y);
+    y += 4.5;
+
+    const tableHeaders = ['Q#', 'Viva Examination Question', 'Max', 'Marks', 'Rating'];
+    const tableRows = vivaHistory.map((v, idx) => {
+      const qText = cleanMarkdownText(v.question || '');
+      const shortQ = qText.length > 60 ? qText.substring(0, 57) + '...' : qText;
+      const m = Number(v.marks) || 0;
+      const rating = m >= 4.5 ? 'Excellent' : m >= 3.5 ? 'Good' : m >= 2.5 ? 'Average' : 'Needs Work';
+      return [
+        `Q${idx + 1}`,
+        shortQ,
+        '5',
+        `${m}`,
+        rating,
+      ];
+    });
+
+    y = drawPdfTable(doc, tableHeaders, tableRows, y, [14, 96, 20, 22, 28]);
+    y += 7;
+  }
+
+  // 3. Question-by-Question Review with Spoken Answer, Feedback & Model Answer
+  if (y + 16 > MAX_Y) { doc.addPage(); y = HEADER_START_Y + 6; }
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9.5);
+  doc.setTextColor(15, 23, 42);
+  doc.text('II. QUESTION-BY-QUESTION SCRUTINY, CANDIDATE TRANSCRIPT & MODEL ANSWERS', MARGIN_LEFT, y);
+  y += 5;
+
+  for (let idx = 0; idx < vivaHistory.length; idx++) {
+    const v = vivaHistory[idx];
+    const qLines = doc.splitTextToSize(cleanMarkdownText(v.question || ''), USABLE_WIDTH - 12);
+    const ansLines = doc.splitTextToSize(v.answer ? `"${cleanMarkdownText(v.answer)}"` : '"Unattempted / No response recorded"', USABLE_WIDTH - 16);
+    const fbLines = doc.splitTextToSize(cleanMarkdownText(v.feedback || 'Evaluated against prescribed syllabus.'), USABLE_WIDTH - 16);
+    const modelAnsLines = v.modelAnswer ? doc.splitTextToSize(cleanMarkdownText(v.modelAnswer), USABLE_WIDTH - 16) : [];
+
+    const estimatedBoxH =
+      12 +
+      qLines.length * 4.2 +
+      10 +
+      ansLines.length * 4 +
+      10 +
+      fbLines.length * 4 +
+      (modelAnsLines.length ? 10 + modelAnsLines.length * 4 : 0);
+
+    if (y + estimatedBoxH > MAX_Y) {
+      doc.addPage();
+      y = HEADER_START_Y + 6;
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8.5);
+      doc.setTextColor(100, 116, 139);
+      doc.text(`Viva Voce Transcript Continued - Question ${idx + 1}`, MARGIN_LEFT, y);
+      y += 6;
+    }
+
+    // Header Strip for Question
+    doc.setFillColor(241, 245, 249);
+    doc.setDrawColor(203, 213, 225);
+    doc.setLineWidth(0.3);
+    doc.roundedRect(MARGIN_LEFT, y, USABLE_WIDTH, 8, 1.5, 1.5, 'FD');
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8.5);
+    doc.setTextColor(30, 41, 59);
+    doc.text(`VIVA QUESTION ${idx + 1} (5 MARKS)`, MARGIN_LEFT + 4, y + 5.5);
+
+    const m = Number(v.marks) || 0;
+    doc.setTextColor(m >= 3 ? 21 : 185, m >= 3 ? 128 : 28, m >= 3 ? 61 : 28);
+    doc.text(`Score: ${m} / 5 Marks`, MARGIN_LEFT + USABLE_WIDTH - 4, y + 5.5, { align: 'right' });
+    y += 11.5;
+
+    // Question
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8.5);
+    doc.setTextColor(15, 23, 42);
+    for (let l of qLines) {
+      doc.text(l, MARGIN_LEFT + 4, y);
+      y += 4.2;
+    }
+    y += 2;
+
+    // Candidate Spoken Transcript
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7.5);
+    doc.setTextColor(71, 85, 105);
+    doc.text('CANDIDATE SPOKEN TRANSCRIPT:', MARGIN_LEFT + 4, y);
+    y += 3.5;
+
+    doc.setFillColor(248, 250, 252);
+    doc.setDrawColor(226, 232, 240);
+    const ansBoxH = ansLines.length * 4 + 3;
+    doc.roundedRect(MARGIN_LEFT + 4, y, USABLE_WIDTH - 8, ansBoxH, 1, 1, 'FD');
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(8);
+    doc.setTextColor(30, 41, 59);
+    let ansY = y + 4;
+    for (let l of ansLines) {
+      doc.text(l, MARGIN_LEFT + 7, ansY);
+      ansY += 4;
+    }
+    y += ansBoxH + 3.5;
+
+    // Examiner Feedback
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7.5);
+    doc.setTextColor(180, 83, 9); // Amber
+    doc.text('EXAMINER EVALUATION & FEEDBACK:', MARGIN_LEFT + 4, y);
+    y += 3.5;
+
+    doc.setFillColor(254, 252, 232); // amber-50
+    doc.setDrawColor(254, 240, 138); // amber-200
+    const fbBoxH = fbLines.length * 4 + 3;
+    doc.roundedRect(MARGIN_LEFT + 4, y, USABLE_WIDTH - 8, fbBoxH, 1, 1, 'FD');
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(113, 63, 18);
+    let fbY = y + 4;
+    for (let l of fbLines) {
+      doc.text(l, MARGIN_LEFT + 7, fbY);
+      fbY += 4;
+    }
+    y += fbBoxH + 3.5;
+
+    // Ideal Viva Answer
+    if (modelAnsLines.length > 0) {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(7.5);
+      doc.setTextColor(21, 128, 61); // Emerald
+      doc.text('IDEAL UNIVERSITY VIVA ANSWER (MODEL SOLUTION):', MARGIN_LEFT + 4, y);
+      y += 3.5;
+
+      doc.setFillColor(240, 253, 244); // emerald-50
+      doc.setDrawColor(187, 247, 208); // emerald-200
+      const modelBoxH = modelAnsLines.length * 4 + 3;
+      doc.roundedRect(MARGIN_LEFT + 4, y, USABLE_WIDTH - 8, modelBoxH, 1, 1, 'FD');
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(20, 83, 45);
+      let mY = y + 4;
+      for (let l of modelAnsLines) {
+        doc.text(l, MARGIN_LEFT + 7, mY);
+        mY += 4;
+      }
+      y += modelBoxH + 4;
+    }
+
+    y += 3;
+  }
+
+  // 4. Strengths & Weaknesses Checklist
+  if ((finalReport.strengths && finalReport.strengths.length > 0) || (finalReport.weaknesses && finalReport.weaknesses.length > 0)) {
+    if (y + 35 > MAX_Y) { doc.addPage(); y = HEADER_START_Y + 6; }
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9.5);
+    doc.setTextColor(15, 23, 42);
+    doc.text('III. ORAL COMPETENCY CHECKLIST: STRENGTHS & REVISION TARGETS', MARGIN_LEFT, y);
+    y += 5;
+
+    // Strengths
+    if (finalReport.strengths && finalReport.strengths.length > 0) {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8.5);
+      doc.setTextColor(21, 128, 61);
+      doc.text('Demonstrated Strengths:', MARGIN_LEFT, y);
+      y += 4.5;
+      for (let s of finalReport.strengths) {
+        const sLines = doc.splitTextToSize(`✓  ${cleanMarkdownText(s)}`, USABLE_WIDTH - 4);
+        if (y + sLines.length * 4.2 > MAX_Y) { doc.addPage(); y = HEADER_START_Y + 6; }
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(15, 23, 42);
+        for (let l of sLines) {
+          doc.text(l, MARGIN_LEFT + 2, y);
+          y += 4.2;
+        }
+      }
+      y += 2;
+    }
+
+    // Weaknesses / Revise
+    if (finalReport.weaknesses && finalReport.weaknesses.length > 0) {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8.5);
+      doc.setTextColor(180, 83, 9);
+      doc.text('Concepts to Revise Before University Oral Viva Exam:', MARGIN_LEFT, y);
+      y += 4.5;
+      for (let w of finalReport.weaknesses) {
+        const wLines = doc.splitTextToSize(`⚠  ${cleanMarkdownText(w)}`, USABLE_WIDTH - 4);
+        if (y + wLines.length * 4.2 > MAX_Y) { doc.addPage(); y = HEADER_START_Y + 6; }
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(15, 23, 42);
+        for (let l of wLines) {
+          doc.text(l, MARGIN_LEFT + 2, y);
+          y += 4.2;
+        }
+      }
+      y += 2;
+    }
+
+    // Trap Questions
+    if (finalReport.examiner_trap_questions && finalReport.examiner_trap_questions.length > 0) {
+      if (y + 20 > MAX_Y) { doc.addPage(); y = HEADER_START_Y + 6; }
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8.5);
+      doc.setTextColor(190, 18, 60); // rose-700
+      doc.text('Top Examiner Trap Questions in This Subject:', MARGIN_LEFT, y);
+      y += 4.5;
+      for (let idx = 0; idx < finalReport.examiner_trap_questions.length; idx++) {
+        const tq = finalReport.examiner_trap_questions[idx];
+        const tLines = doc.splitTextToSize(`${idx + 1}.  ${cleanMarkdownText(tq)}`, USABLE_WIDTH - 4);
+        if (y + tLines.length * 4.2 > MAX_Y) { doc.addPage(); y = HEADER_START_Y + 6; }
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(30, 41, 59);
+        for (let l of tLines) {
+          doc.text(l, MARGIN_LEFT + 2, y);
+          y += 4.2;
+        }
+      }
+    }
+  }
+
+  stampAllPageFooters(doc);
+  doc.save(filename);
+  return true;
+}
+
+/**
+ * 3. Export Revision Notes, Definitions, Checklist & Flashcards PDF
  * (Parses markdown into authentic H1/H2/H3 banners, real tables, callouts, and flashcards)
  * 
  * @param {Object} options

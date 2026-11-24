@@ -25,10 +25,12 @@ import {
   X,
   Edit3,
   Languages,
+  Download,
 } from 'lucide-react';
 import useAppStore from '../store/appStore';
 import api, { aiApi } from '../lib/api';
 import { playSpeech, stopSpeech, cleanTextForSpeech, unlockMobileAudio } from '../lib/speechVoice';
+import { exportVivaScorecardPdf } from '../lib/pdfExport';
 import toast from 'react-hot-toast';
 
 export default function VivaRoom() {
@@ -66,10 +68,13 @@ export default function VivaRoom() {
   const [examinerFeedback, setExaminerFeedback] = useState('');
   const [examinerModelAnswer, setExaminerModelAnswer] = useState('');
   const [showSyllabusModal, setShowSyllabusModal] = useState(false);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
 
   // Speech Recognition Reference
   const recognitionRef = useRef(null);
   const silenceTimerRef = useRef(null);
+  const restartTimerRef = useRef(null);
+  const isUserActivelyRecordingRef = useRef(false);
   const transcriptRef = useRef('');
 
   // Check if speech recognition is supported in this browser
@@ -80,7 +85,10 @@ export default function VivaRoom() {
   // Stop all speech on unmount
   useEffect(() => {
     return () => {
+      isUserActivelyRecordingRef.current = false;
       stopSpeech();
+      if (restartTimerRef.current) clearTimeout(restartTimerRef.current);
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
       if (recognitionRef.current) {
         try {
           recognitionRef.current.abort();
@@ -97,7 +105,7 @@ export default function VivaRoom() {
   // Typing fallback state for iOS / noisy environments
   const [typingMode, setTypingMode] = useState(false);
 
-  // Start Candidate Speech Recognition
+  // Start Candidate Speech Recognition (with 3-4s Natural Breathing & Thinking Silence Buffer)
   const startListening = useCallback(() => {
     // Prime and unlock mobile audio
     unlockMobileAudio();
@@ -111,14 +119,16 @@ export default function VivaRoom() {
     // Stop examiner audio if playing
     stopSpeech();
     setExaminerSpeaking(false);
+    isUserActivelyRecordingRef.current = true;
+    if (restartTimerRef.current) clearTimeout(restartTimerRef.current);
+    if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
 
     try {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       const rec = new SpeechRecognition();
-      const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-      // On mobile (iOS / Android), non-continuous mode avoids audio pipeline lockups
-      rec.continuous = !isMobile;
+      // Continuous mode enabled across mobile and desktop for natural oral exams
+      rec.continuous = true;
       rec.interimResults = true;
 
       // Voice Recognition Language configuration
@@ -153,21 +163,46 @@ export default function VivaRoom() {
         }
         setInterimTranscript(interimStr);
 
-        // Reset silence timer on new speech
+        // Reset silence buffer on new speech (tolerates 3.5s pause to think or breathe)
         if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
         silenceTimerRef.current = setTimeout(() => {
-          // Keep transcript updated
-        }, 3000);
+          // Graceful 3.5s silence passed; user can keep speaking or click Submit
+        }, 3500);
       };
 
       rec.onerror = (e) => {
-        if (e.error === 'no-speech') return;
+        // Non-fatal errors like 'no-speech' should not kill recording while student is thinking
+        if (e.error === 'no-speech') {
+          return;
+        }
         console.warn('[Speech Recognition Warning]:', e.error);
-        setIsListening(false);
+        if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+          isUserActivelyRecordingRef.current = false;
+          setIsListening(false);
+          toast.error('Microphone access denied. You can use Type Mode to answer.');
+          setTypingMode(true);
+        }
       };
 
       rec.onend = () => {
-        setIsListening(false);
+        // If user manually clicked stop or submitted answer, stop cleanly
+        if (!isUserActivelyRecordingRef.current) {
+          setIsListening(false);
+          return;
+        }
+
+        // If user is still answering and paused to breathe/think (within natural pauses):
+        // Automatically and seamlessly re-engage speech recognition without cutting the student off!
+        if (restartTimerRef.current) clearTimeout(restartTimerRef.current);
+        restartTimerRef.current = setTimeout(() => {
+          if (isUserActivelyRecordingRef.current) {
+            try {
+              rec.start();
+            } catch (err) {
+              console.debug('[Speech Keepalive Resumed]:', err?.message);
+            }
+          }
+        }, 150);
       };
 
       recognitionRef.current = rec;
@@ -175,11 +210,14 @@ export default function VivaRoom() {
     } catch (err) {
       console.error('[Speech Recognition Error]:', err);
       setIsListening(false);
+      isUserActivelyRecordingRef.current = false;
     }
   }, [isSpeechRecognitionSupported, language]);
 
   // Stop Candidate Speech Recognition
   const stopListening = useCallback(() => {
+    isUserActivelyRecordingRef.current = false;
+    if (restartTimerRef.current) clearTimeout(restartTimerRef.current);
     if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
     if (recognitionRef.current) {
       try {
@@ -422,6 +460,32 @@ export default function VivaRoom() {
     toast.success('Viva session concluded.');
   };
 
+  // Export 100% Native Vector PDF Scorecard
+  const handleExportScorecardPdf = async () => {
+    if (!finalReport) {
+      toast.error('No viva report available to export.');
+      return;
+    }
+    try {
+      setIsExportingPdf(true);
+      toast.loading('Generating Official Viva Scorecard PDF...', { id: 'viva-pdf' });
+      await exportVivaScorecardPdf({
+        finalReport,
+        vivaHistory,
+        selectedSubject,
+        selectedCourse,
+        language: language === 'hindi' ? 'Hindi' : language === 'hinglish' ? 'Hinglish' : 'English',
+        persona: examinerPersona === 'strict' ? 'Strict External University Examiner' : 'Friendly Senior Professor',
+      });
+      toast.success('Official Viva Scorecard PDF downloaded!', { id: 'viva-pdf' });
+    } catch (err) {
+      console.error('PDF export failed:', err);
+      toast.error('Failed to export PDF scorecard. Please try again.', { id: 'viva-pdf' });
+    } finally {
+      setIsExportingPdf(false);
+    }
+  };
+
   return (
     <div className="h-full w-full flex flex-col bg-gray-50 dark:bg-black text-gray-950 dark:text-white overflow-hidden font-sans select-none">
       {/* ============================================================ */}
@@ -543,9 +607,9 @@ export default function VivaRoom() {
               </div>
               <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
                 {[
-                  { id: 'english', label: 'English', sub: 'Academic English' },
+                  { id: 'english', label: 'English', sub: 'Simple English' },
                   { id: 'hindi', label: 'हिंदी', sub: 'सरल हिंदी' },
-                  { id: 'hinglish', label: 'Hinglish', sub: 'Mix Mode' },
+                  { id: 'hinglish', label: 'Hinglish', sub: 'सरल Mix Mode' },
                 ].map((l) => (
                   <button
                     key={l.id}
@@ -588,7 +652,7 @@ export default function VivaRoom() {
                   >
                     <span>Strict External</span>
                     <span className={`text-[8px] sm:text-[9px] font-normal ${difficulty === 'strict' ? 'text-gray-300 dark:text-gray-700' : 'text-gray-500 dark:text-gray-400'}`}>
-                      Cross-questions
+                      Probing & direct
                     </span>
                   </button>
                   <button
@@ -601,7 +665,7 @@ export default function VivaRoom() {
                   >
                     <span>Friendly Prof</span>
                     <span className={`text-[8px] sm:text-[9px] font-normal ${difficulty === 'friendly' ? 'text-gray-300 dark:text-gray-700' : 'text-gray-500 dark:text-gray-400'}`}>
-                      Encouraging & calm
+                      Easy & encouraging
                     </span>
                   </button>
                 </div>
@@ -1171,11 +1235,22 @@ export default function VivaRoom() {
               </button>
               <button
                 type="button"
-                onClick={() => window.print()}
-                className="w-full sm:w-auto px-4 py-2.5 sm:py-3 rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-700 font-semibold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                disabled={isExportingPdf}
+                onClick={handleExportScorecardPdf}
+                className="w-full sm:w-auto px-4 py-2.5 sm:py-3 rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-700 font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-50"
+                title="Download Official Viva Voce Scorecard PDF"
               >
-                <Printer className="w-3.5 h-3.5" />
-                <span>Print Scorecard</span>
+                {isExportingPdf ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Generating PDF...</span>
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                    <span>Download Scorecard (PDF)</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
