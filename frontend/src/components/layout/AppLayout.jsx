@@ -9,7 +9,7 @@ import useAppStore from '../../store/appStore';
 import { usePwaStore } from '../../store/pwaStore';
 
 export default function AppLayout() {
-  const { sidebarCollapsed, initTheme, initAiCredentials } = useAppStore();
+  const { sidebarCollapsed, initTheme, initAiCredentials, setMobileNavOpen } = useAppStore();
   const { initPwa } = usePwaStore();
   const location = useLocation();
   const isPdfPage = location.pathname.startsWith('/pdf/');
@@ -22,6 +22,11 @@ export default function AppLayout() {
     initAiCredentials();
     initPwa();
   }, [initTheme, initAiCredentials, initPwa]);
+
+  // Automatically close mobile sidebar whenever navigating to any page
+  useEffect(() => {
+    setMobileNavOpen(false);
+  }, [location.pathname, location.search, setMobileNavOpen]);
 
   return (
     <div className="h-screen w-full overflow-hidden bg-[#F7F8FC] dark:bg-black text-gray-900 dark:text-gray-100 flex flex-col selection:bg-indigo-500 selection:text-white">
