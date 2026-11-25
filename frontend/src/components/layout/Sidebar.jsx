@@ -26,6 +26,7 @@ import {
   Smartphone,
   Mic,
   Terminal,
+  Briefcase,
 } from 'lucide-react';
 import useAppStore from '../../store/appStore';
 import { usePwaStore } from '../../store/pwaStore';
@@ -47,6 +48,7 @@ const ICONS = {
   Settings,
   Mic,
   Terminal,
+  Briefcase,
 };
 
 export default function Sidebar() {
@@ -100,6 +102,7 @@ export default function Sidebar() {
       title: 'Practice & Mock Tests',
       icon: 'PenTool',
       items: [
+        { label: 'Business Case War Room', path: '/business-lab', icon: 'Briefcase', badge: 'MBA' },
         { label: 'Coding Practice Lab', path: '/coding-lab', icon: 'Terminal', badge: 'LAB' },
         { label: 'Practice Questions', path: '/practice', icon: 'PenTool' },
         { label: 'Timed Mock Tests', path: '/tests', icon: 'ClipboardCheck' },

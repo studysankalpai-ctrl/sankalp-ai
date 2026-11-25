@@ -623,6 +623,9 @@ export default function CodingLab() {
               activeTab={detailTab}
               onTabChange={setDetailTab}
               onOpenProblemList={() => setIsProblemListOpen(true)}
+              errorOutput={error}
+              stdout={output}
+              stdin={customInput}
               onSelectSubmissionCode={(savedCode, lang) => {
                 setCode(savedCode);
                 if (lang && lang !== selectedLanguage) {
@@ -748,10 +751,14 @@ export default function CodingLab() {
             </div>
             <div className="flex-1 overflow-hidden p-2">
               <AiAssistantPanel
-                problemSlug={null}
+                problemSlug={currentProblem?.slug || null}
+                problemTitle={currentProblem?.title || null}
                 language={selectedLanguage}
                 code={code}
                 studentId={studentId}
+                errorOutput={error}
+                stdout={output}
+                stdin={customInput}
               />
             </div>
           </div>

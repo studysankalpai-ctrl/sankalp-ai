@@ -28,6 +28,9 @@ export default function ProblemDetail({
   onTabChange: onExternalTabChange,
   onOpenProblemList,
   onSelectSubmissionCode,
+  errorOutput = '',
+  stdout = '',
+  stdin = '',
 }) {
   const [internalTab, setInternalTab] = useState('description');
   const activeTab = externalTab !== undefined ? externalTab : internalTab;
@@ -364,9 +367,13 @@ export default function ProblemDetail({
         {activeTab === 'ai' && (
           <AiAssistantPanel
             problemSlug={problem.slug}
+            problemTitle={problem.title}
             language={language}
             code={currentCode}
             studentId={studentId}
+            errorOutput={errorOutput}
+            stdout={stdout}
+            stdin={stdin}
           />
         )}
       </div>

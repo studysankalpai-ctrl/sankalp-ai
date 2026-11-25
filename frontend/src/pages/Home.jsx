@@ -10,6 +10,8 @@ import {
   ArrowRight,
   FileText,
   BookOpen,
+  Terminal,
+  Briefcase,
 } from 'lucide-react';
 import { publicApi } from '../lib/api';
 import useAppStore from '../store/appStore';
@@ -93,6 +95,24 @@ export default function Home() {
             >
               <Bot className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-neutral-300" />
               <span>Ask AI Mentor</span>
+            </Link>
+
+            <Link
+              to="/coding-lab"
+              className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 font-bold text-[11px] sm:text-xs border border-emerald-500/40 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+            >
+              <Terminal className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400" />
+              <span>Coding Lab</span>
+              <span className="px-1 py-0.2 rounded text-[8px] font-mono font-bold bg-emerald-500/20 text-emerald-300">IDE</span>
+            </Link>
+
+            <Link
+              to="/business-lab"
+              className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-amber-950/80 hover:bg-amber-900 text-amber-300 font-bold text-[11px] sm:text-xs border border-amber-500/40 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+            >
+              <Briefcase className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400" />
+              <span>Business War Room</span>
+              <span className="px-1 py-0.2 rounded text-[8px] font-mono font-bold bg-amber-500/20 text-amber-300">MBA</span>
             </Link>
 
             <Link

@@ -90,6 +90,7 @@ app.use('/api/admin', require('./routes/admin'));
 app.use('/api/public', require('./routes/public'));
 app.use('/api/ai', require('./routes/ai'));
 app.use('/api/coding', require('./routes/coding'));
+app.use('/api/case-study', require('./routes/caseStudy'));
 
 // Global error handler
 app.use(errorHandler);

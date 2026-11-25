@@ -681,7 +681,11 @@ const requestAiAssist = async (req, res, next) => {
 
       case 'hint':
         if (!problem) {
-          return errorResponse(res, 'Problem context is required for hints.', 400);
+          problem = {
+            title: problem_title || `${language.toUpperCase()} Algorithm / Playground`,
+            description: 'Provide progressive guided hints for the current code implementation without giving away full answer.',
+            constraints: 'Standard',
+          };
         }
         aiResult = await codingAiService.getHint({
           apiKey,
@@ -695,13 +699,36 @@ const requestAiAssist = async (req, res, next) => {
 
       case 'solution':
         if (!problem) {
-          return errorResponse(res, 'Problem context is required for solution explanation.', 400);
+          problem = {
+            title: problem_title || `${language.toUpperCase()} Algorithm Optimization`,
+            description: 'Explain the optimal algorithmic approach and pattern for solving this task.',
+            input_format: 'Standard',
+            output_format: 'Standard',
+            difficulty: 'General',
+            topic: 'DSA & Algorithms',
+            constraints: 'Standard',
+          };
         }
         aiResult = await codingAiService.explainSolution({
           apiKey,
           model,
           problem,
           language,
+          code,
+        });
+        break;
+
+      case 'ask':
+      case 'custom':
+        aiResult = await codingAiService.askQuestion({
+          apiKey,
+          model,
+          code,
+          language,
+          problemTitle: problem?.title || problem_title,
+          question: req.body.question || req.body.prompt,
+          errorOutput,
+          stdout,
         });
         break;
 
@@ -709,9 +736,15 @@ const requestAiAssist = async (req, res, next) => {
         return errorResponse(res, `Unknown AI action: "${action}"`, 400);
     }
 
+    const responseText = (typeof aiResult === 'object' && aiResult !== null && aiResult.content)
+      ? aiResult.content
+      : (typeof aiResult === 'string' ? aiResult : String(aiResult || ''));
+
     return successResponse(res, {
       action,
-      response: aiResult,
+      response: responseText,
+      model: aiResult?.model,
+      usage: aiResult?.usage,
     }, 'AI response generated');
   } catch (error) {
     next(error);

@@ -40,6 +40,7 @@ import {
   Mail,
   Mic,
   ClipboardCheck,
+  Briefcase,
 } from 'lucide-react';
 
 export default function Landing() {
@@ -86,6 +87,25 @@ export default function Landing() {
       ],
       link: '/mentor',
       linkText: 'Launch AI Mentor',
+    },
+    {
+      id: 'coding-lab',
+      title: 'Interactive Coding Lab & DSA',
+      subtitle: 'Multi-Language IDE & 18+ Graded DSA Questions',
+      icon: Terminal,
+      image: '/screenshots/coding-lab.png',
+      badge: 'Live Online IDE',
+      tagline: 'Write, debug, and run code with real-time interactive terminal prompts.',
+      description:
+        'A full-featured university programming environment and DSA problem-solving studio. Features a free-form multi-language playground with instant compiler diagnostics, traditional step-by-step interactive terminal execution (supporting scanf, cin, input(), Scanner), 18+ graded university DSA questions with sample and hidden test cases, execution runtime metrics, and an AI Debugger mentor.',
+      highlights: [
+        'Multi-Language Support: GCC 14 C/C++, Python 3.12, Java 17, JavaScript',
+        'Interactive Terminal Console: authentic step-by-step TTY input prompts',
+        '18+ Graded DSA Problems: Arrays, Matrix, Strings, Linked Lists, Stacks, Trees',
+        'AI Debug Assistant: explain runtime bugs, analyze complexity, generate dry runs',
+      ],
+      link: '/coding-lab',
+      linkText: 'Launch Coding Lab',
     },
     {
       id: 'final-paper',
@@ -255,7 +275,27 @@ export default function Landing() {
           </Link>
 
           {/* Center Navigation Links (Desktop) */}
-          <nav className="hidden lg:flex items-center gap-7 text-xs font-semibold text-zinc-400">
+          <nav className="hidden lg:flex items-center gap-6 text-xs font-semibold text-zinc-400">
+            <Link
+              to="/business-lab"
+              className="hover:text-white transition-colors flex items-center gap-1.5 text-amber-400 hover:text-amber-300 font-bold"
+            >
+              <Briefcase className="w-3.5 h-3.5" />
+              <span>Business Lab</span>
+              <span className="px-1.5 py-0.2 rounded-full text-[9px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                MBA
+              </span>
+            </Link>
+            <Link
+              to="/coding-lab"
+              className="hover:text-white transition-colors flex items-center gap-1.5 text-emerald-400 hover:text-emerald-300 font-bold"
+            >
+              <Terminal className="w-3.5 h-3.5" />
+              <span>Coding Lab</span>
+              <span className="px-1.5 py-0.2 rounded-full text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                NEW
+              </span>
+            </Link>
             <a href="#tour" className="hover:text-white transition-colors">
               Inside Software
             </a>
@@ -275,6 +315,13 @@ export default function Landing() {
 
           {/* Right Action: Enter AI Platform + Mobile Hamburger */}
           <div className="flex items-center gap-2">
+            <Link
+              to="/coding-lab"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-950/80 hover:bg-emerald-900/80 text-emerald-300 border border-emerald-500/30 text-xs font-bold transition-all"
+            >
+              <Terminal className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Coding Lab</span>
+            </Link>
             <Link
               to="/dashboard"
               className="group inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full bg-white hover:bg-zinc-200 text-black text-xs font-extrabold tracking-tight shadow-md shadow-white/5 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
@@ -298,6 +345,32 @@ export default function Landing() {
         {mobileMenuOpen && (
           <div className="lg:hidden bg-zinc-950 border-b border-white/15 px-5 py-4 space-y-3 animate-in fade-in duration-200">
             <nav className="flex flex-col gap-2 text-xs font-medium text-zinc-300">
+              <Link
+                to="/business-lab"
+                onClick={() => setMobileMenuOpen(false)}
+                className="py-1.5 hover:text-white transition-colors flex items-center justify-between text-amber-400 font-bold"
+              >
+                <div className="flex items-center gap-2">
+                  <Briefcase className="w-4 h-4 text-amber-400" />
+                  <span>Business Case War Room</span>
+                </div>
+                <span className="px-1.5 py-0.2 rounded-full text-[9px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                  MBA
+                </span>
+              </Link>
+              <Link
+                to="/coding-lab"
+                onClick={() => setMobileMenuOpen(false)}
+                className="py-1.5 hover:text-white transition-colors flex items-center justify-between text-emerald-400 font-bold"
+              >
+                <div className="flex items-center gap-2">
+                  <Terminal className="w-4 h-4 text-emerald-400" />
+                  <span>Coding Lab &amp; DSA Studio</span>
+                </div>
+                <span className="px-1.5 py-0.2 rounded-full text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  NEW
+                </span>
+              </Link>
               <a
                 href="#tour"
                 onClick={() => setMobileMenuOpen(false)}
@@ -335,7 +408,15 @@ export default function Landing() {
               </Link>
             </nav>
 
-            <div className="pt-2 border-t border-white/10">
+            <div className="pt-2 border-t border-white/10 space-y-2">
+              <Link
+                to="/coding-lab"
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-emerald-950 text-emerald-300 border border-emerald-500/40 text-xs font-bold shadow-md"
+              >
+                <Terminal className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Open Coding Lab (IDE &amp; DSA)</span>
+              </Link>
               <Link
                 to="/dashboard"
                 onClick={() => setMobileMenuOpen(false)}
@@ -355,6 +436,23 @@ export default function Landing() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 xl:gap-16 items-center">
             {/* Left Column (Headline, Natural Human-Centric Copy & CTAs - Immediate Paint on Mobile) */}
             <div className="lg:col-span-6 xl:col-span-6 space-y-5 sm:space-y-6 text-center lg:text-left flex flex-col items-center lg:items-start">
+
+              {/* Highlight Announcement Pill */}
+              <Link
+                to="/coding-lab"
+                className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/5 border border-white/20 hover:border-emerald-400/60 hover:bg-emerald-950/20 text-zinc-300 hover:text-white text-xs font-medium transition-all group mb-0.5 shadow-sm"
+              >
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                </span>
+                <span className="font-extrabold text-emerald-400 font-mono text-[10px] tracking-wider uppercase">
+                  NEW
+                </span>
+                <span className="text-zinc-500">•</span>
+                <span className="text-xs">Interactive Coding Lab &amp; DSA Studio</span>
+                <ArrowRight className="w-3.5 h-3.5 text-zinc-400 group-hover:translate-x-0.5 group-hover:text-emerald-400 transition-all" />
+              </Link>
 
               {/* Bold Headline (Equal centered on mobile, responsive font) */}
               <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight text-white leading-[1.2] text-center lg:text-left">
@@ -381,6 +479,24 @@ export default function Landing() {
                   <Bot className="w-4 h-4 text-black" />
                   <span>Enter SANKALP AI</span>
                   <ArrowRight className="w-4 h-4 text-black" />
+                </Link>
+
+                <Link
+                  to="/coding-lab"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 sm:px-5 py-3 rounded-xl bg-emerald-950/70 hover:bg-emerald-900/80 text-emerald-300 hover:text-emerald-200 text-xs sm:text-sm font-bold border border-emerald-500/40 transition-all hover:border-emerald-400 shadow-lg shadow-emerald-950/30"
+                >
+                  <Terminal className="w-4 h-4 text-emerald-400" />
+                  <span>Coding Lab &amp; DSA</span>
+                  <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-black bg-emerald-400 text-black">IDE</span>
+                </Link>
+
+                <Link
+                  to="/business-lab"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 sm:px-5 py-3 rounded-xl bg-amber-950/70 hover:bg-amber-900/80 text-amber-300 hover:text-amber-200 text-xs sm:text-sm font-bold border border-amber-500/40 transition-all hover:border-amber-400 shadow-lg shadow-amber-950/30"
+                >
+                  <Briefcase className="w-4 h-4 text-amber-400" />
+                  <span>Business War Room</span>
+                  <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-black bg-amber-400 text-black">MBA</span>
                 </Link>
 
                 <Link
@@ -464,6 +580,15 @@ export default function Landing() {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
 
                   {/* Floating Highlight Chips */}
+                  <Link
+                    to="/coding-lab"
+                    className="absolute top-3.5 left-3.5 bg-black/90 backdrop-blur-md border border-emerald-500/40 hover:border-emerald-400 px-3 py-1.5 rounded-xl shadow-lg flex items-center gap-2 transition-transform hover:scale-105 group/chip"
+                  >
+                    <Terminal className="w-3.5 h-3.5 text-emerald-400" />
+                    <span className="text-xs font-bold text-white">Coding Lab: C, C++, Python, Java</span>
+                    <span className="px-1.5 py-0.2 rounded text-[8px] font-mono font-bold bg-emerald-500/20 text-emerald-300">RUN</span>
+                  </Link>
+
                   <div className="absolute top-3.5 right-3.5 bg-black/85 backdrop-blur-md border border-white/20 px-3.5 py-1.5 rounded-xl shadow-lg flex items-center gap-2">
                     <Target className="w-4 h-4 text-white" />
                     <span className="text-xs sm:text-sm font-bold text-white">10-Mark Model Answer Structure</span>
@@ -620,15 +745,89 @@ export default function Landing() {
                     </span>
                   </div>
                   <div className="rounded-xl overflow-hidden border border-white/10 aspect-[16/10] bg-zinc-900 relative">
-                    <img
-                      src={activeModule.image}
-                      alt={activeModule.title}
-                      width="800"
-                      height="500"
-                      loading="lazy"
-                      decoding="async"
-                      className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-102"
-                    />
+                    {activeModule.id === 'coding-lab' ? (
+                      <div className="w-full h-full bg-[#0a0d12] flex flex-col font-mono text-xs select-none p-0">
+                        {/* Editor Tab Bar */}
+                        <div className="flex items-center justify-between px-3 py-2 bg-[#12161f] border-b border-white/10 text-[11px]">
+                          <div className="flex items-center gap-2">
+                            <span className="w-2.5 h-2.5 rounded-full bg-red-500/80 inline-block" />
+                            <span className="w-2.5 h-2.5 rounded-full bg-yellow-500/80 inline-block" />
+                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80 inline-block" />
+                            <span className="ml-2 px-2.5 py-0.5 rounded bg-zinc-800/90 text-white border border-white/10 flex items-center gap-1.5 font-sans font-medium text-[11px]">
+                              <span className="text-emerald-400 font-bold font-mono">C</span> main.c
+                            </span>
+                            <span className="px-2 py-0.5 rounded text-zinc-400 hover:text-zinc-200 font-sans font-medium text-[11px] hidden sm:inline-block">
+                              solution.py
+                            </span>
+                            <span className="px-2 py-0.5 rounded text-zinc-400 hover:text-zinc-200 font-sans font-medium text-[11px] hidden sm:inline-block">
+                              Main.java
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 text-zinc-400 text-[10px]">
+                            <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-semibold">
+                              GCC 14.2
+                            </span>
+                            <span className="px-2 py-0.5 rounded bg-white/10 text-white font-sans hidden sm:inline-block">
+                              Run Code
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Editor Code Canvas */}
+                        <div className="p-3.5 bg-[#0a0d12] text-zinc-300 text-[11px] sm:text-xs leading-relaxed overflow-hidden font-mono flex-1">
+                          <div className="flex gap-3">
+                            <div className="text-zinc-600 select-none text-right font-mono pr-1 text-[10px] leading-[1.6]">
+                              1<br />2<br />3<br />4<br />5<br />6<br />7<br />8
+                            </div>
+                            <div className="flex-1 font-mono text-[11px] sm:text-xs leading-[1.6]">
+                              <span className="text-pink-400">#include</span> <span className="text-amber-300">&lt;stdio.h&gt;</span><br />
+                              <span className="text-purple-400">int</span> <span className="text-blue-400">main</span>() &#123;<br />
+                              &nbsp;&nbsp;<span className="text-purple-400">int</span> a, b;<br />
+                              &nbsp;&nbsp;<span className="text-yellow-300">printf</span>(<span className="text-emerald-300">"Enter Two Numbers: "</span>);<br />
+                              &nbsp;&nbsp;<span className="text-yellow-300">scanf</span>(<span className="text-emerald-300">"%d %d"</span>, &amp;a, &amp;b);<br />
+                              &nbsp;&nbsp;<span className="text-yellow-300">printf</span>(<span className="text-emerald-300">"Sum Of Values = %d\n"</span>, a + b);<br />
+                              &nbsp;&nbsp;<span className="text-purple-400">return</span> <span className="text-cyan-400">0</span>;<br />
+                              &#125;
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Interactive Terminal */}
+                        <div className="border-t border-white/10 bg-black/95 p-3 text-[11px] font-mono">
+                          <div className="flex items-center justify-between text-[10px] text-zinc-400 mb-1.5 pb-1 border-b border-white/5">
+                            <span className="flex items-center gap-1.5 text-emerald-400 font-bold">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                              Interactive Terminal (TTY)
+                            </span>
+                            <span className="text-zinc-500 font-sans">0.012s • 1MB RAM</span>
+                          </div>
+                          <div className="text-zinc-300 space-y-1 leading-snug">
+                            <p className="text-zinc-400 font-semibold">
+                              <span className="text-emerald-400 font-bold">sankalp@ide:~$</span> ./main
+                            </p>
+                            <p className="text-zinc-200">
+                              Enter Two Numbers: <span className="text-emerald-400 font-bold bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-500/30">10 20</span>
+                            </p>
+                            <p className="text-emerald-300 font-semibold">
+                              Sum Of Values = 30
+                            </p>
+                            <p className="text-[10px] text-zinc-500 font-mono">
+                              [Process finished with exit code 0]
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <img
+                        src={activeModule.image}
+                        alt={activeModule.title}
+                        width="800"
+                        height="500"
+                        loading="lazy"
+                        decoding="async"
+                        className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-102"
+                      />
+                    )}
                   </div>
                 </div>
               </div>
@@ -754,7 +953,34 @@ export default function Landing() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            <div className="p-5 sm:p-7 rounded-2xl bg-zinc-950 border border-emerald-500/30 hover:border-emerald-500/60 transition-all flex flex-col justify-between text-center sm:text-left items-center sm:items-start group relative overflow-hidden">
+              <div className="absolute top-0 right-0 px-3 py-1 bg-emerald-500/10 border-b border-l border-emerald-500/20 rounded-bl-xl text-[10px] font-mono text-emerald-400 font-bold">
+                NEW
+              </div>
+              <div>
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-400 mb-4 mx-auto sm:mx-0 group-hover:scale-105 transition-transform">
+                  <Terminal className="w-5 h-5" />
+                </div>
+                <h3 className="text-sm sm:text-base font-bold text-white mb-1.5 flex items-center gap-2">
+                  <span>Coding Lab &amp; DSA Studio</span>
+                </h3>
+                <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed font-normal">
+                  Multi-language browser compiler (C, C++, Python 3, Java 17) with interactive step-by-step terminal execution, 18+ graded DSA problems, and AI bug diagnosis.
+                </p>
+              </div>
+              <div className="mt-4 pt-3 border-t border-white/5 text-xs font-mono text-emerald-400 flex items-center justify-between w-full">
+                <div className="flex items-center gap-1.5">
+                  <Check className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Interactive TTY Terminal</span>
+                </div>
+                <Link to="/coding-lab" className="hover:underline flex items-center gap-1 text-white font-semibold">
+                  <span>Open Lab</span>
+                  <ArrowRight className="w-3 h-3" />
+                </Link>
+              </div>
+            </div>
+
             <div className="p-5 sm:p-7 rounded-2xl bg-zinc-950 border border-white/10 hover:border-white/30 transition-all flex flex-col justify-between text-center sm:text-left items-center sm:items-start">
               <div>
                 <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/15 flex items-center justify-center text-white mb-4 mx-auto sm:mx-0">
@@ -770,6 +996,24 @@ export default function Landing() {
               <div className="mt-4 pt-3 border-t border-white/5 text-xs font-mono text-zinc-400 flex items-center justify-center sm:justify-start gap-1.5 w-full">
                 <Check className="w-3.5 h-3.5 text-white" />
                 <span>Automatic Section A/B/C Balancing</span>
+              </div>
+            </div>
+
+            <div className="p-5 sm:p-7 rounded-2xl bg-zinc-950 border border-white/10 hover:border-white/30 transition-all flex flex-col justify-between text-center sm:text-left items-center sm:items-start">
+              <div>
+                <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/15 flex items-center justify-center text-white mb-4 mx-auto sm:mx-0">
+                  <Mic className="w-5 h-5" />
+                </div>
+                <h3 className="text-sm sm:text-base font-bold text-white mb-1.5">
+                  Speech-Powered AI Viva Voce
+                </h3>
+                <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed font-normal">
+                  Simulate high-stakes university oral vivas with spoken questions, speech-to-text student responses, and instant rubric grading across 4 examiner personas.
+                </p>
+              </div>
+              <div className="mt-4 pt-3 border-t border-white/5 text-xs font-mono text-zinc-400 flex items-center justify-center sm:justify-start gap-1.5 w-full">
+                <Check className="w-3.5 h-3.5 text-white" />
+                <span>Hands-Free Speech Dialogue</span>
               </div>
             </div>
 
@@ -1025,6 +1269,28 @@ export default function Landing() {
               </h4>
               <ul className="space-y-2.5 text-xs text-zinc-300 font-medium">
                 <li>
+                  <Link to="/business-lab" className="hover:text-white transition-colors flex items-center justify-between text-amber-400 font-bold">
+                    <span className="flex items-center gap-1.5">
+                      <Briefcase className="w-3.5 h-3.5 text-amber-400" />
+                      <span>Business Case War Room</span>
+                    </span>
+                    <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                      MBA
+                    </span>
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/coding-lab" className="hover:text-white transition-colors flex items-center justify-between text-emerald-400 font-bold">
+                    <span className="flex items-center gap-1.5">
+                      <Terminal className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>Coding Lab &amp; DSA Studio</span>
+                    </span>
+                    <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                      NEW
+                    </span>
+                  </Link>
+                </li>
+                <li>
                   <Link to="/mentor" className="hover:text-white transition-colors flex items-center gap-1.5">
                     <Bot className="w-3.5 h-3.5 text-zinc-400" />
                     <span>AI Exam Mentor</span>
@@ -1037,9 +1303,21 @@ export default function Landing() {
                   </Link>
                 </li>
                 <li>
+                  <Link to="/viva" className="hover:text-white transition-colors flex items-center gap-1.5">
+                    <Mic className="w-3.5 h-3.5 text-zinc-400" />
+                    <span>AI Viva Voce Room</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/tests" className="hover:text-white transition-colors flex items-center gap-1.5">
+                    <ClipboardCheck className="w-3.5 h-3.5 text-zinc-400" />
+                    <span>Timed Mock Tests &amp; PDF</span>
+                  </Link>
+                </li>
+                <li>
                   <Link to="/library" className="hover:text-white transition-colors flex items-center gap-1.5">
                     <BookOpen className="w-3.5 h-3.5 text-zinc-400" />
-                    <span>Academic Library & Textbooks</span>
+                    <span>Academic Library &amp; Textbooks</span>
                   </Link>
                 </li>
                 <li>
@@ -1051,7 +1329,7 @@ export default function Landing() {
                 <li>
                   <Link to="/guide" className="hover:text-white transition-colors flex items-center gap-1.5">
                     <FileText className="w-3.5 h-3.5 text-zinc-400" />
-                    <span>Student User Manual & Guide</span>
+                    <span>Student User Manual &amp; Guide</span>
                   </Link>
                 </li>
               </ul>
@@ -1120,6 +1398,10 @@ export default function Landing() {
             </p>
 
             <div className="flex flex-wrap items-center gap-5 font-medium text-zinc-300">
+              <Link to="/coding-lab" className="text-emerald-400 hover:text-emerald-300 transition-colors font-semibold flex items-center gap-1">
+                <Terminal className="w-3.5 h-3.5" />
+                <span>Coding Lab</span>
+              </Link>
               <Link to="/dashboard" className="hover:text-white transition-colors">
                 Launch Platform
               </Link>

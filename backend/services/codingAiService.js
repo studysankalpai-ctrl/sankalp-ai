@@ -8,9 +8,17 @@
  * 3. AI Complexity Analyzer: Computes Big-O Time & Space complexity with bottle-neck analysis.
  * 4. AI Progressive Hints: Multi-stage guided hints without revealing the full solution.
  * 5. AI Solution Explanation: Optimal pattern analysis, data structures, and edge cases.
+ * 6. AI Custom Doubt: Answers student questions directly regarding their code.
  */
 
 const { chatCompletion } = require('./groqService');
+
+function extractContent(res) {
+  if (!res) return '';
+  if (typeof res === 'string') return res;
+  if (typeof res === 'object' && res.content) return res.content;
+  return String(res);
+}
 
 /**
  * 1. AI Code Explainer
@@ -28,7 +36,7 @@ Formatting Guidelines:
 
   const userPrompt = `${problemTitle ? `Problem: ${problemTitle}\n\n` : ''}Language: ${language}\n\nCode to Explain:\n\`\`\`${language}\n${code}\n\`\`\``;
 
-  return await chatCompletion({
+  const res = await chatCompletion({
     apiKey,
     model,
     messages: [
@@ -37,6 +45,7 @@ Formatting Guidelines:
     ],
     temperature: 0.3,
   });
+  return extractContent(res);
 }
 
 /**
@@ -58,7 +67,7 @@ Keep your explanation clear, encouraging, and focused directly on the bug.`;
   if (stdin) userPrompt += `Test Input:\n\`\`\`\n${stdin}\n\`\`\`\n\n`;
   if (stdout) userPrompt += `Actual Output Generated:\n\`\`\`\n${stdout}\n\`\`\`\n\n`;
 
-  return await chatCompletion({
+  const res = await chatCompletion({
     apiKey,
     model,
     messages: [
@@ -67,6 +76,7 @@ Keep your explanation clear, encouraging, and focused directly on the bug.`;
     ],
     temperature: 0.2,
   });
+  return extractContent(res);
 }
 
 /**
@@ -84,7 +94,7 @@ Output Format:
 
   const userPrompt = `${problemTitle ? `Problem: ${problemTitle}\n\n` : ''}Language: ${language}\n\nCode to Analyze:\n\`\`\`${language}\n${code}\n\`\`\``;
 
-  return await chatCompletion({
+  const res = await chatCompletion({
     apiKey,
     model,
     messages: [
@@ -93,6 +103,7 @@ Output Format:
     ],
     temperature: 0.2,
   });
+  return extractContent(res);
 }
 
 /**
@@ -111,9 +122,9 @@ Hint Levels:
 Current Request Level: Hint ${hintLevel} of 3.
 Give ONLY the requested level hint clearly and concisely in 2-4 sentences.`;
 
-  const userPrompt = `Problem: ${problem.title}\nDescription: ${problem.description}\nConstraints: ${problem.constraints || 'Standard'}\n\nStudent's Current ${language} Code:\n\`\`\`${language}\n${code || '// Empty code'}\n\`\`\`\n\nPlease give Hint #${hintLevel}.`;
+  const userPrompt = `Problem: ${problem?.title || 'Coding Exercise'}\nDescription: ${problem?.description || 'Implement the algorithm efficiently'}\nConstraints: ${problem?.constraints || 'Standard'}\n\nStudent's Current ${language} Code:\n\`\`\`${language}\n${code || '// Empty code'}\n\`\`\`\n\nPlease give Hint #${hintLevel}.`;
 
-  return await chatCompletion({
+  const res = await chatCompletion({
     apiKey,
     model,
     messages: [
@@ -122,12 +133,13 @@ Give ONLY the requested level hint clearly and concisely in 2-4 sentences.`;
     ],
     temperature: 0.4,
   });
+  return extractContent(res);
 }
 
 /**
  * 5. AI Solution Explanation
  */
-async function explainSolution({ apiKey, model, problem, language }) {
+async function explainSolution({ apiKey, model, problem, language, code }) {
   const systemPrompt = `You are "Sankalp AI Algorithm Guide".
 Your goal is to guide the student on HOW to solve this problem independently.
 IMPORTANT INSTRUCTION: DO NOT provide full copy-paste solution code. The student must write the implementation themselves.
@@ -142,18 +154,19 @@ Structure your response:
 4. **Complexity Target**: Expected Time Complexity and Space Complexity.
 5. **Encouraging Call to Action**: Encourage them to write the code in the editor and click Submit!`;
 
-  const userPrompt = `Problem: ${problem.title}
-Difficulty: ${problem.difficulty}
-Topic: ${problem.topic}
+  const userPrompt = `Problem: ${problem?.title || 'Optimal Strategy'}
+Difficulty: ${problem?.difficulty || 'General'}
+Topic: ${problem?.topic || 'DSA Algorithms'}
 Description:
-${problem.description}
-Input Format: ${problem.input_format}
-Output Format: ${problem.output_format}
-Constraints: ${problem.constraints || 'Standard'}
+${problem?.description || 'Algorithm analysis'}
+Input Format: ${problem?.input_format || 'Standard'}
+Output Format: ${problem?.output_format || 'Standard'}
+Constraints: ${problem?.constraints || 'Standard'}
+${code ? `\nStudent's Current Code:\n\`\`\`${language}\n${code}\n\`\`\`\n` : ''}
 
 Please provide the complete optimal solution explanation in ${language.toUpperCase()}.`;
 
-  return await chatCompletion({
+  const res = await chatCompletion({
     apiKey,
     model,
     messages: [
@@ -162,6 +175,33 @@ Please provide the complete optimal solution explanation in ${language.toUpperCa
     ],
     temperature: 0.3,
   });
+  return extractContent(res);
+}
+
+/**
+ * 6. AI Custom Doubt / Question
+ */
+async function askQuestion({ apiKey, model, code, language, problemTitle, question, errorOutput, stdout }) {
+  const systemPrompt = `You are "Sankalp AI Code Mentor", a patient, friendly, and expert programming tutor.
+Answer the student's specific question about their ${language.toUpperCase()} code accurately and concisely.
+Use clean Markdown with bold points, explanations, and code snippets when helpful.
+Keep your response directly answering their doubt without unnecessary fluff.`;
+
+  let userPrompt = `${problemTitle ? `Problem: ${problemTitle}\n\n` : ''}Language: ${language}\n\nCode in Editor:\n\`\`\`${language}\n${code || '// Empty code'}\n\`\`\`\n\n`;
+  if (errorOutput) userPrompt += `Compiler / Error Output:\n\`\`\`\n${errorOutput}\n\`\`\`\n\n`;
+  if (stdout) userPrompt += `Console Output:\n\`\`\`\n${stdout}\n\`\`\`\n\n`;
+  userPrompt += `Student Question: ${question || 'Please review and help me with this code.'}`;
+
+  const res = await chatCompletion({
+    apiKey,
+    model,
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userPrompt },
+    ],
+    temperature: 0.3,
+  });
+  return extractContent(res);
 }
 
 module.exports = {
@@ -170,4 +210,5 @@ module.exports = {
   analyzeComplexity,
   getHint,
   explainSolution,
+  askQuestion,
 };

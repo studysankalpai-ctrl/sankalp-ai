@@ -172,4 +172,12 @@ export const codingApi = {
   requestAiAssist: (payload) => api.post('/coding/ai-assist', payload),
 };
 
+// Business Case Study & Strategy War Room Endpoints
+export const caseStudyApi = {
+  getPresets: () => api.get('/case-study/presets'),
+  generateCase: (payload) => api.post('/case-study/generate', payload),
+  simulateTurn: (payload) => api.post('/case-study/simulate', payload),
+  evaluateSimulation: (payload) => api.post('/case-study/evaluate', payload),
+};
+
 export default api;

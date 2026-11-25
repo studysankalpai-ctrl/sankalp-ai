@@ -8,8 +8,9 @@ import remarkGfm from 'remark-gfm';
  * and ensures proper GFM Markdown formatting (tables, lists, headings).
  */
 function cleanMarkdown(text) {
-  if (!text || typeof text !== 'string') return '';
-  let clean = text;
+  if (!text) return '';
+  let clean = typeof text === 'string' ? text : (text?.content || text?.message || String(text));
+  if (!clean || typeof clean !== 'string') return '';
 
   // 1. Remove LaTeX \boxed{...} wrappers
   clean = clean.replace(/\\boxed\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}/g, '$1');

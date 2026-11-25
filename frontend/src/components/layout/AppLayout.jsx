@@ -16,7 +16,8 @@ export default function AppLayout() {
   const isMentorPage = location.pathname.startsWith('/mentor');
   const isVivaPage = location.pathname.startsWith('/viva');
   const isCodingLabPage = location.pathname.startsWith('/coding-lab');
-  const isFullBleedPage = isPdfPage || isMentorPage || isVivaPage || isCodingLabPage;
+  const isBusinessLabPage = location.pathname.startsWith('/business-lab');
+  const isFullBleedPage = isPdfPage || isMentorPage || isVivaPage || isCodingLabPage || isBusinessLabPage;
 
   useEffect(() => {
     initTheme();
