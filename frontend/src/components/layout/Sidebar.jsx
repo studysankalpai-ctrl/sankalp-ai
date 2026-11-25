@@ -25,6 +25,7 @@ import {
   Download,
   Smartphone,
   Mic,
+  Terminal,
 } from 'lucide-react';
 import useAppStore from '../../store/appStore';
 import { usePwaStore } from '../../store/pwaStore';
@@ -45,6 +46,7 @@ const ICONS = {
   Bookmark,
   Settings,
   Mic,
+  Terminal,
 };
 
 export default function Sidebar() {
@@ -98,6 +100,7 @@ export default function Sidebar() {
       title: 'Practice & Mock Tests',
       icon: 'PenTool',
       items: [
+        { label: 'Coding Practice Lab', path: '/coding-lab', icon: 'Terminal', badge: 'LAB' },
         { label: 'Practice Questions', path: '/practice', icon: 'PenTool' },
         { label: 'Timed Mock Tests', path: '/tests', icon: 'ClipboardCheck' },
         { label: 'Study Planner', path: '/planner', icon: 'Calendar' },

@@ -23,6 +23,7 @@ const Revision = lazy(() => import('./pages/Revision'));
 const Bookmarks = lazy(() => import('./pages/Bookmarks'));
 const Settings = lazy(() => import('./pages/Settings'));
 const Guide = lazy(() => import('./pages/Guide'));
+const CodingLab = lazy(() => import('./pages/CodingLab'));
 
 // Lazy load Admin Portal (zero overhead for regular students & mobile visitors)
 const AdminLayout = lazy(() => import('./components/layout/AdminLayout'));
@@ -86,6 +87,8 @@ export default function App() {
             <Route path="/topics" element={<Topics />} />
             <Route path="/predictions" element={<Predictions />} />
             <Route path="/practice" element={<Practice />} />
+            <Route path="/coding-lab" element={<CodingLab />} />
+            <Route path="/coding-lab/:slug" element={<CodingLab />} />
             <Route path="/tests" element={<Tests />} />
             <Route path="/planner" element={<Planner />} />
             <Route path="/revision" element={<Revision />} />

@@ -158,4 +158,18 @@ export const aiApi = {
   respondViva: (payload) => api.post('/ai/viva/respond', payload),
 };
 
+// Coding Practice Lab Endpoints
+export const codingApi = {
+  executeCode: (payload) => api.post('/coding/execute', payload),
+  submitSolution: (payload) => api.post('/coding/submit', payload),
+  getProblems: (params) => api.get('/coding/problems', { params }),
+  getProblemBySlug: (slug, params) => api.get(`/coding/problems/${slug}`, { params }),
+  getLanguages: () => api.get('/coding/languages'),
+  saveCode: (payload) => api.post('/coding/save-code', payload),
+  getSavedCode: (params) => api.get('/coding/saved-code', { params }),
+  getProgress: (studentId) => api.get(`/coding/progress/${studentId}`),
+  getSubmissions: (params) => api.get('/coding/submissions', { params }),
+  requestAiAssist: (payload) => api.post('/coding/ai-assist', payload),
+};
+
 export default api;

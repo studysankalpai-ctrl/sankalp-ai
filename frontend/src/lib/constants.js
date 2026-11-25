@@ -11,6 +11,7 @@ export const API_BASE =
 
 export const STUDENT_NAV = [
   { label: 'AI Viva Room', path: '/viva', icon: 'Mic', badge: 'NEW', highlight: true },
+  { label: 'Coding Practice Lab', path: '/coding-lab', icon: 'Terminal', badge: 'LAB' },
   { label: 'Home', path: '/', icon: 'Home' },
   { label: 'Papers & Syllabus', path: '/library', icon: 'FolderTree' },
   { label: 'AI Exam Mentor', path: '/mentor', icon: 'Bot' },

@@ -89,6 +89,7 @@ app.use('/api/admin/analysis', require('./routes/analysis'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/public', require('./routes/public'));
 app.use('/api/ai', require('./routes/ai'));
+app.use('/api/coding', require('./routes/coding'));
 
 // Global error handler
 app.use(errorHandler);

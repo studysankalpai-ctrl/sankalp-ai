@@ -29,4 +29,13 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-module.exports = { generalLimiter, aiLimiter, authLimiter };
+const codingExecutionLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000,
+  max: isDev ? 10000 : 45,
+  skip: () => isDev,
+  message: { success: false, message: 'Code execution limit reached. Please wait a few seconds before executing or submitting again.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+module.exports = { generalLimiter, aiLimiter, authLimiter, codingExecutionLimiter };
