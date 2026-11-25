@@ -80,7 +80,9 @@ export default function Mentor() {
     setSelectedSubject,
   } = useAppStore();
 
-  const [connectModalOpen, setConnectModalOpen] = useState(!isAiConnected);
+  const [connectModalOpen, setConnectModalOpen] = useState(
+    !isAiConnected && searchParams.get('preview') !== 'true'
+  );
   const [subjects, setSubjects] = useState([]);
   const [books, setBooks] = useState([]);
   const [learnByBook, setLearnByBook] = useState(initialLearnByBook || false);
@@ -122,10 +124,10 @@ export default function Mentor() {
 
   // Automatically show connect popup when visiting SANKALP AI while offline
   useEffect(() => {
-    if (!isAiConnected) {
+    if (!isAiConnected && searchParams.get('preview') !== 'true') {
       setConnectModalOpen(true);
     }
-  }, [isAiConnected]);
+  }, [isAiConnected, searchParams]);
 
   // Helper to build initial welcome message tailored to subject
   const getSubjectWelcome = (subj) => ({

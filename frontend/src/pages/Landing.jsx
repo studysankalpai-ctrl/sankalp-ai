@@ -44,6 +44,7 @@ import {
 } from 'lucide-react';
 
 export default function Landing() {
+  const [heroPreviewTab, setHeroPreviewTab] = useState('mentor');
   const [activeTourTab, setActiveTourTab] = useState('mentor');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -72,56 +73,71 @@ export default function Landing() {
     {
       id: 'mentor',
       title: 'AI Exam Mentor',
-      subtitle: 'Structured Model Answers (2, 5, 10 & 15 Marks)',
+      subtitle: '2, 5, 10 & 15 Mark Schemas',
       icon: Bot,
       image: '/screenshots/mentor.png',
-      badge: 'Core Feature',
-      tagline: 'Get exam-ready answers formatted exactly as university evaluators expect.',
+      badge: 'Core Engine',
+      tagline: 'Structured model answers formatted for university scoring rubrics.',
       description:
-        'Generic chatbots write rambling, unstructured paragraphs. SANKALP AI Mentor formats answers with clear definitions, comparative matrices, architectural bullet points, and scoring summaries calibrated for 2, 5, 10, or 15 marks.',
+        'Generates mark-winning model answers with clean definitions, comparison matrices, and textbook-grounded diagrams.',
       highlights: [
-        'Exact mark schemas: 2-mark definitions, 5-mark short notes, 10-mark full answers',
-        'Auto-healed Markdown tables and comparison matrices with zero formatting bugs',
-        '1-Click Unit Masterclass button for complete syllabus unit overviews',
-        'Prescribed book grounding for textbook-authentic academic explanations',
+        'Calibrated for 2, 5, 10, and 15 marks',
+        'Auto-formatted comparison tables & diagrams',
+        'Direct grounding in prescribed textbooks',
       ],
       link: '/mentor',
-      linkText: 'Launch AI Mentor',
+      linkText: 'Open AI Mentor',
     },
     {
       id: 'coding-lab',
-      title: 'Interactive Coding Lab & DSA',
-      subtitle: 'Multi-Language IDE & 18+ Graded DSA Questions',
+      title: 'Coding Lab & DSA',
+      subtitle: 'Browser IDE & 18+ Graded Problems',
       icon: Terminal,
       image: '/screenshots/coding-lab.png',
-      badge: 'Live Online IDE',
-      tagline: 'Write, debug, and run code with real-time interactive terminal prompts.',
+      badge: 'Online IDE',
+      tagline: 'Write, debug, and run code with live terminal interaction.',
       description:
-        'A full-featured university programming environment and DSA problem-solving studio. Features a free-form multi-language playground with instant compiler diagnostics, traditional step-by-step interactive terminal execution (supporting scanf, cin, input(), Scanner), 18+ graded university DSA questions with sample and hidden test cases, execution runtime metrics, and an AI Debugger mentor.',
+        'Multi-language browser compiler with step-by-step TTY input execution, 18+ university DSA challenges, and AI bug diagnosis.',
       highlights: [
-        'Multi-Language Support: GCC 14 C/C++, Python 3.12, Java 17, JavaScript',
-        'Interactive Terminal Console: authentic step-by-step TTY input prompts',
-        '18+ Graded DSA Problems: Arrays, Matrix, Strings, Linked Lists, Stacks, Trees',
-        'AI Debug Assistant: explain runtime bugs, analyze complexity, generate dry runs',
+        'GCC 14 C/C++, Python 3, Java 17 & JS',
+        'Interactive terminal supporting scanf, cin, input',
+        '18+ graded DSA problems with sample test cases',
       ],
       link: '/coding-lab',
-      linkText: 'Launch Coding Lab',
+      linkText: 'Open Coding Lab',
+    },
+    {
+      id: 'business-lab',
+      title: 'MBA Business Lab',
+      subtitle: 'Boardroom Decision Simulator',
+      icon: Briefcase,
+      image: '/screenshots/business-lab.png',
+      badge: 'MBA Sim',
+      tagline: 'Step into the executive seat to resolve live corporate crisis dilemmas.',
+      description:
+        'Simulate multi-turn executive decisions with real-time financial vitals, burn rate tracking, and stakeholder impact analysis.',
+      highlights: [
+        'Live cash, runway, morale & market vitals',
+        'Dynamic multi-turn corporate crisis dilemmas',
+        'Rubric scoring on strategic and ethical thinking',
+      ],
+      link: '/business-lab',
+      linkText: 'Open Business Lab',
     },
     {
       id: 'final-paper',
-      title: '5-Year Master Paper Synthesizer',
-      subtitle: 'Cross-Paper Examination Synthesis',
+      title: '5-Year Master Paper',
+      subtitle: 'Exam Trend Synthesizer',
       icon: FileCheck2,
       image: '/screenshots/final-paper.png',
-      badge: 'Exclusive',
-      tagline: 'Synthesizes 5 years of past exams into one definitive university paper.',
+      badge: 'Predictions',
+      tagline: 'Synthesize 5 years of past exams into one balanced master paper.',
       description:
-        'Never guess what might appear in your semester exams. SANKALP AI analyzes past 5-year university examination papers, detects repeat trends, and generates one official master paper balanced into Section A (Short), Section B (Analytical), and Section C (Essay with OR choices).',
+        'Analyzes historical recurrence to generate a complete mock examination balanced across Section A, Section B, and Section C.',
       highlights: [
-        'Balanced 75-mark official structure adhering to university exam rules',
-        'Includes repeated questions that appeared in 3+ previous academic years',
-        'Clean printable format: click Print or download as PDF for mock exams',
-        'Resilient JSON synthesis engine with automatic prompt token compression',
+        'Balanced Section A, B & C university exam format',
+        'Flags questions repeating in 3+ previous years',
+        '1-click print and PDF download for mock practice',
       ],
       link: '/predictions',
       linkText: 'Generate Master Paper',
@@ -129,97 +145,20 @@ export default function Landing() {
     {
       id: 'viva',
       title: 'AI Viva Voce Room',
-      subtitle: 'Speech-Powered Oral Exam Simulation',
+      subtitle: 'Speech-Driven Oral Drills',
       icon: Mic,
-      image: '/screenshots/mentor.png',
-      badge: 'Live Audio AI',
-      tagline: 'Simulate high-stakes university oral vivas with an AI external examiner.',
+      image: '/screenshots/viva.png',
+      badge: 'Audio AI',
+      tagline: 'Simulate university oral vivas with spoken questions and answers.',
       description:
-        'Overcome oral exam anxiety with speech-driven interactive practice. SANKALP AI speaks questions aloud, transcribes your spoken answers in real time using Web Speech, and grades your response against university syllabi with instant scorecards.',
+        'Hands-free speech dialogue with real-time audio transcription and instant rubric grading across 4 examiner personas.',
       highlights: [
-        'Hands-free speech dialogue: AI speaks questions and listens to student answers',
-        '4 Examiner Personas: Strict Academic, Friendly Mentor, Rapid-Fire, Standard',
-        'Instant oral viva scorecard with conceptual strengths and missing points',
-        'Zero typing needed  builds confidence for real university practical exams',
+        'Hands-free voice questions and student speech response',
+        '4 Examiner personas: Strict, Friendly, Rapid & Standard',
+        'Instant oral scorecards with missing points highlighted',
       ],
       link: '/viva',
-      linkText: 'Enter AI Viva Room',
-    },
-    {
-      id: 'tests',
-      title: 'Timed Mock Tests & PDF Scorecard',
-      subtitle: '5-Min, 10-Min Drills & Official PDF Scorecards',
-      icon: ClipboardCheck,
-      image: '/screenshots/final-paper.png',
-      badge: 'Rapid Exam Drills',
-      tagline: 'Test your retention under time pressure with automatic rubric grading and PDF export.',
-      description:
-        'Practice with 5-minute blitz drills, 10-minute quizzes, or full 3-hour university mocks. Features real-time urgency timer warnings, an interactive question matrix, automated marking with model answers, and instant 1-click A4 PDF scorecard download complete with your typed answers.',
-      highlights: [
-        'Rapid 5 Min (Blitz) & 10 Min (Express) quick revision presets',
-        'Live timer HUD with smart warning alerts and review flagging',
-        'Real-time word and character counters for descriptive 10-mark answers',
-        'Official Scorecard PDF export with marks, grade badge, and typed answers',
-      ],
-      link: '/tests',
-      linkText: 'Take a Mock Test',
-    },
-    {
-      id: 'library',
-      title: 'Library & Prescribed Books',
-      subtitle: 'Integrated PDF Reader with Learn by Book AI',
-      icon: BookOpen,
-      image: '/screenshots/library.png',
-      badge: 'Integrated Reader',
-      tagline: 'Study prescribed textbooks side-by-side with an intelligent AI tutor.',
-      description:
-        'Access official university syllabus blueprints, past question papers, and prescribed textbooks (like Pradeep K. Sinha) directly in the integrated reader. Click any question or topic in the book and the AI assistant solves it instantly.',
-      highlights: [
-        'Prescribed Textbook Mode: answers anchored directly in textbook content',
-        'Fullscreen Study Preview: large distraction-free reader with font size controls (S, M, L, XL)',
-        'Expandable split-screen view: side-by-side textbook reader and AI answer workspace',
-        '10 1-click university actions: Explain Paper, Solve Question, Find Similar, etc.',
-      ],
-      link: '/library',
-      linkText: 'Open Academic Library',
-    },
-    {
-      id: 'topics',
-      title: 'Important Topics Analyzer',
-      subtitle: 'High-Probability Repeated Topics',
-      icon: Star,
-      image: '/screenshots/topics.png',
-      badge: 'Exam Intelligence',
-      tagline: 'Prioritize questions that appear most frequently in previous exams.',
-      description:
-        'SANKALP AI scans historical exam papers and tags topics with their exact frequency (e.g., "Appeared 4x in past exams"). Students know precisely which units and topics carry the highest probability before exam day.',
-      highlights: [
-        'Frequency indicators: see exact historical appearances across past exams',
-        'Clear explanations of why each topic is critical for scoring high marks',
-        '1-Click launch directly into SANKALP AI model answer generation',
-        'Filtered by course, semester, and individual academic subjects',
-      ],
-      link: '/topics',
-      linkText: 'View Important Topics',
-    },
-    {
-      id: 'dashboard',
-      title: 'Student Academic Dashboard',
-      subtitle: 'Course & Semester Synchronization',
-      icon: BarChart3,
-      image: '/screenshots/dashboard.png',
-      badge: 'Overview',
-      tagline: 'Your centralized command center for all university semester preparation.',
-      description:
-        'Synchronized to your selected university course (BCA, MCA, B.Sc, B.Tech) and semester. Instantly view your total subjects, available past papers, recent question history, and step-by-step exam preparation guide.',
-      highlights: [
-        'Instant course & semester switching with automatic curriculum reload',
-        'Recent question history tracking for easy continuation of revision',
-        '4-step guided workflow for systematic semester exam preparation',
-        'Zero clutter, fast loading, and complete dark/light mode compatibility',
-      ],
-      link: '/dashboard',
-      linkText: 'Open Student Dashboard',
+      linkText: 'Enter Viva Room',
     },
   ];
 
@@ -242,12 +181,12 @@ export default function Landing() {
         <div className="hidden sm:block absolute bottom-10 left-1/3 w-[800px] h-[400px] bg-gradient-to-t from-white/5 to-transparent blur-3xl pointer-events-none" />
       </div>
 
-      {/* Top Navbar (Monochrome Black & White, Responsive Mobile Height & Text, iPhone Notch Protection) */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-black/95 sm:bg-black/85 sm:backdrop-blur-xl border-b border-white/10 transition-all pt-[env(safe-area-inset-top,0px)]">
-        <div className="w-full max-w-[1560px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 h-14 sm:h-16 flex items-center justify-between">
+      {/* Top Navbar (Monochrome Black & White, Lowered position for iPhone notch/dynamic island, Mobile responsive) */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-black/95 sm:bg-black/85 sm:backdrop-blur-xl border-b border-white/10 transition-all pt-[calc(env(safe-area-inset-top,0px)+10px)] sm:pt-0">
+        <div className="w-full max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-2">
           {/* Logo & Brand Identity */}
-          <Link to="/" className="flex items-center gap-2.5 group shrink-0">
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-white/5 border border-white/20 p-1 flex items-center justify-center transition-all duration-200 group-hover:border-white/50 group-hover:bg-white/10">
+          <Link to="/" className="flex items-center gap-2 sm:gap-2.5 group shrink-0">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-white/10 border border-white/20 p-1 flex items-center justify-center transition-all duration-200 group-hover:border-white/50 group-hover:bg-white/15 shadow-sm shrink-0">
               <img
                 src="/Logo.png"
                 alt="SANKALP AI"
@@ -259,15 +198,10 @@ export default function Landing() {
                 className="w-full h-full object-contain filter drop-shadow"
               />
             </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="font-extrabold text-sm sm:text-base tracking-tight text-white group-hover:text-zinc-200 transition-colors">
-                  SANKALP AI
-                </span>
-                <span className="text-[9px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/10 border border-white/15 text-zinc-300 font-semibold">
-                  2.0 Core
-                </span>
-              </div>
+            <div className="shrink-0">
+              <span className="font-extrabold text-sm sm:text-base tracking-tight text-white group-hover:text-zinc-200 transition-colors whitespace-nowrap block">
+                SANKALP AI
+              </span>
               <p className="text-[10px] text-zinc-400 font-medium hidden sm:block leading-tight">
                 University Exam Intelligence Engine
               </p>
@@ -313,27 +247,20 @@ export default function Landing() {
             </a>
           </nav>
 
-          {/* Right Action: Enter AI Platform + Mobile Hamburger */}
-          <div className="flex items-center gap-2">
-            <Link
-              to="/coding-lab"
-              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-950/80 hover:bg-emerald-900/80 text-emerald-300 border border-emerald-500/30 text-xs font-bold transition-all"
-            >
-              <Terminal className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Coding Lab</span>
-            </Link>
+          {/* Right Action: Enter SANKALP CTA + Mobile Hamburger */}
+          <div className="flex items-center gap-2.5 shrink-0">
             <Link
               to="/dashboard"
-              className="group inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full bg-white hover:bg-zinc-200 text-black text-xs font-extrabold tracking-tight shadow-md shadow-white/5 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+              className="hidden sm:inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-white hover:bg-zinc-200 text-black text-xs font-extrabold tracking-tight shadow-sm transition-all shrink-0"
             >
-              <span>Enter SANKALP AI</span>
-              <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+              <span>Launch Platform</span>
+              <ArrowRight className="w-3.5 h-3.5" />
             </Link>
 
             {/* Mobile Menu Button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 border border-white/10 transition-colors"
+              className="lg:hidden p-2 rounded-xl text-zinc-300 hover:text-white hover:bg-white/10 border border-white/10 transition-colors shrink-0 flex items-center justify-center cursor-pointer"
               aria-label="Toggle Navigation"
             >
               {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
@@ -430,236 +357,442 @@ export default function Landing() {
         )}
       </header>
 
-      {/* 2-Column Hero Section: Left (Copy & CTAs) + Right (Live Software Frame) */}
-      <section className="relative pt-[calc(4.75rem+env(safe-area-inset-top,0px))] pb-12 sm:pt-28 sm:pb-20 z-10">
-        <div className="w-full max-w-[1560px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 xl:gap-16 items-center">
-            {/* Left Column (Headline, Natural Human-Centric Copy & CTAs - Immediate Paint on Mobile) */}
-            <div className="lg:col-span-6 xl:col-span-6 space-y-5 sm:space-y-6 text-center lg:text-left flex flex-col items-center lg:items-start">
+      {/* 2-Column Hero Section: Left (Copy & CTAs) + Right (Interactive Live Studio Showcase) */}
+      <section className="relative pt-[calc(4.25rem+env(safe-area-inset-top,0px))] pb-8 sm:pt-28 sm:pb-16 z-10 overflow-hidden">
+        {/* Ambient atmospheric backdrop glow */}
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] sm:w-[900px] h-[400px] bg-gradient-to-tr from-indigo-600/15 via-emerald-600/10 to-transparent blur-[140px] pointer-events-none rounded-full -z-10" />
 
-              {/* Highlight Announcement Pill */}
+        <div className="w-full max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-center">
+            {/* Left Column (Left-aligned Headline, Clean Paragraph, Minimal Padding) */}
+            <div className="lg:col-span-6 space-y-3.5 sm:space-y-4 text-left flex flex-col items-start">
+
+              {/* Highlight Announcement Pill (Linear/Raycast style) */}
               <Link
                 to="/coding-lab"
-                className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/5 border border-white/20 hover:border-emerald-400/60 hover:bg-emerald-950/20 text-zinc-300 hover:text-white text-xs font-medium transition-all group mb-0.5 shadow-sm"
+                className="self-start inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-white/[0.04] hover:bg-white/[0.08] border border-white/15 hover:border-emerald-400/50 text-zinc-300 hover:text-white text-[11px] sm:text-xs font-medium transition-all group shadow-sm text-left backdrop-blur-md"
               >
-                <span className="relative flex h-2 w-2">
+                <span className="relative flex h-2 w-2 shrink-0">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
                 </span>
-                <span className="font-extrabold text-emerald-400 font-mono text-[10px] tracking-wider uppercase">
+                <span className="font-extrabold text-emerald-400 font-mono text-[9px] sm:text-[10px] tracking-wider uppercase shrink-0">
                   NEW
                 </span>
-                <span className="text-zinc-500">•</span>
-                <span className="text-xs">Interactive Coding Lab &amp; DSA Studio</span>
-                <ArrowRight className="w-3.5 h-3.5 text-zinc-400 group-hover:translate-x-0.5 group-hover:text-emerald-400 transition-all" />
+                <span className="text-zinc-600 shrink-0">•</span>
+                <span className="text-[11px] sm:text-xs truncate max-w-[210px] sm:max-w-none text-zinc-300 group-hover:text-white">
+                  Interactive Coding Lab &amp; MBA Studio
+                </span>
+                <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-zinc-400 group-hover:translate-x-0.5 group-hover:text-emerald-400 transition-all shrink-0" />
               </Link>
 
-              {/* Bold Headline (Equal centered on mobile, responsive font) */}
-              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight text-white leading-[1.2] text-center lg:text-left">
+              {/* Headline */}
+              <h1 className="text-[26px] sm:text-4xl md:text-5xl lg:text-[52px] font-black tracking-[-0.03em] text-white leading-[1.12] text-left">
                 Master Your University Exams with{' '}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-zinc-200 to-zinc-400">
-                  Presized AI Precision.
+                  Calibrated AI Precision.
                 </span>
               </h1>
 
-              {/* Natural, Easy-to-Read Subheadline (Equal aligned on mobile, left on desktop) */}
-              <p
-                className="text-xs sm:text-sm md:text-base text-zinc-300 leading-relaxed font-normal max-w-xl mx-auto lg:mx-0 text-justify sm:text-justify lg:text-left hyphens-auto"
-                style={{ textJustify: 'inter-word' }}
-              >
-                Stop drowning in unorganized 800-page PDFs and last-minute panic. SANKALP AI turns your university syllabus, past 5-year question papers, and prescribed textbooks into structured, high-scoring model answers &mdash; calibrated for 2, 5, 10, and 15 marks.
+              {/* Subheadline (Minimal, punchy, clean - no awkward text-justify gaps) */}
+              <p className="text-xs sm:text-sm md:text-[15px] text-zinc-300 leading-relaxed font-normal max-w-xl text-left">
+                Transform 5-year past papers, prescribed textbooks, and syllabus units into structured model answers, live compiler environments, and strategic decision simulations.
               </p>
 
-              {/* Action Buttons (Centered on mobile, horizontal on tablet/desktop) */}
-              <div className="w-full flex flex-wrap items-center justify-center lg:justify-start gap-2.5 sm:gap-3 pt-1">
+              {/* 2 Clean Primary Action Buttons */}
+              <div className="w-full flex flex-col sm:flex-row items-stretch sm:items-center justify-start gap-2.5 sm:gap-3.5 pt-1">
                 <Link
                   to="/dashboard"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 sm:px-6 py-3 rounded-xl bg-white hover:bg-zinc-200 text-black text-xs sm:text-sm font-extrabold shadow-lg shadow-white/10 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-5 py-2.5 sm:px-6 sm:py-3.5 rounded-xl bg-white hover:bg-zinc-100 text-black text-xs sm:text-sm font-extrabold shadow-[0_0_25px_rgba(255,255,255,0.22)] hover:shadow-[0_0_35px_rgba(255,255,255,0.35)] transition-all hover:scale-[1.02] active:scale-[0.98]"
                 >
                   <Bot className="w-4 h-4 text-black" />
                   <span>Enter SANKALP AI</span>
-                  <ArrowRight className="w-4 h-4 text-black" />
+                  <ArrowRight className="w-3.5 h-3.5 text-black" />
                 </Link>
 
                 <Link
                   to="/coding-lab"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 sm:px-5 py-3 rounded-xl bg-emerald-950/70 hover:bg-emerald-900/80 text-emerald-300 hover:text-emerald-200 text-xs sm:text-sm font-bold border border-emerald-500/40 transition-all hover:border-emerald-400 shadow-lg shadow-emerald-950/30"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-4 py-2.5 sm:px-5 sm:py-3.5 rounded-xl bg-emerald-950/60 hover:bg-emerald-900/80 text-emerald-300 hover:text-emerald-200 text-xs sm:text-sm font-bold border border-emerald-500/40 hover:border-emerald-400 transition-all shadow-md shadow-emerald-950/40"
                 >
                   <Terminal className="w-4 h-4 text-emerald-400" />
                   <span>Coding Lab &amp; DSA</span>
-                  <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-black bg-emerald-400 text-black">IDE</span>
-                </Link>
-
-                <Link
-                  to="/business-lab"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 sm:px-5 py-3 rounded-xl bg-amber-950/70 hover:bg-amber-900/80 text-amber-300 hover:text-amber-200 text-xs sm:text-sm font-bold border border-amber-500/40 transition-all hover:border-amber-400 shadow-lg shadow-amber-950/30"
-                >
-                  <Briefcase className="w-4 h-4 text-amber-400" />
-                  <span>Business War Room</span>
-                  <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-black bg-amber-400 text-black">MBA</span>
-                </Link>
-
-                <Link
-                  to="/viva"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 sm:px-5 py-3 rounded-xl bg-zinc-900/90 hover:bg-zinc-800 text-white text-xs sm:text-sm font-bold border border-white/20 transition-all hover:border-white/40"
-                >
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                  <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-black bg-emerald-400 text-black">
+                    IDE
                   </span>
-                  <Mic className="w-4 h-4 text-white" />
-                  <span>AI Viva Room</span>
-                  <span className="px-1.5 py-0.2 rounded text-[9px] font-black bg-white text-black">LIVE</span>
-                </Link>
-
-                <Link
-                  to="/tests"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 sm:px-5 py-3 rounded-xl bg-zinc-900/90 hover:bg-zinc-800 text-white text-xs sm:text-sm font-bold border border-white/20 transition-all hover:border-white/40"
-                >
-                  <ClipboardCheck className="w-4 h-4 text-white" />
-                  <span>Timed Mock Drills</span>
-                </Link>
-
-                <Link
-                  to="/predictions"
-                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-transparent hover:bg-white/5 text-zinc-300 hover:text-white text-xs sm:text-sm font-semibold transition-colors"
-                >
-                  <FileCheck2 className="w-3.5 h-3.5 text-zinc-400" />
-                  <span>5-Yr Master Paper</span>
                 </Link>
               </div>
 
-              {/* 3 Value Metrics on Left Column (Centered on mobile, aligned on desktop) */}
-              <div className="w-full pt-5 border-t border-white/10 grid grid-cols-3 gap-2 sm:gap-4 text-center lg:text-left">
-                <div>
-                  <p className="text-base sm:text-xl md:text-2xl lg:text-3xl font-extrabold text-white">5-Year</p>
-                  <p className="text-[10px] sm:text-xs text-zinc-400 mt-0.5 font-medium leading-tight">Cross-Paper Analysis</p>
+              {/* Quick Studio Dock */}
+              <div className="w-full pt-1.5 text-left">
+                <span className="text-[10px] sm:text-[11px] font-mono text-zinc-400 uppercase tracking-wider block mb-2 text-left font-semibold">
+                  Explore Specialized Studios:
+                </span>
+                <div className="flex flex-wrap items-center justify-start gap-1.5 sm:gap-2">
+                  <Link
+                    to="/business-lab"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-lg bg-zinc-900/80 hover:bg-zinc-900 border border-amber-500/30 hover:border-amber-400 text-[11px] sm:text-xs font-semibold text-amber-300 transition-all hover:-translate-y-0.5 shadow-sm"
+                  >
+                    <Briefcase className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-400" />
+                    <span>MBA Business Lab</span>
+                  </Link>
+                  <Link
+                    to="/viva"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-lg bg-zinc-900/80 hover:bg-zinc-900 border border-white/15 hover:border-indigo-400/50 text-[11px] sm:text-xs font-semibold text-zinc-300 hover:text-indigo-300 transition-all hover:-translate-y-0.5 shadow-sm"
+                  >
+                    <Mic className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-indigo-400" />
+                    <span>AI Viva Room</span>
+                  </Link>
+                  <Link
+                    to="/predictions"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-lg bg-zinc-900/80 hover:bg-zinc-900 border border-white/15 hover:border-white/30 text-[11px] sm:text-xs font-semibold text-zinc-300 hover:text-white transition-all hover:-translate-y-0.5 shadow-sm"
+                  >
+                    <FileCheck2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-zinc-400" />
+                    <span>5-Yr Master Paper</span>
+                  </Link>
+                  <Link
+                    to="/tests"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-lg bg-zinc-900/80 hover:bg-zinc-900 border border-white/15 hover:border-white/30 text-[11px] sm:text-xs font-semibold text-zinc-300 hover:text-white transition-all hover:-translate-y-0.5 shadow-sm"
+                  >
+                    <ClipboardCheck className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-zinc-400" />
+                    <span>Mock Tests</span>
+                  </Link>
                 </div>
-                <div>
-                  <p className="text-base sm:text-xl md:text-2xl lg:text-3xl font-extrabold text-white">2 - 15M</p>
-                  <p className="text-[10px] sm:text-xs text-zinc-400 mt-0.5 font-medium leading-tight">Mark Formats</p>
+              </div>
+
+              {/* 3 Core Value Metrics (Divided glass bar) */}
+              <div className="w-full pt-3 sm:pt-4 border-t border-white/10 grid grid-cols-3 divide-x divide-white/10 text-left">
+                <div className="pr-2 sm:pr-4">
+                  <p className="text-lg sm:text-2xl font-black text-white tracking-tight">5-Year</p>
+                  <p className="text-[10px] sm:text-xs text-zinc-400 font-medium leading-tight">Cross-Paper Analysis</p>
                 </div>
-                <div>
-                  <p className="text-base sm:text-xl md:text-2xl lg:text-3xl font-extrabold text-white">100%</p>
-                  <p className="text-[10px] sm:text-xs text-zinc-400 mt-0.5 font-medium leading-tight">Syllabus Grounded</p>
+                <div className="px-2 sm:px-4">
+                  <p className="text-lg sm:text-2xl font-black text-white tracking-tight">2 - 15M</p>
+                  <p className="text-[10px] sm:text-xs text-zinc-400 font-medium leading-tight">Model Mark Formats</p>
+                </div>
+                <div className="pl-2 sm:pl-4">
+                  <p className="text-lg sm:text-2xl font-black text-white tracking-tight">100%</p>
+                  <p className="text-[10px] sm:text-xs text-zinc-400 font-medium leading-tight">Syllabus Grounded</p>
                 </div>
               </div>
             </div>
 
-            {/* Right Column (Hero Visual: Sleek Software Showcase Window - Instant Render) */}
-            <div className="lg:col-span-6 xl:col-span-6">
-              <div className="relative rounded-3xl bg-zinc-950 border border-white/20 p-3 sm:p-4 shadow-2xl overflow-hidden group">
-                {/* Window Frame Top Header */}
-                <div className="h-10 px-4 bg-zinc-900/90 rounded-2xl border border-white/10 flex items-center justify-between mb-2.5">
+            {/* Right Column (Hero Visual: Interactive Multi-Studio Showcase Window with Dynamic Aura) - Hidden on Mobile per user request */}
+            <div className="hidden lg:block lg:col-span-6 w-full relative">
+              {/* Dynamic Aura Glow matching active tab */}
+              <div
+                className={`absolute -inset-1 sm:-inset-2 rounded-3xl blur-2xl opacity-60 transition-all duration-700 pointer-events-none -z-10 ${
+                  heroPreviewTab === 'mentor'
+                    ? 'bg-gradient-to-tr from-indigo-600/35 via-purple-600/20 to-blue-600/30'
+                    : heroPreviewTab === 'coding'
+                    ? 'bg-gradient-to-tr from-emerald-600/40 via-teal-600/20 to-cyan-600/30'
+                    : 'bg-gradient-to-tr from-amber-600/35 via-orange-600/20 to-yellow-600/30'
+                }`}
+              />
+
+              <div className="rounded-2xl sm:rounded-3xl bg-zinc-950/90 backdrop-blur-xl border border-white/20 p-3 sm:p-5 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] relative overflow-hidden ring-1 ring-white/10">
+                {/* Window Frame Top Header & Interactive Tab Switcher */}
+                <div className="flex flex-wrap items-center justify-between gap-2 pb-3 mb-3 border-b border-white/10">
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-zinc-700" />
-                    <div className="w-3 h-3 rounded-full bg-zinc-700" />
-                    <div className="w-3 h-3 rounded-full bg-zinc-700" />
-                    <span className="text-xs font-mono text-zinc-400 ml-2">
-                      sankalp-ai://exam-mentor/unit-masterclass
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-xs font-mono text-zinc-400">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    <span>ACTIVE CORE</span>
-                  </div>
-                </div>
-
-                {/* Main Hero Software Screenshot */}
-                <div className="relative rounded-2xl overflow-hidden border border-white/10 aspect-[16/10] bg-black">
-                  <img
-                    src="/screenshots/mentor.png"
-                    alt="SANKALP AI Exam Mentor Interface"
-                    width="800"
-                    height="500"
-                    loading="eager"
-                    fetchPriority="high"
-                    decoding="async"
-                    className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-102"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
-
-                  {/* Floating Highlight Chips */}
-                  <Link
-                    to="/coding-lab"
-                    className="absolute top-3.5 left-3.5 bg-black/90 backdrop-blur-md border border-emerald-500/40 hover:border-emerald-400 px-3 py-1.5 rounded-xl shadow-lg flex items-center gap-2 transition-transform hover:scale-105 group/chip"
-                  >
-                    <Terminal className="w-3.5 h-3.5 text-emerald-400" />
-                    <span className="text-xs font-bold text-white">Coding Lab: C, C++, Python, Java</span>
-                    <span className="px-1.5 py-0.2 rounded text-[8px] font-mono font-bold bg-emerald-500/20 text-emerald-300">RUN</span>
-                  </Link>
-
-                  <div className="absolute top-3.5 right-3.5 bg-black/85 backdrop-blur-md border border-white/20 px-3.5 py-1.5 rounded-xl shadow-lg flex items-center gap-2">
-                    <Target className="w-4 h-4 text-white" />
-                    <span className="text-xs sm:text-sm font-bold text-white">10-Mark Model Answer Structure</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-rose-500/90 shadow-[0_0_8px_rgba(244,63,94,0.4)] inline-block" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-amber-500/90 shadow-[0_0_8px_rgba(245,158,11,0.4)] inline-block" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/90 shadow-[0_0_8px_rgba(16,185,129,0.4)] inline-block" />
+                    </div>
+                    {/* Simulated URL Pill / App breadcrumb */}
+                    <div className="hidden sm:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-white/[0.04] border border-white/10 text-[10px] font-mono text-zinc-400">
+                      <span className="text-zinc-500">sankalp-ai://studio/</span>
+                      <span className="text-zinc-200 font-semibold">{heroPreviewTab}</span>
+                    </div>
                   </div>
 
-                  <div className="absolute bottom-3.5 left-3.5 bg-black/85 backdrop-blur-md border border-white/20 px-3.5 py-1.5 rounded-xl shadow-lg flex items-center gap-2">
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-                    </span>
-                    <Mic className="w-4 h-4 text-white" />
-                    <span className="text-xs sm:text-sm font-bold text-white">Oral Viva Voce & Speech AI</span>
-                  </div>
-
-                  <div className="absolute bottom-3.5 right-3.5">
-                    <Link
-                      to="/tests"
-                      className="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-white text-black shadow-md hover:bg-zinc-200 inline-flex items-center gap-1.5 transition-transform hover:scale-105"
+                  {/* Switcher Buttons (Floating Segmented Control) */}
+                  <div className="flex items-center gap-1 bg-zinc-900/90 p-1 rounded-xl border border-white/15 text-[10px] sm:text-xs font-semibold shadow-inner">
+                    <button
+                      type="button"
+                      onClick={() => setHeroPreviewTab('mentor')}
+                      className={`px-2.5 py-1 sm:px-3 sm:py-1 rounded-lg transition-all cursor-pointer ${
+                        heroPreviewTab === 'mentor'
+                          ? 'bg-white text-black font-extrabold shadow-md'
+                          : 'text-zinc-400 hover:text-white'
+                      }`}
                     >
-                      <ClipboardCheck className="w-3.5 h-3.5 text-black" />
-                      <span>5M & 10M Mock Drills</span>
-                    </Link>
+                      AI Mentor
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setHeroPreviewTab('coding')}
+                      className={`px-2.5 py-1 sm:px-3 sm:py-1 rounded-lg transition-all cursor-pointer ${
+                        heroPreviewTab === 'coding'
+                          ? 'bg-emerald-500 text-black font-extrabold shadow-md'
+                          : 'text-zinc-400 hover:text-white'
+                      }`}
+                    >
+                      Coding Lab
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setHeroPreviewTab('business')}
+                      className={`px-2.5 py-1 sm:px-3 sm:py-1 rounded-lg transition-all cursor-pointer ${
+                        heroPreviewTab === 'business'
+                          ? 'bg-amber-400 text-black font-extrabold shadow-md'
+                          : 'text-zinc-400 hover:text-white'
+                      }`}
+                    >
+                      Business Lab
+                    </button>
                   </div>
                 </div>
+
+                {/* Tab 1: AI Exam Mentor Live Mockup */}
+                {heroPreviewTab === 'mentor' && (
+                  <div className="space-y-3 font-sans text-xs animate-in fade-in duration-300">
+                    {/* Prompt Box */}
+                    <div className="p-3.5 rounded-xl bg-zinc-900/90 border border-indigo-500/30 flex items-start gap-2.5 shadow-sm">
+                      <div className="w-6 h-6 rounded-lg bg-indigo-600/20 text-indigo-400 flex items-center justify-center shrink-0 mt-0.5 font-bold font-mono text-[11px] border border-indigo-500/30">
+                        Q
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between text-[10px] text-zinc-400 mb-0.5">
+                          <span className="text-zinc-400">Operating Systems • Unit 2 (Process Management)</span>
+                          <span className="px-1.5 py-0.2 rounded bg-indigo-500/20 text-indigo-300 font-mono font-bold border border-indigo-500/30">10 MARKS</span>
+                        </div>
+                        <p className="font-semibold text-white text-xs sm:text-[13px] leading-snug">
+                          Explain Process Synchronization and deadlock avoidance using Banker&apos;s Algorithm with an illustrative matrix.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Model Answer Preview */}
+                    <div className="p-3.5 rounded-xl bg-black/90 border border-white/10 space-y-2.5 text-zinc-300 shadow-inner">
+                      <div className="flex items-center justify-between border-b border-white/10 pb-1.5 text-[10px] font-mono text-zinc-400">
+                        <span className="text-emerald-400 font-bold flex items-center gap-1">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                          SANKALP AI Structured Output
+                        </span>
+                        <span className="text-zinc-400">Evaluation Rubric: 10/10</span>
+                      </div>
+
+                      <div className="text-[11px] sm:text-xs leading-relaxed space-y-2">
+                        <p>
+                          <strong className="text-white">1. Conceptual Definition:</strong> Banker&apos;s Algorithm is a resource allocation and deadlock avoidance algorithm developed by Edsger Dijkstra that tests for safety by simulating the allocation of predetermined maximum possible amounts of all resources.
+                        </p>
+
+                        {/* Comparative Matrix Preview */}
+                        <div className="rounded-lg border border-white/10 overflow-hidden text-[10px] font-mono">
+                          <div className="grid grid-cols-3 bg-zinc-900/90 p-1.5 font-bold text-white border-b border-white/10">
+                            <span>Process</span>
+                            <span>Allocation (A, B)</span>
+                            <span>Max Need (A, B)</span>
+                          </div>
+                          <div className="grid grid-cols-3 p-1.5 text-zinc-400 border-b border-white/5 bg-zinc-950/40">
+                            <span className="text-white font-semibold">P0</span>
+                            <span>0, 1</span>
+                            <span>7, 5</span>
+                          </div>
+                          <div className="grid grid-cols-3 p-1.5 text-zinc-400 bg-zinc-900/20">
+                            <span className="text-white font-semibold">P1</span>
+                            <span>2, 0</span>
+                            <span>3, 2</span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between pt-1">
+                          <span className="text-[10px] text-zinc-400 italic">Grounded in: Galvin / Pradeep K. Sinha</span>
+                          <Link
+                            to="/mentor"
+                            className="text-[11px] font-bold text-indigo-400 hover:text-indigo-300 flex items-center gap-1 group/link"
+                          >
+                            <span>Open in AI Mentor</span>
+                            <ArrowRight className="w-3 h-3 group-hover/link:translate-x-0.5 transition-transform" />
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Tab 2: Coding Lab Live IDE Mockup */}
+                {heroPreviewTab === 'coding' && (
+                  <div className="space-y-2.5 font-mono text-xs select-none animate-in fade-in duration-300">
+                    {/* Code Editor Preview */}
+                    <div className="p-3 rounded-xl bg-[#07090e] border border-emerald-500/20 text-[11px] leading-relaxed shadow-inner">
+                      <div className="flex items-center justify-between pb-2 mb-2 border-b border-white/10 text-[10px] text-zinc-400 font-sans">
+                        <span className="flex items-center gap-1.5 font-bold text-white font-mono">
+                          <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                          main.c
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-semibold font-mono text-[9px]">
+                            GCC 14.2
+                          </span>
+                          <span className="text-[10px] font-mono text-emerald-400 font-bold hidden sm:inline">
+                            ▶ Run (F5)
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <div className="text-zinc-600 select-none text-right pr-1 text-[10px] leading-[1.6]">
+                          1<br />2<br />3<br />4<br />5
+                        </div>
+                        <div className="flex-1 text-[11px] leading-[1.6]">
+                          <span className="text-pink-400">#include</span> <span className="text-amber-300">&lt;stdio.h&gt;</span><br />
+                          <span className="text-purple-400">int</span> <span className="text-blue-400">main</span>() &#123;<br />
+                          &nbsp;&nbsp;<span className="text-purple-400">int</span> n, arr[<span className="text-cyan-400">50</span>];<br />
+                          &nbsp;&nbsp;<span className="text-yellow-300">printf</span>(<span className="text-emerald-300">&quot;Enter elements: &quot;</span>);<br />
+                          &nbsp;&nbsp;<span className="text-yellow-300">scanf</span>(<span className="text-emerald-300">&quot;%d&quot;</span>, &amp;n);<br />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Interactive TTY Terminal */}
+                    <div className="p-3 rounded-xl bg-black border border-emerald-500/30 text-[11px] space-y-1.5 shadow-inner">
+                      <div className="flex items-center justify-between text-[10px] text-zinc-400 pb-1 border-b border-white/10">
+                        <span className="text-emerald-400 font-bold flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                          Interactive Terminal (TTY)
+                        </span>
+                        <span className="text-zinc-500">0.012s • 1MB RAM</span>
+                      </div>
+                      <p className="text-zinc-400">
+                        <span className="text-emerald-400 font-bold">sankalp@ide:~$</span> ./main
+                      </p>
+                      <p className="text-zinc-200">
+                        Enter elements: <span className="text-emerald-400 font-bold bg-emerald-950/80 px-1.5 py-0.5 rounded border border-emerald-500/40">10 20 30</span>
+                      </p>
+                      <p className="text-emerald-300 font-bold">
+                        Array Processed Successfully.
+                      </p>
+                    </div>
+
+                    <div className="flex justify-end pt-0.5">
+                      <Link
+                        to="/coding-lab"
+                        className="text-[11px] font-bold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 font-sans group/link"
+                      >
+                        <span>Launch Full IDE Playground</span>
+                        <ArrowRight className="w-3 h-3 group-hover/link:translate-x-0.5 transition-transform" />
+                      </Link>
+                    </div>
+                  </div>
+                )}
+
+                {/* Tab 3: Business Lab Live Mockup */}
+                {heroPreviewTab === 'business' && (
+                  <div className="space-y-3 font-sans text-xs animate-in fade-in duration-300">
+                    {/* Company Header */}
+                    <div className="p-3 rounded-xl bg-zinc-900/90 border border-amber-500/30 flex items-center justify-between shadow-sm">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-500">
+                          <Briefcase className="w-3.5 h-3.5" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-bold text-white text-xs">VoltRide Mobility</span>
+                            <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">
+                              MBA SIM
+                            </span>
+                          </div>
+                          <span className="text-[10px] text-zinc-400">Product Safety &amp; Recall Crisis</span>
+                        </div>
+                      </div>
+                      <span className="px-2 py-0.5 rounded bg-zinc-800 text-[10px] font-mono text-zinc-300 font-bold border border-white/10">
+                        Phase: Turn 1/2
+                      </span>
+                    </div>
+
+                    {/* 4 Live Vitals Gauges */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[10px] font-mono">
+                      <div className="p-2 rounded-lg bg-black/90 border border-white/10 shadow-inner">
+                        <span className="text-zinc-400 block text-[9px]">CASH &amp; RUNWAY</span>
+                        <span className="text-white font-bold text-xs">₹4.20 Cr</span>
+                        <span className="text-emerald-400 block text-[9px]">(180 Days)</span>
+                      </div>
+                      <div className="p-2 rounded-lg bg-black/90 border border-white/10 shadow-inner">
+                        <span className="text-zinc-400 block text-[9px]">TEAM MORALE</span>
+                        <span className="text-white font-bold text-xs">82%</span>
+                        <span className="text-emerald-400 block text-[9px]">High</span>
+                      </div>
+                      <div className="p-2 rounded-lg bg-black/90 border border-white/10 shadow-inner">
+                        <span className="text-zinc-400 block text-[9px]">MARKET SHARE</span>
+                        <span className="text-white font-bold text-xs">14%</span>
+                        <span className="text-zinc-400 block text-[9px]">Territory</span>
+                      </div>
+                      <div className="p-2 rounded-lg bg-black/90 border border-white/10 shadow-inner">
+                        <span className="text-zinc-400 block text-[9px]">BRAND TRUST</span>
+                        <span className="text-white font-bold text-xs">78%</span>
+                        <span className="text-amber-400 block text-[9px]">Moderate</span>
+                      </div>
+                    </div>
+
+                    {/* Crisis Dilemma */}
+                    <div className="p-3 rounded-xl bg-black/90 border border-white/10 text-[11px] space-y-1.5 text-zinc-300 shadow-inner">
+                      <span className="text-rose-400 font-bold font-mono text-[10px] uppercase flex items-center gap-1">
+                        <Zap className="w-3.5 h-3.5 text-rose-400" />
+                        The Burning Platform Dilemma:
+                      </span>
+                      <p className="leading-snug">
+                        500 Thermal Runaway incidents reported in Maharashtra. CTO proposes silent OTA firmware update; CFO warns battery recall costs ₹6 Cr (insolvency).
+                      </p>
+                    </div>
+
+                    <div className="flex justify-end pt-0.5">
+                      <Link
+                        to="/business-lab"
+                        className="text-[11px] font-bold text-amber-400 hover:text-amber-300 flex items-center gap-1 group/link"
+                      >
+                        <span>Enter Executive War Room</span>
+                        <ArrowRight className="w-3 h-3 group-hover/link:translate-x-0.5 transition-transform" />
+                      </Link>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Trust & Academic Validation Ribbon (8XL Width, Centered on Mobile) */}
-      <section className="border-y border-white/10 bg-zinc-950/80 py-5 sm:py-6 z-10 relative">
-        <div className="w-full max-w-[1560px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 flex flex-wrap items-center justify-center lg:justify-between gap-4 sm:gap-5 text-center lg:text-left text-xs sm:text-sm font-semibold text-zinc-300">
-          <div className="flex items-center justify-center gap-2">
-            <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5 text-white shrink-0" />
-            <span>St. John's College, Agra Curriculum Grounded</span>
+      {/* Trust & Academic Validation Ribbon (Minimal, Sleek & Left-Aligned) */}
+      <section className="border-y border-white/10 bg-zinc-950/60 py-3 sm:py-3.5 z-10 relative">
+        <div className="w-full max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 flex flex-wrap items-center justify-start lg:justify-between gap-3 sm:gap-4 text-left text-[11px] sm:text-xs font-semibold text-zinc-300">
+          <div className="flex items-center justify-start gap-1.5 sm:gap-2 text-left">
+            <GraduationCap className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+            <span>St. John&apos;s College, Agra</span>
           </div>
-          <div className="flex items-center justify-center gap-2">
-            <FileCheck2 className="w-4 h-4 sm:w-5 sm:h-5 text-white shrink-0" />
-            <span>5-Year Cross-Paper Pattern Analysis (2021-2025)</span>
+          <div className="flex items-center justify-start gap-1.5 sm:gap-2 text-left">
+            <FileCheck2 className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+            <span>5-Year Past Papers (2021–2025)</span>
           </div>
-          <div className="flex items-center justify-center gap-2">
-            <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-white shrink-0" />
-            <span>Prescribed Textbook Mode (Pradeep K. Sinha)</span>
+          <div className="flex items-center justify-start gap-1.5 sm:gap-2 text-left">
+            <BookOpen className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+            <span>Prescribed Textbooks Grounding</span>
           </div>
-          <div className="flex items-center justify-center gap-2">
-            <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-white shrink-0" />
-            <span>Zero Hallucinations • Direct University Marking Keys</span>
+          <div className="flex items-center justify-start gap-1.5 sm:gap-2 text-left">
+            <ShieldCheck className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+            <span>Verified University Marking Keys</span>
           </div>
         </div>
       </section>
 
       {/* CORE PRODUCT TOUR SECTION: Inside the Software with Real Screenshots & Deep Descriptions */}
-      <section id="tour" className="py-14 sm:py-20 z-10 relative">
-        <div className="w-full max-w-[1560px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-3 text-center md:text-left items-center md:items-end">
+      <section id="tour" className="py-8 sm:py-16 z-10 relative">
+        <div className="w-full max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-5 sm:mb-8 gap-2.5 text-center md:text-left items-center md:items-end">
             <div>
-              <span className="text-xs font-mono uppercase tracking-widest text-zinc-400 mb-1.5 block">
-                Product Tour & Inside Software
+              <span className="text-[10px] sm:text-xs font-mono uppercase tracking-wider text-zinc-400 mb-1 block">
+                Platform Architecture
               </span>
-              <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold text-white tracking-tight">
-                Explore the Software Modules in Action
+              <h2 className="text-lg sm:text-2xl md:text-3xl font-extrabold text-white tracking-tight">
+                Explore Specialized Studios
               </h2>
             </div>
             <p className="text-xs sm:text-sm text-zinc-400 max-w-md leading-relaxed mx-auto md:mx-0">
-              Real screenshots from SANKALP AI. Each module is specifically architected to solve a critical university exam challenge.
+              Purpose-built AI studios to master university examinations, code labs, and executive simulations.
             </p>
           </div>
 
-          {/* Module Selector Tabs (Centered on mobile, horizontal touch scrolling) */}
-          <div className="flex items-center justify-center md:justify-start gap-2 overflow-x-auto pb-3 mb-6 no-scrollbar">
+          {/* Module Selector Tabs (Horizontal touch scrolling from start, no clipped left items) */}
+          <div className="w-full flex items-center justify-start gap-2 overflow-x-auto pb-3 mb-4 sm:mb-6 -mx-3.5 px-3.5 sm:mx-0 sm:px-0 touch-pan-x scroll-smooth overscroll-x-contain no-scrollbar">
             {tourModules.map((module) => {
               const Icon = module.icon;
               const isActive = module.id === activeTourTab;
@@ -667,35 +800,35 @@ export default function Landing() {
                 <button
                   key={module.id}
                   onClick={() => setActiveTourTab(module.id)}
-                  className={`px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 shrink-0 transition-all border ${isActive
+                  className={`px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 shrink-0 transition-all border cursor-pointer select-none ${isActive
                     ? 'bg-white text-black border-white shadow-md'
                     : 'bg-zinc-950 text-zinc-400 border-white/10 hover:border-white/30 hover:text-white'
                     }`}
                 >
-                  <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  <span>{module.title}</span>
+                  <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                  <span className="whitespace-nowrap">{module.title}</span>
                 </button>
               );
             })}
           </div>
 
           {/* Detailed Module Showcase Card: Left Description & Highlights, Right Real Screenshot */}
-          <div className="rounded-3xl bg-zinc-950 border border-white/15 p-5 sm:p-8 lg:p-10 shadow-2xl">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+          <div className="rounded-2xl sm:rounded-3xl bg-zinc-950 border border-white/15 p-4 sm:p-7 lg:p-9 shadow-2xl">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-10 items-center">
               {/* Left / Info & Detailed Points (Centered on mobile, left on desktop) */}
-              <div className="lg:col-span-5 space-y-4 sm:space-y-5 text-center lg:text-left flex flex-col items-center lg:items-start">
+              <div className="lg:col-span-5 space-y-3 sm:space-y-4 text-center lg:text-left flex flex-col items-center lg:items-start">
                 <div className="flex items-center justify-center lg:justify-start gap-2">
-                  <span className="text-[11px] font-mono uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-white/10 border border-white/15 text-zinc-200">
+                  <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/10 border border-white/15 text-zinc-200">
                     {activeModule.badge}
                   </span>
-                  <span className="text-xs font-mono text-zinc-400">{activeModule.subtitle}</span>
+                  <span className="text-[11px] sm:text-xs font-mono text-zinc-400">{activeModule.subtitle}</span>
                 </div>
 
-                <h3 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-extrabold text-white tracking-tight">
+                <h3 className="text-base sm:text-xl md:text-2xl font-extrabold text-white tracking-tight">
                   {activeModule.title}
                 </h3>
 
-                <p className="text-xs sm:text-sm font-medium text-zinc-200 italic border-l-0 lg:border-l-2 pl-0 lg:pl-3 leading-relaxed max-w-md">
+                <p className="text-[11px] sm:text-xs font-medium text-zinc-300 italic border-l-0 lg:border-l-2 pl-0 lg:pl-3 leading-relaxed max-w-md">
                   "{activeModule.tagline}"
                 </p>
 
@@ -707,13 +840,13 @@ export default function Landing() {
                 </p>
 
                 {/* Key Highlights (Centered block on mobile with neat checkmarks) */}
-                <div className="space-y-2 pt-1 w-full max-w-md text-left">
-                  <span className="text-xs font-mono text-zinc-400 uppercase tracking-wider block font-bold text-center lg:text-left mb-2">
-                    Key Academic Features:
+                <div className="space-y-1.5 pt-0.5 w-full max-w-md text-left">
+                  <span className="text-[10px] sm:text-xs font-mono text-zinc-400 uppercase tracking-wider block font-bold text-center lg:text-left mb-1.5">
+                    Highlights:
                   </span>
                   {activeModule.highlights.map((h, idx) => (
-                    <div key={idx} className="flex items-start gap-2.5 text-xs sm:text-sm text-zinc-300">
-                      <div className="w-4 h-4 rounded-full bg-white/10 flex items-center justify-center shrink-0 mt-0.5">
+                    <div key={idx} className="flex items-start gap-2 text-[11px] sm:text-xs text-zinc-300">
+                      <div className="w-3.5 h-3.5 rounded-full bg-white/10 flex items-center justify-center shrink-0 mt-0.5">
                         <Check className="w-2.5 h-2.5 text-white" />
                       </div>
                       <span className="leading-snug">{h}</span>
@@ -722,10 +855,10 @@ export default function Landing() {
                 </div>
 
                 {/* Direct Action Link (Centered button on mobile) */}
-                <div className="pt-3 w-full flex justify-center lg:justify-start">
+                <div className="pt-2 w-full flex justify-center lg:justify-start">
                   <Link
                     to={activeModule.link}
-                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-white hover:bg-zinc-200 text-black text-xs sm:text-sm font-extrabold transition-all hover:scale-102"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-white hover:bg-zinc-200 text-black text-xs sm:text-sm font-extrabold transition-all hover:scale-102"
                   >
                     <span>{activeModule.linkText}</span>
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -744,90 +877,18 @@ export default function Landing() {
                       Live Interface Capture
                     </span>
                   </div>
-                  <div className="rounded-xl overflow-hidden border border-white/10 aspect-[16/10] bg-zinc-900 relative">
-                    {activeModule.id === 'coding-lab' ? (
-                      <div className="w-full h-full bg-[#0a0d12] flex flex-col font-mono text-xs select-none p-0">
-                        {/* Editor Tab Bar */}
-                        <div className="flex items-center justify-between px-3 py-2 bg-[#12161f] border-b border-white/10 text-[11px]">
-                          <div className="flex items-center gap-2">
-                            <span className="w-2.5 h-2.5 rounded-full bg-red-500/80 inline-block" />
-                            <span className="w-2.5 h-2.5 rounded-full bg-yellow-500/80 inline-block" />
-                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80 inline-block" />
-                            <span className="ml-2 px-2.5 py-0.5 rounded bg-zinc-800/90 text-white border border-white/10 flex items-center gap-1.5 font-sans font-medium text-[11px]">
-                              <span className="text-emerald-400 font-bold font-mono">C</span> main.c
-                            </span>
-                            <span className="px-2 py-0.5 rounded text-zinc-400 hover:text-zinc-200 font-sans font-medium text-[11px] hidden sm:inline-block">
-                              solution.py
-                            </span>
-                            <span className="px-2 py-0.5 rounded text-zinc-400 hover:text-zinc-200 font-sans font-medium text-[11px] hidden sm:inline-block">
-                              Main.java
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2 text-zinc-400 text-[10px]">
-                            <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-semibold">
-                              GCC 14.2
-                            </span>
-                            <span className="px-2 py-0.5 rounded bg-white/10 text-white font-sans hidden sm:inline-block">
-                              Run Code
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Editor Code Canvas */}
-                        <div className="p-3.5 bg-[#0a0d12] text-zinc-300 text-[11px] sm:text-xs leading-relaxed overflow-hidden font-mono flex-1">
-                          <div className="flex gap-3">
-                            <div className="text-zinc-600 select-none text-right font-mono pr-1 text-[10px] leading-[1.6]">
-                              1<br />2<br />3<br />4<br />5<br />6<br />7<br />8
-                            </div>
-                            <div className="flex-1 font-mono text-[11px] sm:text-xs leading-[1.6]">
-                              <span className="text-pink-400">#include</span> <span className="text-amber-300">&lt;stdio.h&gt;</span><br />
-                              <span className="text-purple-400">int</span> <span className="text-blue-400">main</span>() &#123;<br />
-                              &nbsp;&nbsp;<span className="text-purple-400">int</span> a, b;<br />
-                              &nbsp;&nbsp;<span className="text-yellow-300">printf</span>(<span className="text-emerald-300">"Enter Two Numbers: "</span>);<br />
-                              &nbsp;&nbsp;<span className="text-yellow-300">scanf</span>(<span className="text-emerald-300">"%d %d"</span>, &amp;a, &amp;b);<br />
-                              &nbsp;&nbsp;<span className="text-yellow-300">printf</span>(<span className="text-emerald-300">"Sum Of Values = %d\n"</span>, a + b);<br />
-                              &nbsp;&nbsp;<span className="text-purple-400">return</span> <span className="text-cyan-400">0</span>;<br />
-                              &#125;
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Interactive Terminal */}
-                        <div className="border-t border-white/10 bg-black/95 p-3 text-[11px] font-mono">
-                          <div className="flex items-center justify-between text-[10px] text-zinc-400 mb-1.5 pb-1 border-b border-white/5">
-                            <span className="flex items-center gap-1.5 text-emerald-400 font-bold">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                              Interactive Terminal (TTY)
-                            </span>
-                            <span className="text-zinc-500 font-sans">0.012s • 1MB RAM</span>
-                          </div>
-                          <div className="text-zinc-300 space-y-1 leading-snug">
-                            <p className="text-zinc-400 font-semibold">
-                              <span className="text-emerald-400 font-bold">sankalp@ide:~$</span> ./main
-                            </p>
-                            <p className="text-zinc-200">
-                              Enter Two Numbers: <span className="text-emerald-400 font-bold bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-500/30">10 20</span>
-                            </p>
-                            <p className="text-emerald-300 font-semibold">
-                              Sum Of Values = 30
-                            </p>
-                            <p className="text-[10px] text-zinc-500 font-mono">
-                              [Process finished with exit code 0]
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <img
-                        src={activeModule.image}
-                        alt={activeModule.title}
-                        width="800"
-                        height="500"
-                        loading="lazy"
-                        decoding="async"
-                        className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-102"
-                      />
-                    )}
+                  <div className="rounded-xl overflow-hidden border border-white/10 aspect-[16/10] bg-zinc-950 relative group/img">
+                    <img
+                      key={activeModule.id}
+                      src={activeModule.image}
+                      alt={activeModule.title}
+                      width="1280"
+                      height="800"
+                      loading="lazy"
+                      decoding="async"
+                      className="w-full h-full object-cover object-top transition-all duration-500 group-hover/img:scale-[1.02] animate-in fade-in duration-300"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
                   </div>
                 </div>
               </div>
@@ -838,97 +899,92 @@ export default function Landing() {
 
 
       {/* CREATOR SPOTLIGHT SECTION (Sameer Singh • St. John's College Agra, Centered on Mobile) */}
-      <section id="creator" className="py-14 sm:py-20 border-t border-white/10 z-10 relative">
-        <div className="w-full max-w-[1560px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16">
-          <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-12">
-            <span className="text-xs font-mono uppercase tracking-widest text-zinc-400 mb-1.5 block">
-              Architect & Visionary
+      <section id="creator" className="py-8 sm:py-16 border-t border-white/10 z-10 relative">
+        <div className="w-full max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8">
+          <div className="text-center max-w-2xl mx-auto mb-5 sm:mb-8">
+            <span className="text-[10px] sm:text-xs font-mono uppercase tracking-wider text-zinc-400 mb-1 block">
+              Architect &amp; Visionary
             </span>
-            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold text-white tracking-tight">
+            <h2 className="text-lg sm:text-2xl md:text-3xl font-extrabold text-white tracking-tight">
               Crafted by a Student, for Students
             </h2>
           </div>
 
           {/* Luxury Monochrome Profile Card */}
-          <div className="relative rounded-3xl bg-zinc-950 border border-white/15 p-6 sm:p-10 lg:p-12 shadow-2xl overflow-hidden">
+          <div className="relative rounded-2xl sm:rounded-3xl bg-zinc-950 border border-white/15 p-4 sm:p-8 lg:p-10 shadow-2xl overflow-hidden">
             <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-white/5 to-transparent blur-3xl pointer-events-none" />
 
-            <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start gap-6 sm:gap-10 text-center md:text-left">
+            <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start gap-4 sm:gap-8 text-center md:text-left">
               {/* Profile Image with Monochrome Ring */}
               <div className="relative shrink-0 text-center mx-auto md:mx-0">
-                <div className="relative w-36 h-36 sm:w-44 sm:h-44 rounded-2xl sm:rounded-3xl overflow-hidden border-2 border-white/30 shadow-2xl p-1 bg-black mx-auto">
+                <div className="relative w-28 h-28 sm:w-40 sm:h-40 rounded-xl sm:rounded-2xl overflow-hidden border-2 border-white/30 shadow-2xl p-1 bg-black mx-auto">
                   <img
                     src="/sameer.png"
                     alt="Sameer Singh - Creator of SANKALP AI"
-                    width="176"
-                    height="176"
+                    width="160"
+                    height="160"
                     loading="lazy"
                     decoding="async"
-                    className="w-full h-full object-cover rounded-xl sm:rounded-2xl grayscale-0 sm:grayscale contrast-110 sm:hover:grayscale-0 transition-all duration-500" />
-                  <div className="absolute inset-0 rounded-xl sm:rounded-2xl ring-1 ring-white/20 pointer-events-none" />
+                    className="w-full h-full object-cover rounded-lg sm:rounded-xl grayscale-0 sm:grayscale contrast-110 sm:hover:grayscale-0 transition-all duration-500" />
+                  <div className="absolute inset-0 rounded-lg sm:rounded-xl ring-1 ring-white/20 pointer-events-none" />
                 </div>
-                <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs font-bold text-white">
-                  <ShieldCheck className="w-3.5 h-3.5 text-white" />
+                <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/10 border border-white/20 text-[10px] sm:text-xs font-bold text-white">
+                  <ShieldCheck className="w-3 h-3 text-white" />
                   <span>Verified Builder</span>
                 </div>
               </div>
 
               {/* Bio & Details */}
               <div className="flex-1 flex flex-col items-center md:items-start text-center md:text-left">
-                <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-2">
-                  <span className="text-xs font-mono uppercase tracking-widest text-zinc-400">
-                    Platform Architect & Lead Creator
+                <div className="flex flex-wrap items-center justify-center md:justify-start gap-1.5 mb-1.5">
+                  <span className="text-[10px] sm:text-xs font-mono uppercase tracking-wider text-zinc-400">
+                    Platform Architect &amp; Creator
                   </span>
                   <span className="text-zinc-600 hidden md:inline">&bull;</span>
-                  <span className="text-xs font-mono px-2 py-0.5 rounded bg-white/10 text-white font-semibold">
-                    Full Stack & AI Engineer
+                  <span className="text-[10px] sm:text-xs font-mono px-2 py-0.5 rounded bg-white/10 text-white font-semibold">
+                    St. John&apos;s College, Agra
                   </span>
                 </div>
 
-                <h3 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold text-white tracking-tight mb-2">
+                <h3 className="text-lg sm:text-2xl md:text-3xl font-extrabold text-white tracking-tight mb-2">
                   Sameer Singh
                 </h3>
 
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-zinc-900 border border-white/15 text-xs sm:text-sm font-bold text-white mb-4">
-                  <GraduationCap className="w-4 h-4 text-white" />
-                  <span>Student of St. John's College, Agra</span>
-                </div>
-
                 <p
-                  className="text-zinc-300 text-xs sm:text-sm md:text-base leading-relaxed mb-6 font-normal max-w-2xl mx-auto md:mx-0 hyphens-auto"
+                  className="text-zinc-300 text-xs sm:text-sm leading-relaxed mb-4 sm:mb-5 font-normal max-w-2xl mx-auto md:mx-0 hyphens-auto"
                   style={{ textAlign: 'justify', textJustify: 'inter-word' }}
                 >
-                  &ldquo;SANKALP AI was born out of a real classroom reality at <strong>St. John&apos;s College, Agra</strong> &mdash; every semester, students wrestle with scattered notes, unpredictable question patterns, and thick textbooks. I architected SANKALP AI to be an autonomous, syllabus-aligned intelligence system that transforms 5-year past papers and prescribed textbooks into structured, mark-winning model answers so every student can prepare with absolute clarity and confidence.&rdquo;
+                  &ldquo;Built at St. John&apos;s College, Agra to eliminate semester exam anxiety. SANKALP AI grounds 5-year past papers and prescribed textbooks into verified model answers so every student can prepare with absolute confidence.&rdquo;
                 </p>
 
-                {/* Highlights Grid */}
-                <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-4 border-t border-white/10 text-xs sm:text-sm">
-                  <div className="p-3 rounded-xl bg-black border border-white/10 text-center sm:text-left">
-                    <span className="text-[10px] sm:text-[11px] font-mono text-zinc-400 block mb-0.5">ACADEMIC ALMA MATER</span>
-                    <p className="font-bold text-white text-xs sm:text-sm">St. John's College, Agra</p>
+                {/* Highlights Grid (2-columns on mobile for neat density) */}
+                <div className="w-full grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 pt-3 sm:pt-4 border-t border-white/10 text-xs sm:text-sm">
+                  <div className="p-2.5 sm:p-3 rounded-xl bg-black border border-white/10 text-left">
+                    <span className="text-[9px] sm:text-[10px] font-mono text-zinc-400 block mb-0.5 truncate">ALMA MATER</span>
+                    <p className="font-bold text-white text-[11px] sm:text-xs truncate">St. John's College</p>
                   </div>
 
-                  <div className="p-3 rounded-xl bg-black border border-white/10 text-center sm:text-left">
-                    <span className="text-[10px] sm:text-[11px] font-mono text-zinc-400 block mb-0.5">CORE TECHNOLOGY</span>
-                    <p className="font-bold text-white text-xs sm:text-sm">React 19, Node.js, Groq AI</p>
+                  <div className="p-2.5 sm:p-3 rounded-xl bg-black border border-white/10 text-left">
+                    <span className="text-[9px] sm:text-[10px] font-mono text-zinc-400 block mb-0.5 truncate">STACK</span>
+                    <p className="font-bold text-white text-[11px] sm:text-xs truncate">React 19, Node, Groq</p>
                   </div>
 
-                  <div className="p-3 rounded-xl bg-black border border-white/10 text-center sm:text-left">
-                    <span className="text-[10px] sm:text-[11px] font-mono text-zinc-400 block mb-0.5">PURPOSE & MISSION</span>
-                    <p className="font-bold text-white text-xs sm:text-sm">Empowering Students</p>
+                  <div className="p-2.5 sm:p-3 rounded-xl bg-black border border-white/10 text-left">
+                    <span className="text-[9px] sm:text-[10px] font-mono text-zinc-400 block mb-0.5 truncate">MISSION</span>
+                    <p className="font-bold text-white text-[11px] sm:text-xs truncate">Student Exam Mastery</p>
                   </div>
 
                   <a
                     href="mailto:study.sankalp.ai@gmail.com"
-                    className="p-3 rounded-xl bg-black border border-white/10 hover:border-white/30 transition-all text-center sm:text-left block group"
+                    className="p-2.5 sm:p-3 rounded-xl bg-black border border-white/10 hover:border-white/30 transition-all text-left block group"
                     title="Send an email enquiry"
                   >
-                    <span className="text-[10px] sm:text-[11px] font-mono text-zinc-400 mb-0.5 flex items-center justify-center sm:justify-start gap-1">
-                      <Mail className="w-3 h-3 text-white" />
-                      <span>QUERIES & ENQUIRY</span>
+                    <span className="text-[9px] sm:text-[10px] font-mono text-zinc-400 mb-0.5 flex items-center gap-1">
+                      <Mail className="w-2.5 h-2.5 text-white" />
+                      <span className="truncate">CONTACT</span>
                     </span>
-                    <p className="font-bold text-white text-xs sm:text-sm truncate group-hover:underline">
-                      study.sankalp.ai@gmail.com
+                    <p className="font-bold text-white text-[11px] sm:text-xs truncate group-hover:underline">
+                      study.sankalp.ai
                     </p>
                   </a>
                 </div>
@@ -938,282 +994,241 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* 6 Core Architectural Capabilities Grid (8XL Width, Centered on Mobile) */}
-      <section id="features" className="py-14 sm:py-20 border-t border-white/10 z-10 relative">
-        <div className="w-full max-w-[1560px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16">
-          <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-12">
-            <span className="text-xs font-mono uppercase tracking-widest text-zinc-400 mb-1.5 block">
-              Platform Features
+      {/* 6 Core Architectural Capabilities Grid */}
+      <section id="features" className="py-8 sm:py-16 border-t border-white/10 z-10 relative">
+        <div className="w-full max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8">
+          <div className="text-center max-w-2xl mx-auto mb-5 sm:mb-8">
+            <span className="text-[10px] sm:text-xs font-mono uppercase tracking-wider text-zinc-400 mb-1 block">
+              Capabilities
             </span>
-            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold text-white tracking-tight mb-2.5">
-              Everything Needed for 90%+ Semester Exam Scores
+            <h2 className="text-lg sm:text-2xl md:text-3xl font-extrabold text-white tracking-tight mb-1.5 sm:mb-2">
+              Engineered for Academic Mastery
             </h2>
-            <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed max-w-xl mx-auto">
-              Every tool inside SANKALP AI is built with one clear purpose: eliminating exam uncertainty and giving students precise, model-grade answers.
+            <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed max-w-lg mx-auto">
+              Purpose-built tools to eliminate exam ambiguity and master complex technical concepts.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            <div className="p-5 sm:p-7 rounded-2xl bg-zinc-950 border border-emerald-500/30 hover:border-emerald-500/60 transition-all flex flex-col justify-between text-center sm:text-left items-center sm:items-start group relative overflow-hidden">
-              <div className="absolute top-0 right-0 px-3 py-1 bg-emerald-500/10 border-b border-l border-emerald-500/20 rounded-bl-xl text-[10px] font-mono text-emerald-400 font-bold">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-5">
+            {/* 1. Coding Lab */}
+            <div className="p-4 sm:p-5 rounded-2xl bg-zinc-950 border border-emerald-500/30 hover:border-emerald-500/60 transition-all flex flex-col justify-between group relative overflow-hidden">
+              <div className="absolute top-0 right-0 px-2.5 py-0.5 bg-emerald-500/10 border-b border-l border-emerald-500/20 rounded-bl-xl text-[9px] font-mono text-emerald-400 font-bold">
                 NEW
               </div>
               <div>
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-400 mb-4 mx-auto sm:mx-0 group-hover:scale-105 transition-transform">
-                  <Terminal className="w-5 h-5" />
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-400 mb-2.5 group-hover:scale-105 transition-transform">
+                  <Terminal className="w-4 h-4 text-emerald-400" />
                 </div>
-                <h3 className="text-sm sm:text-base font-bold text-white mb-1.5 flex items-center gap-2">
-                  <span>Coding Lab &amp; DSA Studio</span>
-                </h3>
-                <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed font-normal">
-                  Multi-language browser compiler (C, C++, Python 3, Java 17) with interactive step-by-step terminal execution, 18+ graded DSA problems, and AI bug diagnosis.
+                <h3 className="text-xs sm:text-sm font-bold text-white mb-1">Coding Lab &amp; DSA</h3>
+                <p className="text-[11px] sm:text-xs text-zinc-400 leading-relaxed">
+                  Browser compiler for C, C++, Python &amp; Java with interactive terminal execution and 18+ DSA challenges.
                 </p>
               </div>
-              <div className="mt-4 pt-3 border-t border-white/5 text-xs font-mono text-emerald-400 flex items-center justify-between w-full">
-                <div className="flex items-center gap-1.5">
-                  <Check className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>Interactive TTY Terminal</span>
-                </div>
+              <div className="mt-3 pt-2.5 border-t border-white/5 text-[10px] sm:text-xs font-mono text-emerald-400 flex items-center justify-between">
+                <span>GCC 14 • 18+ DSA Problems</span>
                 <Link to="/coding-lab" className="hover:underline flex items-center gap-1 text-white font-semibold">
-                  <span>Open Lab</span>
+                  <span>Open</span>
                   <ArrowRight className="w-3 h-3" />
                 </Link>
               </div>
             </div>
 
-            <div className="p-5 sm:p-7 rounded-2xl bg-zinc-950 border border-white/10 hover:border-white/30 transition-all flex flex-col justify-between text-center sm:text-left items-center sm:items-start">
+            {/* 2. 5-Year Master Papers */}
+            <div className="p-4 sm:p-5 rounded-2xl bg-zinc-950 border border-white/10 hover:border-white/30 transition-all flex flex-col justify-between">
               <div>
-                <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/15 flex items-center justify-center text-white mb-4 mx-auto sm:mx-0">
-                  <FileCheck2 className="w-5 h-5" />
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white/5 border border-white/15 flex items-center justify-center text-white mb-2.5">
+                  <FileCheck2 className="w-4 h-4 text-white" />
                 </div>
-                <h3 className="text-sm sm:text-base font-bold text-white mb-1.5">
-                  5-Year Master Paper Synthesizer
-                </h3>
-                <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed font-normal">
-                  Aggregates recurring questions across the last 5 years into a balanced official paper format (Sections A, B, and C).
+                <h3 className="text-xs sm:text-sm font-bold text-white mb-1">5-Year Master Papers</h3>
+                <p className="text-[11px] sm:text-xs text-zinc-400 leading-relaxed">
+                  Analyzes 5 years of exam archives to synthesize balanced Section A, B &amp; C mock examination papers.
                 </p>
               </div>
-              <div className="mt-4 pt-3 border-t border-white/5 text-xs font-mono text-zinc-400 flex items-center justify-center sm:justify-start gap-1.5 w-full">
-                <Check className="w-3.5 h-3.5 text-white" />
-                <span>Automatic Section A/B/C Balancing</span>
+              <div className="mt-3 pt-2.5 border-t border-white/5 text-[10px] sm:text-xs font-mono text-zinc-400 flex items-center justify-between">
+                <span>Balanced Sections A/B/C</span>
+                <Link to="/predictions" className="hover:underline flex items-center gap-1 text-white font-semibold">
+                  <span>Open</span>
+                  <ArrowRight className="w-3 h-3" />
+                </Link>
               </div>
             </div>
 
-            <div className="p-5 sm:p-7 rounded-2xl bg-zinc-950 border border-white/10 hover:border-white/30 transition-all flex flex-col justify-between text-center sm:text-left items-center sm:items-start">
+            {/* 3. MBA Business Lab */}
+            <div className="p-4 sm:p-5 rounded-2xl bg-zinc-950 border border-amber-500/30 hover:border-amber-500/60 transition-all flex flex-col justify-between group relative overflow-hidden">
+              <div className="absolute top-0 right-0 px-2.5 py-0.5 bg-amber-500/10 border-b border-l border-amber-500/20 rounded-bl-xl text-[9px] font-mono text-amber-400 font-bold">
+                MBA
+              </div>
               <div>
-                <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/15 flex items-center justify-center text-white mb-4 mx-auto sm:mx-0">
-                  <Mic className="w-5 h-5" />
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-center text-amber-400 mb-2.5 group-hover:scale-105 transition-transform">
+                  <Briefcase className="w-4 h-4 text-amber-400" />
                 </div>
-                <h3 className="text-sm sm:text-base font-bold text-white mb-1.5">
-                  Speech-Powered AI Viva Voce
-                </h3>
-                <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed font-normal">
-                  Simulate high-stakes university oral vivas with spoken questions, speech-to-text student responses, and instant rubric grading across 4 examiner personas.
+                <h3 className="text-xs sm:text-sm font-bold text-white mb-1">MBA Business Lab</h3>
+                <p className="text-[11px] sm:text-xs text-zinc-400 leading-relaxed">
+                  Boardroom crisis dilemmas with dynamic financial vitals, runway metrics, and strategic simulations.
                 </p>
               </div>
-              <div className="mt-4 pt-3 border-t border-white/5 text-xs font-mono text-zinc-400 flex items-center justify-center sm:justify-start gap-1.5 w-full">
-                <Check className="w-3.5 h-3.5 text-white" />
-                <span>Hands-Free Speech Dialogue</span>
+              <div className="mt-3 pt-2.5 border-t border-white/5 text-[10px] sm:text-xs font-mono text-amber-400 flex items-center justify-between">
+                <span>Executive War Room</span>
+                <Link to="/business-lab" className="hover:underline flex items-center gap-1 text-white font-semibold">
+                  <span>Open</span>
+                  <ArrowRight className="w-3 h-3" />
+                </Link>
               </div>
             </div>
 
-            <div className="p-5 sm:p-7 rounded-2xl bg-zinc-950 border border-white/10 hover:border-white/30 transition-all flex flex-col justify-between text-center sm:text-left items-center sm:items-start">
+            {/* 4. AI Viva Voce */}
+            <div className="p-4 sm:p-5 rounded-2xl bg-zinc-950 border border-white/10 hover:border-white/30 transition-all flex flex-col justify-between">
               <div>
-                <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/15 flex items-center justify-center text-white mb-4 mx-auto sm:mx-0">
-                  <BookOpen className="w-5 h-5" />
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white/5 border border-white/15 flex items-center justify-center text-white mb-2.5">
+                  <Mic className="w-4 h-4 text-white" />
                 </div>
-                <h3 className="text-sm sm:text-base font-bold text-white mb-1.5">
-                  Learn by Prescribed Book Mode
-                </h3>
-                <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed font-normal">
-                  Anchors answers directly in prescribed university textbooks like Pradeep K. Sinha for page-authentic definitions and diagrams.
+                <h3 className="text-xs sm:text-sm font-bold text-white mb-1">AI Viva Voce Room</h3>
+                <p className="text-[11px] sm:text-xs text-zinc-400 leading-relaxed">
+                  Hands-free oral viva drills with real-time speech transcription and scoring across 4 examiner personas.
                 </p>
               </div>
-              <div className="mt-4 pt-3 border-t border-white/5 text-xs font-mono text-zinc-400 flex items-center justify-center sm:justify-start gap-1.5 w-full">
-                <Check className="w-3.5 h-3.5 text-white" />
-                <span>Textbook Definitions & Diagrams</span>
+              <div className="mt-3 pt-2.5 border-t border-white/5 text-[10px] sm:text-xs font-mono text-zinc-400 flex items-center justify-between">
+                <span>Voice Speech Dialogue</span>
+                <Link to="/viva" className="hover:underline flex items-center gap-1 text-white font-semibold">
+                  <span>Open</span>
+                  <ArrowRight className="w-3 h-3" />
+                </Link>
               </div>
             </div>
 
-            <div className="p-5 sm:p-7 rounded-2xl bg-zinc-950 border border-white/10 hover:border-white/30 transition-all flex flex-col justify-between text-center sm:text-left items-center sm:items-start">
+            {/* 5. Prescribed Books Mode */}
+            <div className="p-4 sm:p-5 rounded-2xl bg-zinc-950 border border-white/10 hover:border-white/30 transition-all flex flex-col justify-between">
               <div>
-                <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/15 flex items-center justify-center text-white mb-4 mx-auto sm:mx-0">
-                  <Target className="w-5 h-5" />
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white/5 border border-white/15 flex items-center justify-center text-white mb-2.5">
+                  <BookOpen className="w-4 h-4 text-white" />
                 </div>
-                <h3 className="text-sm sm:text-base font-bold text-white mb-1.5">
-                  Mark-Specific Model Formats
-                </h3>
-                <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed font-normal">
-                  Instant answer generation tailored for 2-mark definitions, 5-mark short notes, and 10-mark architectural essays.
+                <h3 className="text-xs sm:text-sm font-bold text-white mb-1">Prescribed Books Grounding</h3>
+                <p className="text-[11px] sm:text-xs text-zinc-400 leading-relaxed">
+                  Directly anchors definitions, diagrams, and explanations in university-prescribed textbooks.
                 </p>
               </div>
-              <div className="mt-4 pt-3 border-t border-white/5 text-xs font-mono text-zinc-400 flex items-center justify-center sm:justify-start gap-1.5 w-full">
-                <Check className="w-3.5 h-3.5 text-white" />
-                <span>Engineered for Maximum Marks</span>
+              <div className="mt-3 pt-2.5 border-t border-white/5 text-[10px] sm:text-xs font-mono text-zinc-400 flex items-center justify-between">
+                <span>Textbook Definitions</span>
+                <Link to="/library" className="hover:underline flex items-center gap-1 text-white font-semibold">
+                  <span>Open</span>
+                  <ArrowRight className="w-3 h-3" />
+                </Link>
               </div>
             </div>
 
-            <div className="p-5 sm:p-7 rounded-2xl bg-zinc-950 border border-white/10 hover:border-white/30 transition-all flex flex-col justify-between text-center sm:text-left items-center sm:items-start">
+            {/* 6. Calibrated Model Formats */}
+            <div className="p-4 sm:p-5 rounded-2xl bg-zinc-950 border border-white/10 hover:border-white/30 transition-all flex flex-col justify-between">
               <div>
-                <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/15 flex items-center justify-center text-white mb-4 mx-auto sm:mx-0">
-                  <Layers className="w-5 h-5" />
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white/5 border border-white/15 flex items-center justify-center text-white mb-2.5">
+                  <Target className="w-4 h-4 text-white" />
                 </div>
-                <h3 className="text-sm sm:text-base font-bold text-white mb-1.5">
-                  Syllabus Unit Masterclasses
-                </h3>
-                <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed font-normal">
-                  Every syllabus unit is systematically linked with topics and 1-click comprehensive unit deep-dives for rapid pre-exam revision.
+                <h3 className="text-xs sm:text-sm font-bold text-white mb-1">Calibrated Mark Schemas</h3>
+                <p className="text-[11px] sm:text-xs text-zinc-400 leading-relaxed">
+                  Instant answer generation tailored for 2-mark definitions, 5-mark notes, and 10-mark architectural essays.
                 </p>
               </div>
-              <div className="mt-4 pt-3 border-t border-white/5 text-xs font-mono text-zinc-400 flex items-center justify-center sm:justify-start gap-1.5 w-full">
-                <Check className="w-3.5 h-3.5 text-white" />
-                <span>Zero Hallucinations • Syllabus Locked</span>
-              </div>
-            </div>
-
-            <div className="p-5 sm:p-7 rounded-2xl bg-zinc-950 border border-white/10 hover:border-white/30 transition-all flex flex-col justify-between text-center sm:text-left items-center sm:items-start">
-              <div>
-                <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/15 flex items-center justify-center text-white mb-4 mx-auto sm:mx-0">
-                  <Maximize2 className="w-5 h-5" />
-                </div>
-                <h3 className="text-sm sm:text-base font-bold text-white mb-1.5">
-                  Fullscreen Study Reader & Sizing
-                </h3>
-                <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed font-normal">
-                  Distraction-free large study preview modal with dynamic font scaling (S, M, L, XL), wide-split views, and printable notes.
-                </p>
-              </div>
-              <div className="mt-4 pt-3 border-t border-white/5 text-xs font-mono text-zinc-400 flex items-center justify-center sm:justify-start gap-1.5 w-full">
-                <Check className="w-3.5 h-3.5 text-white" />
-                <span>Responsive & Easy on the Eyes</span>
-              </div>
-            </div>
-
-            <div className="p-5 sm:p-7 rounded-2xl bg-zinc-950 border border-white/10 hover:border-white/30 transition-all flex flex-col justify-between text-center sm:text-left items-center sm:items-start">
-              <div>
-                <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/15 flex items-center justify-center text-white mb-4 mx-auto sm:mx-0">
-                  <Cpu className="w-5 h-5" />
-                </div>
-                <h3 className="text-sm sm:text-base font-bold text-white mb-1.5">
-                  High-Speed BYOK Engine
-                </h3>
-                <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed font-normal">
-                  Powered by ultra-fast Groq LLaMA-3.3 acceleration. Connect with your own free API key stored securely in your browser session.
-                </p>
-              </div>
-              <div className="mt-4 pt-3 border-t border-white/5 text-xs font-mono text-zinc-400 flex items-center justify-center sm:justify-start gap-1.5 w-full">
-                <Check className="w-3.5 h-3.5 text-white" />
-                <span>Instant Inference • Browser Session Only</span>
+              <div className="mt-3 pt-2.5 border-t border-white/5 text-[10px] sm:text-xs font-mono text-zinc-400 flex items-center justify-between">
+                <span>2M, 5M &amp; 10M Formats</span>
+                <Link to="/mentor" className="hover:underline flex items-center gap-1 text-white font-semibold">
+                  <span>Open</span>
+                  <ArrowRight className="w-3 h-3" />
+                </Link>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 4-Step University Exam Master Workflow (8XL Width, Centered on Mobile) */}
-      <section id="workflow" className="py-14 sm:py-20 bg-zinc-950/70 border-t border-white/10 z-10 relative">
-        <div className="w-full max-w-[1560px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16">
-          <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-12">
-            <span className="text-xs font-mono uppercase tracking-widest text-zinc-400 mb-1.5 block">
-              Proven Methodology
+      {/* 4-Step University Exam Master Workflow */}
+      <section id="workflow" className="py-8 sm:py-16 bg-zinc-950/70 border-t border-white/10 z-10 relative">
+        <div className="w-full max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8">
+          <div className="text-center max-w-2xl mx-auto mb-5 sm:mb-8">
+            <span className="text-[10px] sm:text-xs font-mono uppercase tracking-wider text-zinc-400 mb-1 block">
+              Methodology
             </span>
-            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold text-white tracking-tight">
-              4 Steps to Top Semester Marks
+            <h2 className="text-lg sm:text-2xl md:text-3xl font-extrabold text-white tracking-tight">
+              4 Steps to Exam Mastery
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            <div className="p-5 sm:p-6 rounded-2xl bg-black border border-white/10 flex flex-col justify-between text-center sm:text-left items-center sm:items-start">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <div className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-black border border-white/10 flex flex-col justify-between">
               <div>
-                <span className="text-xs font-mono font-bold text-zinc-400 uppercase tracking-widest block mb-1.5">
-                  Phase 01
+                <span className="text-[10px] sm:text-xs font-mono font-bold text-zinc-400 uppercase tracking-wider block mb-1">
+                  Step 01
                 </span>
-                <h4 className="font-bold text-white text-sm sm:text-base mb-1.5">Sync the Syllabus</h4>
-                <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed font-normal">
-                  Select your university course and semester. Access verified units, prescribed books, and syllabus outlines.
+                <h4 className="font-bold text-white text-xs sm:text-sm mb-1">Sync Syllabus</h4>
+                <p className="text-[11px] sm:text-xs text-zinc-400 leading-relaxed">
+                  Select your course and semester to load verified syllabus units and prescribed books.
                 </p>
-              </div>
-              <div className="mt-4 pt-3 border-t border-white/5 text-xs font-mono text-zinc-400 w-full text-center sm:text-left">
-                Papers & Syllabus Module
               </div>
             </div>
 
-            <div className="p-5 sm:p-6 rounded-2xl bg-black border border-white/10 flex flex-col justify-between text-center sm:text-left items-center sm:items-start">
+            <div className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-black border border-white/10 flex flex-col justify-between">
               <div>
-                <span className="text-xs font-mono font-bold text-zinc-400 uppercase tracking-widest block mb-1.5">
-                  Phase 02
+                <span className="text-[10px] sm:text-xs font-mono font-bold text-zinc-400 uppercase tracking-wider block mb-1">
+                  Step 02
                 </span>
-                <h4 className="font-bold text-white text-sm sm:text-base mb-1.5">Identify Repetitions</h4>
-                <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed font-normal">
-                  Review historical frequencies. Prioritize topics that repeat 3+ times in official university examinations.
+                <h4 className="font-bold text-white text-xs sm:text-sm mb-1">Analyze Trends</h4>
+                <p className="text-[11px] sm:text-xs text-zinc-400 leading-relaxed">
+                  Identify high-probability questions repeated in 3+ historical university examination years.
                 </p>
-              </div>
-              <div className="mt-4 pt-3 border-t border-white/5 text-xs font-mono text-zinc-400 w-full text-center sm:text-left">
-                Important Topics Module
               </div>
             </div>
 
-            <div className="p-5 sm:p-6 rounded-2xl bg-black border border-white/10 flex flex-col justify-between text-center sm:text-left items-center sm:items-start">
+            <div className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-black border border-white/10 flex flex-col justify-between">
               <div>
-                <span className="text-xs font-mono font-bold text-zinc-400 uppercase tracking-widest block mb-1.5">
-                  Phase 03
+                <span className="text-[10px] sm:text-xs font-mono font-bold text-zinc-400 uppercase tracking-wider block mb-1">
+                  Step 03
                 </span>
-                <h4 className="font-bold text-white text-sm sm:text-base mb-1.5">Learn Model Structures</h4>
-                <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed font-normal">
-                  Generate 10-mark model answers containing exact introductions, comparative tables, and bullet points.
+                <h4 className="font-bold text-white text-xs sm:text-sm mb-1">Master Formats</h4>
+                <p className="text-[11px] sm:text-xs text-zinc-400 leading-relaxed">
+                  Study 2, 5 &amp; 10-mark model structures with clean comparative matrices and diagrams.
                 </p>
-              </div>
-              <div className="mt-4 pt-3 border-t border-white/5 text-xs font-mono text-zinc-400 w-full text-center sm:text-left">
-                AI Exam Mentor Module
               </div>
             </div>
 
-            <div className="p-5 sm:p-6 rounded-2xl bg-black border border-white/10 flex flex-col justify-between text-center sm:text-left items-center sm:items-start">
+            <div className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-black border border-white/10 flex flex-col justify-between">
               <div>
-                <span className="text-xs font-mono font-bold text-zinc-400 uppercase tracking-widest block mb-1.5">
-                  Phase 04
+                <span className="text-[10px] sm:text-xs font-mono font-bold text-zinc-400 uppercase tracking-wider block mb-1">
+                  Step 04
                 </span>
-                <h4 className="font-bold text-white text-sm sm:text-base mb-1.5">Solve 5-Yr Master Paper</h4>
-                <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed font-normal">
-                  Synthesize and print the 5-Year Master Final Paper. Simulate the exam atmosphere and test your preparedness.
+                <h4 className="font-bold text-white text-xs sm:text-sm mb-1">Simulate Mocks</h4>
+                <p className="text-[11px] sm:text-xs text-zinc-400 leading-relaxed">
+                  Practice balanced 5-year master papers and interactive coding terminal drills.
                 </p>
-              </div>
-              <div className="mt-4 pt-3 border-t border-white/5 text-xs font-mono text-zinc-400 w-full text-center sm:text-left">
-                Final Paper Module
               </div>
             </div>
           </div>
         </div>
       </section>
 
-
-
       {/* High-Impact Final Call to Action */}
-      <section className="py-14 sm:py-20 border-t border-white/10 z-10 relative">
-        <div className="w-full max-w-[1560px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 text-center">
-          <div className="p-6 sm:p-12 lg:p-16 rounded-3xl bg-gradient-to-b from-zinc-900 via-zinc-950 to-black border border-white/20 shadow-2xl relative overflow-hidden">
+      <section className="py-8 sm:py-16 border-t border-white/10 z-10 relative">
+        <div className="w-full max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 text-center">
+          <div className="p-5 sm:p-10 lg:p-12 rounded-2xl sm:rounded-3xl bg-gradient-to-b from-zinc-900 via-zinc-950 to-black border border-white/20 shadow-2xl relative overflow-hidden">
             <div className="relative z-10 max-w-xl mx-auto">
-              <span className="text-xs font-mono uppercase tracking-widest text-zinc-400 mb-2 block">
+              <span className="text-[10px] sm:text-xs font-mono uppercase tracking-wider text-zinc-400 mb-1.5 block">
                 Immediate Access • Zero Complex Setup
               </span>
-              <h2 className="text-xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-white tracking-tight mb-3">
+              <h2 className="text-lg sm:text-2xl md:text-3xl lg:text-4xl font-extrabold text-white tracking-tight mb-2 sm:mb-2.5">
                 Ready to Ace Your University Exams?
               </h2>
-              <p className="text-zinc-300 text-xs sm:text-sm md:text-base mb-6 leading-relaxed">
-                Step into SANKALP AI right now. Synthesize your first 5-year exam paper or study chapter-by-chapter with your prescribed university textbook.
+              <p className="text-zinc-300 text-xs sm:text-sm mb-4 sm:mb-5 leading-relaxed">
+                Step into SANKALP AI right now. Free for university students.
               </p>
 
               <Link
                 to="/dashboard"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl bg-white hover:bg-zinc-200 text-black text-xs sm:text-sm font-extrabold shadow-2xl transition-all hover:scale-103 active:scale-[0.98]"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 sm:px-7 sm:py-3.5 rounded-xl bg-white hover:bg-zinc-200 text-black text-xs sm:text-sm font-extrabold shadow-xl transition-all hover:scale-103 active:scale-[0.98]"
               >
                 <Bot className="w-4 h-4 text-black" />
                 <span>Enter SANKALP AI Platform</span>
                 <ArrowRight className="w-4 h-4 text-black" />
               </Link>
 
-              <p className="text-[11px] sm:text-xs text-zinc-400 font-mono mt-3.5">
-                Free academic tier available • St. John's College, Agra • Enquiry:{' '}
+              <p className="text-[10px] sm:text-xs text-zinc-400 font-mono mt-3">
+                St. John&apos;s College, Agra • Inquiries:{' '}
                 <a href="mailto:study.sankalp.ai@gmail.com" className="text-white hover:underline underline-offset-2">
                   study.sankalp.ai@gmail.com
                 </a>
@@ -1224,10 +1239,10 @@ export default function Landing() {
       </section>
 
       {/* Rich High-Impact Monochrome Footer */}
-      <footer className="relative z-10 border-t border-white/20 bg-zinc-950 text-zinc-400 text-xs pt-16 pb-12 shadow-2xl">
-        <div className="w-full max-w-[1560px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12">
+      <footer className="relative z-10 border-t border-white/20 bg-zinc-950 text-zinc-400 text-xs pt-10 sm:pt-14 pb-8 sm:pb-10 shadow-2xl">
+        <div className="w-full max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8">
           {/* Main 4-Column Footer Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 pb-12 border-b border-white/10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-10 pb-8 sm:pb-10 border-b border-white/10">
             {/* Col 1: Brand & Academic Mission */}
             <div className="space-y-4">
               <div className="flex items-center gap-3">
@@ -1392,12 +1407,12 @@ export default function Landing() {
           </div>
 
           {/* Sub-Footer Bar */}
-          <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-400">
+          <div className="pt-5 sm:pt-7 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] sm:text-xs text-zinc-400 text-center sm:text-left">
             <p>
               &copy; {new Date().getFullYear()} SANKALP AI. Developed for University Students of St. John's College, Agra.
             </p>
 
-            <div className="flex flex-wrap items-center gap-5 font-medium text-zinc-300">
+            <div className="flex flex-wrap items-center justify-center sm:justify-end gap-3.5 sm:gap-5 font-medium text-zinc-300">
               <Link to="/coding-lab" className="text-emerald-400 hover:text-emerald-300 transition-colors font-semibold flex items-center gap-1">
                 <Terminal className="w-3.5 h-3.5" />
                 <span>Coding Lab</span>

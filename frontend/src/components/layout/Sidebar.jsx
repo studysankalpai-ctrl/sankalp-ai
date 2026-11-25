@@ -186,7 +186,7 @@ export default function Sidebar() {
 
       {/* Main Sidebar (Responsive: Full-Featured Drawer on Mobile, Collapsible on Desktop) */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-50 flex flex-col bg-white dark:bg-black border-r border-gray-200 dark:border-neutral-800 transition-all duration-300 ease-in-out shadow-2xl md:shadow-none pt-[env(safe-area-inset-top,0px)] md:pt-0 pb-[env(safe-area-inset-bottom,0px)] md:pb-0 w-[290px] sm:w-80 max-w-[85vw] ${
+        className={`fixed top-0 bottom-0 left-0 z-50 flex flex-col bg-white dark:bg-black border-r border-gray-200 dark:border-neutral-800 transition-all duration-300 ease-in-out shadow-2xl md:shadow-none pt-[env(safe-area-inset-top,0px)] md:pt-0 pb-[env(safe-area-inset-bottom,0px)] md:pb-0 w-[290px] sm:w-80 max-w-[85vw] no-scrollbar scrollbar-transparent ${
           sidebarCollapsed ? 'md:w-20' : 'md:w-64'
         } ${
           mobileNavOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
@@ -234,8 +234,8 @@ export default function Sidebar() {
           </button>
         </div>
 
-        {/* Navigation Links & Modules */}
-        <div className="flex-1 overflow-y-auto overscroll-contain py-3 px-3 space-y-3.5 scrollbar-thin">
+        {/* Navigation Links & Modules (Smoothly scrollable, scrollbar 100% transparent/invisible) */}
+        <div className="flex-1 overflow-y-auto overscroll-contain py-3 px-3 space-y-3.5 no-scrollbar scrollbar-transparent [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden [&::-webkit-scrollbar]:w-0 [&::-webkit-scrollbar]:bg-transparent">
           {/* Mobile Academic Degree, Semester & Subject Switcher (md:hidden) */}
           {courses && courses.length > 0 && (
             <div className="md:hidden p-3 rounded-2xl bg-gray-50 dark:bg-[#0a0a0a] border border-gray-200 dark:border-neutral-800 space-y-2.5">

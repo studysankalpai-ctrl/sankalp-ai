@@ -281,80 +281,82 @@ export default function BusinessLab() {
 
   return (
     <div className="w-full h-full flex flex-col bg-gray-50 dark:bg-black text-gray-900 dark:text-zinc-100 select-none overflow-hidden font-sans">
-      {/* 1. TOP EXECUTIVE HUD & CONTROLS */}
-      <header className="px-3 sm:px-6 py-2.5 bg-white dark:bg-[#0a0a0a] border-b border-gray-200 dark:border-neutral-800 shrink-0 shadow-xs flex flex-wrap items-center justify-between gap-3">
-        {/* Left: Brand & Company Identity */}
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-500 shadow-sm shrink-0">
-            <Briefcase className="w-4 h-4" />
+      {/* 1. TOP EXECUTIVE HUD & CONTROLS (Horizontally scrollable on mobile) */}
+      <header className="w-full bg-white dark:bg-[#0a0a0a] border-b border-gray-200 dark:border-neutral-800 shrink-0 shadow-xs overflow-x-auto no-scrollbar scrollbar-transparent">
+        <div className="min-w-max w-full px-3 sm:px-6 py-2.5 flex items-center justify-between gap-4">
+          {/* Left: Brand & Company Identity */}
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-500 shadow-sm shrink-0">
+              <Briefcase className="w-4 h-4" />
+            </div>
+            <div className="shrink-0">
+              <div className="flex items-center gap-2">
+                <h1 className="text-xs sm:text-sm font-extrabold tracking-tight text-gray-900 dark:text-white flex items-center gap-1.5 whitespace-nowrap">
+                  <span>{currentCase?.company_name || 'Loading War Room...'}</span>
+                </h1>
+                <span className="px-2 py-0.5 rounded-full text-[9px] font-mono uppercase tracking-wider font-bold bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 whitespace-nowrap">
+                  {currentCase?.industry || 'MBA Strategic Sim'}
+                </span>
+              </div>
+              <p className="text-[10px] text-gray-500 dark:text-neutral-400 max-w-xs sm:max-w-md truncate whitespace-nowrap block">
+                {currentCase?.headline || 'High-Stakes Decision Laboratory'}
+              </p>
+            </div>
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xs sm:text-sm font-extrabold tracking-tight text-gray-900 dark:text-white flex items-center gap-1.5">
-                <span>{currentCase?.company_name || 'Loading War Room...'}</span>
-              </h1>
-              <span className="px-2 py-0.5 rounded-full text-[9px] font-mono uppercase tracking-wider font-bold bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400">
-                {currentCase?.industry || 'MBA Strategic Sim'}
+
+          {/* Center / Right Controls: Turn Progression & Preset Select */}
+          <div className="flex items-center gap-2 shrink-0">
+            {/* Turn Tracker Pill */}
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-gray-100 dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 text-[11px] font-mono whitespace-nowrap">
+              <Clock className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+              <span className="text-gray-500 dark:text-neutral-400 font-sans">Phase:</span>
+              <span className="font-bold text-gray-900 dark:text-white">
+                {turn === 1 ? 'Turn 1/2 (Crisis)' : turn === 2 ? 'Turn 2/2 (Twist)' : 'Final Resolution'}
               </span>
             </div>
-            <p className="text-[10px] text-gray-500 dark:text-neutral-400 hidden sm:block truncate max-w-md">
-              {currentCase?.headline || 'High-Stakes Decision Laboratory'}
-            </p>
-          </div>
-        </div>
 
-        {/* Center / Right Controls: Turn Progression & Preset Select */}
-        <div className="flex items-center gap-2 shrink-0">
-          {/* Turn Tracker Pill */}
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-gray-100 dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 text-[11px] font-mono">
-            <Clock className="w-3.5 h-3.5 text-indigo-500" />
-            <span className="text-gray-500 dark:text-neutral-400 font-sans">Phase:</span>
-            <span className="font-bold text-gray-900 dark:text-white">
-              {turn === 1 ? 'Turn 1/2 (Crisis)' : turn === 2 ? 'Turn 2/2 (Twist)' : 'Final Resolution'}
-            </span>
-          </div>
+            {/* Quick Dilemma Switcher Dropdown */}
+            <div className="relative group shrink-0">
+              <select
+                value={currentCase?.id || ''}
+                onChange={(e) => {
+                  const found = presets.find((p) => p.id === e.target.value);
+                  if (found) initCase(found);
+                }}
+                className="appearance-none bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 hover:border-gray-300 dark:hover:border-neutral-700 rounded-xl px-3 py-1.5 pr-7 text-xs font-medium text-gray-800 dark:text-neutral-200 focus:outline-none cursor-pointer shadow-xs whitespace-nowrap"
+              >
+                {presets.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.company_name} ({p.domain.split('&')[0]})
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="w-3.5 h-3.5 text-gray-400 absolute right-2.5 top-2.5 pointer-events-none" />
+            </div>
 
-          {/* Quick Dilemma Switcher Dropdown */}
-          <div className="relative group">
-            <select
-              value={currentCase?.id || ''}
-              onChange={(e) => {
-                const found = presets.find((p) => p.id === e.target.value);
-                if (found) initCase(found);
-              }}
-              className="appearance-none bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 hover:border-gray-300 dark:hover:border-neutral-700 rounded-xl px-3 py-1.5 pr-7 text-xs font-medium text-gray-800 dark:text-neutral-200 focus:outline-none cursor-pointer shadow-xs"
+            {/* AI Generator Button */}
+            <button
+              type="button"
+              onClick={() => handleGenerateAiCase()}
+              disabled={isGeneratingAiCase}
+              className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm active:scale-98 disabled:opacity-50 cursor-pointer shrink-0 whitespace-nowrap"
             >
-              {presets.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.company_name} ({p.domain.split('&')[0]})
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="w-3.5 h-3.5 text-gray-400 absolute right-2.5 top-2.5 pointer-events-none" />
+              <Sparkles className={`w-3.5 h-3.5 shrink-0 ${isGeneratingAiCase ? 'animate-spin' : ''}`} />
+              <span className="whitespace-nowrap">
+                {isGeneratingAiCase ? 'Generating...' : 'AI New Case'}
+              </span>
+            </button>
+
+            {/* Reset Button */}
+            <button
+              type="button"
+              onClick={() => currentCase && initCase(currentCase)}
+              title="Restart Scenario"
+              className="p-1.5 rounded-xl border border-gray-200 dark:border-neutral-800 text-gray-500 hover:text-gray-900 dark:text-neutral-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-neutral-900 transition-colors cursor-pointer shrink-0"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+            </button>
           </div>
-
-          {/* AI Generator Button */}
-          <button
-            type="button"
-            onClick={() => handleGenerateAiCase()}
-            disabled={isGeneratingAiCase}
-            className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm active:scale-98 disabled:opacity-50 cursor-pointer"
-          >
-            <Sparkles className={`w-3.5 h-3.5 ${isGeneratingAiCase ? 'animate-spin' : ''}`} />
-            <span className="hidden sm:inline">
-              {isGeneratingAiCase ? 'Generating...' : 'AI New Case'}
-            </span>
-          </button>
-
-          {/* Reset Button */}
-          <button
-            type="button"
-            onClick={() => currentCase && initCase(currentCase)}
-            title="Restart Scenario"
-            className="p-1.5 rounded-xl border border-gray-200 dark:border-neutral-800 text-gray-500 hover:text-gray-900 dark:text-neutral-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-neutral-900 transition-colors cursor-pointer"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-          </button>
         </div>
       </header>
 
