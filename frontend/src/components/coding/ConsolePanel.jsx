@@ -69,6 +69,23 @@ const ConsolePanel = forwardRef(function ConsolePanel(
   const [expectedCount, setExpectedCount] = useState(0);
   const [promptsList, setPromptsList] = useState([]);
   const [dynamicLoopInfo, setDynamicLoopInfo] = useState(null);
+  const [runningElapsed, setRunningElapsed] = useState('0.0');
+
+  useEffect(() => {
+    let timer = null;
+    if (sessionStatus === 'running' || isRunning || isSubmitting) {
+      setRunningElapsed('0.0');
+      const start = Date.now();
+      timer = setInterval(() => {
+        setRunningElapsed(((Date.now() - start) / 1000).toFixed(1));
+      }, 100);
+    } else {
+      setRunningElapsed('0.0');
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [sessionStatus, isRunning, isSubmitting]);
 
   const activeInputRef = useRef(null);
   const terminalScrollRef = useRef(null);
@@ -672,11 +689,13 @@ const ConsolePanel = forwardRef(function ConsolePanel(
                 </form>
               )}
 
-              {/* RUNNING SPINNER */}
+              {/* RUNNING SPINNER WITH LIVE ELAPSED TIMER */}
               {(sessionStatus === 'running' || isRunning || isSubmitting) && (
-                <div className="flex items-center gap-2 text-neutral-400 py-1">
-                  <div className="w-3.5 h-3.5 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
-                  <span className="text-[11px] font-sans">Running program...</span>
+                <div className="flex items-center gap-2 text-emerald-400 py-1 font-mono text-[11px] animate-in fade-in duration-150">
+                  <div className="w-3.5 h-3.5 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin shrink-0" />
+                  <span>
+                    {isSubmitting ? 'Evaluating Test Cases...' : 'Executing Program...'} <span className="text-zinc-400 font-normal">({runningElapsed}s)</span>
+                  </span>
                 </div>
               )}
 

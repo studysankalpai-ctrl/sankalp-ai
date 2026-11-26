@@ -353,6 +353,7 @@ export default function VivaRoom() {
         questionNumber,
         totalQuestions: Number(totalQuestions),
         currentQuestionText: currentQuestion,
+        currentQuestionTopic,
         candidateSpokenAnswer: fullAnswer,
         previousHistory: vivaHistory,
         isCrossQuestion,
@@ -1195,9 +1196,16 @@ export default function VivaRoom() {
                       className="p-3 rounded-xl bg-white dark:bg-black border border-gray-200 dark:border-neutral-800 space-y-2 text-xs"
                     >
                       <div className="flex items-center justify-between gap-2 border-b border-gray-100 dark:border-neutral-800 pb-1.5">
-                        <span className="font-bold text-gray-900 dark:text-gray-100">
-                          Q{idx + 1}: {item.question}
-                        </span>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="font-bold text-gray-900 dark:text-gray-100">
+                            Q{idx + 1}: {item.question}
+                          </span>
+                          {item.topic && (
+                            <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-900/40">
+                              Topic: {item.topic}
+                            </span>
+                          )}
+                        </div>
                         <span className="px-2 py-0.5 rounded-md bg-gray-100 dark:bg-neutral-800 text-[10px] font-bold text-gray-800 dark:text-gray-200 shrink-0">
                           {item.marks} / 5 Marks
                         </span>

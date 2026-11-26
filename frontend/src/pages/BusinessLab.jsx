@@ -36,12 +36,12 @@ import MarkdownRenderer from '../components/common/MarkdownRenderer';
 import toast from 'react-hot-toast';
 
 const DOMAINS = [
-  { id: 'all', label: 'All Crises' },
-  { id: 'startup', label: 'Runway & Cash Burn' },
-  { id: 'competition', label: 'Price War & Defense' },
-  { id: 'crisis', label: 'Recall & Public Safety' },
-  { id: 'ethics', label: 'Ethics & Internal Revolt' },
-  { id: 'growth', label: 'Hostile Scale & Pivot' },
+  { id: 'all', label: 'All Crises', desc: 'Random high-stakes executive crisis across tech, D2C, or manufacturing' },
+  { id: 'startup', label: 'Runway & Cash Burn', desc: 'Startup survival, 45-day runway, VC term sheet paused, store closure tradeoffs' },
+  { id: 'competition', label: 'Price War & Defense', desc: 'Conglomerate predatory pricing clone, 45% undercut, margin & retailer defense' },
+  { id: 'crisis', label: 'Recall & Public Safety', desc: 'Hardware battery failure, viral boycott, Ministry 48-hr show-cause notice' },
+  { id: 'ethics', label: 'Ethics & Internal Revolt', desc: 'Whistleblower leaks, executive misconduct, employee walkout, regulatory scrutiny' },
+  { id: 'growth', label: 'Hostile Scale & Pivot', desc: 'Hostile takeover bid, market disruption, sudden strategic pivot or shutdown' },
 ];
 
 export default function BusinessLab() {
@@ -50,8 +50,10 @@ export default function BusinessLab() {
   // State: Case data
   const [currentCase, setCurrentCase] = useState(null);
   const [presets, setPresets] = useState([]);
-  const [selectedDomain, setSelectedDomain] = useState('all');
-  const [isLoadingCase, setIsLoadingCase] = useState(true);
+  const [selectedDomain, setSelectedDomain] = useState('startup');
+  const [customTopic, setCustomTopic] = useState('');
+  const [showPresets, setShowPresets] = useState(false);
+  const [isLoadingCase, setIsLoadingCase] = useState(false);
   const [isGeneratingAiCase, setIsGeneratingAiCase] = useState(false);
 
   // Simulation Game State
@@ -74,24 +76,19 @@ export default function BusinessLab() {
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef(null);
 
-  // Load Presets on Mount
+  // Load Presets on Mount (as archive options only, do NOT auto-init)
   useEffect(() => {
     loadPresets();
   }, []);
 
   const loadPresets = async () => {
-    setIsLoadingCase(true);
     try {
       const res = await caseStudyApi.getPresets();
       if (res.data?.success && res.data.data?.length > 0) {
         setPresets(res.data.data);
-        initCase(res.data.data[0]);
       }
     } catch (err) {
       console.error('Failed to load preset cases:', err);
-      toast.error('Using offline case engine');
-    } finally {
-      setIsLoadingCase(false);
     }
   };
 
@@ -107,12 +104,13 @@ export default function BusinessLab() {
     setEvaluation(null);
   };
 
-  const handleGenerateAiCase = async (domainToUse = selectedDomain) => {
+  const handleGenerateAiCase = async (domainToUse = selectedDomain, topicToUse = customTopic) => {
     setIsGeneratingAiCase(true);
     const effectiveDomain = domainToUse === 'all' ? 'startup' : domainToUse;
     try {
       const res = await caseStudyApi.generateCase({
         domain: effectiveDomain,
+        customTopic: topicToUse.trim(),
         apiKey: groqApiKey,
         model: groqModel,
       });
@@ -122,7 +120,7 @@ export default function BusinessLab() {
       }
     } catch (err) {
       console.error('AI Case generation error:', err);
-      toast.error('Failed to generate AI case, loaded fallback dilemma');
+      toast.error('Failed to generate AI case, please retry');
     } finally {
       setIsGeneratingAiCase(false);
     }
@@ -279,6 +277,214 @@ export default function BusinessLab() {
     return current - prev;
   };
 
+  // =========================================================================
+  // CASE 1: NO ACTIVE CASE -> SHOW DEDICATED CRISIS GENERATOR STUDIO
+  // =========================================================================
+  if (!currentCase) {
+    return (
+      <div className="w-full h-full flex flex-col bg-gray-50 dark:bg-black text-gray-900 dark:text-zinc-100 select-none overflow-y-auto font-sans">
+        {/* Top Minimal Bar */}
+        <header className="w-full bg-white dark:bg-[#0a0a0a] border-b border-gray-200 dark:border-neutral-800 shrink-0 px-4 sm:px-8 py-3.5 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-500 shadow-sm">
+              <Briefcase className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-extrabold text-sm sm:text-base text-gray-900 dark:text-white">
+                  SANKALP AI Business Lab
+                </span>
+                <span className="px-2 py-0.5 rounded-full text-[9px] font-mono uppercase tracking-wider font-bold bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400">
+                  MBA War Room
+                </span>
+              </div>
+              <p className="text-[11px] text-gray-500 dark:text-neutral-400">
+                Autonomous Corporate Crisis Simulation &amp; Board Scrutiny Engine
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-semibold">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              AI Studio Ready
+            </span>
+          </div>
+        </header>
+
+        {/* Generator Main Content */}
+        <div className="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-6 md:p-8 space-y-6 sm:space-y-8 animate-in fade-in duration-300">
+          {/* Hero Banner */}
+          <div className="text-center space-y-2.5 max-w-2xl mx-auto">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400 text-xs font-bold border border-indigo-200 dark:border-indigo-900/60">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Real-Time AI Dilemma Generation</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-950 dark:text-white tracking-tight">
+              Formulate Your Strategic Crisis
+            </h1>
+            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+              Generate an unpredictable corporate crisis with conflicting CXO agendas, real financial runway constraints, and multi-turn market repercussions.
+            </p>
+          </div>
+
+          {/* Step 1: Select Crisis Domain */}
+          <div className="space-y-3">
+            <label className="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+              <Target className="w-4 h-4 text-amber-500" />
+              <span>1. Choose Crisis Domain</span>
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-3">
+              {DOMAINS.map((domain) => {
+                const isSelected = selectedDomain === domain.id;
+                return (
+                  <button
+                    key={domain.id}
+                    type="button"
+                    onClick={() => setSelectedDomain(domain.id)}
+                    className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer relative overflow-hidden group ${
+                      isSelected
+                        ? 'border-indigo-600 dark:border-indigo-500 bg-indigo-50/40 dark:bg-indigo-950/30 ring-2 ring-indigo-500/20'
+                        : 'border-gray-200 dark:border-neutral-800 bg-white dark:bg-[#0c0c0c] hover:border-gray-300 dark:hover:border-neutral-700'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="font-bold text-xs sm:text-sm text-gray-950 dark:text-white">
+                        {domain.label}
+                      </span>
+                      {isSelected && (
+                        <span className="w-2 h-2 rounded-full bg-indigo-600 dark:bg-indigo-400" />
+                      )}
+                    </div>
+                    <p className="text-[11px] text-gray-500 dark:text-gray-400 leading-relaxed">
+                      {domain.desc}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Step 2: Custom Company / Scenario Prompt */}
+          <div className="space-y-3">
+            <label className="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+              <Zap className="w-4 h-4 text-indigo-500" />
+              <span>2. Specific Industry or Dilemma Focus (Optional)</span>
+            </label>
+            <div className="space-y-2">
+              <input
+                type="text"
+                value={customTopic}
+                onChange={(e) => setCustomTopic(e.target.value)}
+                placeholder="E.g. Electric Vehicle startup in Pune with battery thermal runaway, or Tier-2 Quick Commerce CAC crisis..."
+                className="w-full px-4 py-3 rounded-2xl bg-white dark:bg-[#0c0c0c] border border-gray-200 dark:border-neutral-800 text-xs sm:text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-indigo-500 shadow-2xs"
+              />
+
+              {/* Quick Suggestion Chips */}
+              <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mr-1">
+                  Try:
+                </span>
+                {[
+                  '⚡ EV Battery Thermal Fire',
+                  '💳 Fintech UPI Payment Freeze',
+                  '📦 10-Min Delivery CAC Crisis',
+                  '🏭 Chemical Factory Pollution Notice',
+                  '🤖 Generative AI EdTech Disruption',
+                ].map((chip) => (
+                  <button
+                    key={chip}
+                    type="button"
+                    onClick={() => setCustomTopic(chip.replace(/^[^\w]+/, '').trim())}
+                    className="px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-neutral-900 dark:hover:bg-neutral-800 text-gray-700 dark:text-gray-300 text-[11px] font-medium transition-colors border border-gray-200/60 dark:border-neutral-800 cursor-pointer"
+                  >
+                    {chip}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Step 3: Big Glowing Generate CTA */}
+          <div className="pt-2">
+            <button
+              type="button"
+              onClick={() => handleGenerateAiCase()}
+              disabled={isGeneratingAiCase}
+              className="w-full py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-sm sm:text-base flex items-center justify-center gap-2.5 shadow-lg shadow-indigo-600/25 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-60 cursor-pointer"
+            >
+              {isGeneratingAiCase ? (
+                <>
+                  <Sparkles className="w-5 h-5 animate-spin" />
+                  <span>AI Calibrating Corporate Dilemma &amp; Financial Vitals...</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-5 h-5" />
+                  <span>Generate AI Crisis Simulation</span>
+                  <ArrowRight className="w-4 h-4 ml-1" />
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* Optional Archive Benchmark Cases Drawer */}
+          {presets.length > 0 && (
+            <div className="pt-4 border-t border-gray-200 dark:border-neutral-800">
+              <button
+                type="button"
+                onClick={() => setShowPresets(!showPresets)}
+                className="flex items-center justify-between w-full text-left py-2 text-xs font-bold text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white cursor-pointer"
+              >
+                <span className="flex items-center gap-2">
+                  <Layers className="w-4 h-4 text-amber-500" />
+                  <span>Or Browse Benchmark Cases ({presets.length} Harvard/IIM Case Archives)</span>
+                </span>
+                <ChevronDown className={`w-4 h-4 transition-transform ${showPresets ? 'rotate-180' : ''}`} />
+              </button>
+
+              {showPresets && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3">
+                  {presets.map((preset) => (
+                    <div
+                      key={preset.id}
+                      className="p-3.5 rounded-2xl bg-white dark:bg-[#0c0c0c] border border-gray-200 dark:border-neutral-800 flex flex-col justify-between hover:border-gray-300 dark:hover:border-neutral-700 transition-colors"
+                    >
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="font-bold text-xs text-gray-900 dark:text-white">
+                            {preset.company_name}
+                          </span>
+                          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-gray-100 dark:bg-neutral-800 text-gray-600 dark:text-gray-400">
+                            {preset.domain.split('&')[0]}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-gray-500 dark:text-gray-400 line-clamp-2">
+                          {preset.headline}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => initCase(preset)}
+                        className="mt-3 px-3 py-1.5 rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-gray-900 dark:text-white text-xs font-semibold self-start flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <span>Launch Case</span>
+                        <ArrowRight className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // =========================================================================
+  // CASE 2: ACTIVE SIMULATION -> RENDER FULL EXECUTIVE WAR ROOM & HUD
+  // =========================================================================
   return (
     <div className="w-full h-full flex flex-col bg-gray-50 dark:bg-black text-gray-900 dark:text-zinc-100 select-none overflow-hidden font-sans">
       {/* 1. TOP EXECUTIVE HUD & CONTROLS (Horizontally scrollable on mobile) */}
@@ -286,6 +492,16 @@ export default function BusinessLab() {
         <div className="min-w-max w-full px-3 sm:px-6 py-2.5 flex items-center justify-between gap-4">
           {/* Left: Brand & Company Identity */}
           <div className="flex items-center gap-3 shrink-0">
+            <button
+              type="button"
+              onClick={() => setCurrentCase(null)}
+              className="px-2.5 py-1.5 rounded-xl bg-gray-100 dark:bg-neutral-900 hover:bg-gray-200 dark:hover:bg-neutral-800 text-gray-700 dark:text-neutral-300 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
+              title="Return to Crisis Generator"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>New Simulation</span>
+            </button>
+
             <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-500 shadow-sm shrink-0">
               <Briefcase className="w-4 h-4" />
             </div>
@@ -315,25 +531,6 @@ export default function BusinessLab() {
               </span>
             </div>
 
-            {/* Quick Dilemma Switcher Dropdown */}
-            <div className="relative group shrink-0">
-              <select
-                value={currentCase?.id || ''}
-                onChange={(e) => {
-                  const found = presets.find((p) => p.id === e.target.value);
-                  if (found) initCase(found);
-                }}
-                className="appearance-none bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 hover:border-gray-300 dark:hover:border-neutral-700 rounded-xl px-3 py-1.5 pr-7 text-xs font-medium text-gray-800 dark:text-neutral-200 focus:outline-none cursor-pointer shadow-xs whitespace-nowrap"
-              >
-                {presets.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.company_name} ({p.domain.split('&')[0]})
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="w-3.5 h-3.5 text-gray-400 absolute right-2.5 top-2.5 pointer-events-none" />
-            </div>
-
             {/* AI Generator Button */}
             <button
               type="button"
@@ -343,7 +540,7 @@ export default function BusinessLab() {
             >
               <Sparkles className={`w-3.5 h-3.5 shrink-0 ${isGeneratingAiCase ? 'animate-spin' : ''}`} />
               <span className="whitespace-nowrap">
-                {isGeneratingAiCase ? 'Generating...' : 'AI New Case'}
+                {isGeneratingAiCase ? 'Generating...' : 'AI New Dilemma'}
               </span>
             </button>
 
@@ -351,7 +548,7 @@ export default function BusinessLab() {
             <button
               type="button"
               onClick={() => currentCase && initCase(currentCase)}
-              title="Restart Scenario"
+              title="Restart Current Scenario"
               className="p-1.5 rounded-xl border border-gray-200 dark:border-neutral-800 text-gray-500 hover:text-gray-900 dark:text-neutral-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-neutral-900 transition-colors cursor-pointer shrink-0"
             >
               <RotateCcw className="w-3.5 h-3.5" />
