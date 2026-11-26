@@ -257,19 +257,20 @@ You can ask me to:
   // Build rich, textbook-level prompt including all detailed topics
   const buildUnitPrompt = (u) => {
     const topicsList = (u.topics && u.topics.length > 0)
-      ? u.topics.map((t) => `• ${t}`).join('\n')
+      ? u.topics.map((t, idx) => `${idx + 1}. ${t}`).join('\n')
       : (u.description ? `• ${u.description}` : '• Core syllabus topics and principles');
 
-    return `Teach and thoroughly explain the academic concepts of "${u.name}" in comprehensive, textbook-level detail.
+    return `Teach and thoroughly explain all academic topics of "${u.name}" in complete, textbook-grade detail.
 
-Topics to cover in depth:
+SYLLABUS TOPICS TO COVER (MANDATORY COMPLETE COVERAGE):
 ${topicsList}
 
-Instructions:
-- Provide an authoritative, in-depth academic masterclass matching the quality of top university textbooks and ChatGPT.
-- Explain each concept thoroughly with complete technical definitions, working mechanisms, code/mathematical examples, and architectural diagrams.
-- Do NOT output filler introductions, generic greetings, or repetitive "In this unit..." phrases. Start directly with the actual subject concepts.
-- Use clear structured headings, comparative analysis tables, and exam scoring insights so students get genuine value and master the subject.`;
+STRICT PEDAGOGICAL STRUCTURE (ENFORCED FOR EVERY TOPIC):
+For each and every topic listed above, do NOT skip or gloss over any topic. For each topic, strictly follow this 2-step sequence:
+1. FIRST (Concept & Definition): Provide the formal textbook definition (with bold keywords) and intuitive explanation of what this concept actually is, why it exists, and what problem it solves. Do NOT skip definitions!
+2. THEN (Parts & Derivations Breakdown): Break down and number all of its constituent parts, internal components, working mechanism, types, or step-by-step mathematical/code flow, followed by a clear practical example.
+
+Ensure no topic is left undefined or superficially summarized. Start directly with the first topic.`;
   };
 
   // Send message and persist to IndexedDB (with Local Response Caching in IndexedDB)
@@ -1319,7 +1320,9 @@ Instructions:
                     <div
                       key={t._id}
                       onClick={() =>
-                        setInputValue(`Explain the university exam question: "${t.topic_name}" for ${marksFormat} marks.`)
+                        setInputValue(
+                          `Explain "${t.topic_name}" for university exams (${marksFormat} marks). First define the core concept clearly with bold keywords, then thoroughly break down all its constituent parts, working mechanism, and derivations.`
+                        )
                       }
                       className="p-2 rounded-xl text-xs hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer flex items-center justify-between transition-colors"
                     >
