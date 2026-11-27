@@ -434,7 +434,7 @@ const generateQuestions = async (req, res, next) => {
       marks = 10,
       questionType = 'short',
       count = 5,
-      model = 'openai/gpt-oss-120b',
+      model = 'llama-3.3-70b-versatile',
     } = req.body;
 
     if (!apiKey) {
@@ -442,28 +442,84 @@ const generateQuestions = async (req, res, next) => {
     }
 
     const academicContext = subjectId ? await getSubjectAcademicContext(subjectId) : null;
+    const subjectUnits = academicContext?.subject?.units || [];
 
-    const prompt = `As a university examination mentor, generate ${count} examination practice questions for:
-Subject: ${academicContext?.subject?.name || 'Computer Science/Management'}
-Unit: ${unitName || 'All Units'}
-Difficulty: ${difficulty}
-Marks Format: ${marks} Marks each
-Question Type: ${questionType} (e.g. MCQ, Short, Long, Numerical, Programming)
+    // Filter to target unit if specified (e.g. "Unit 1: Name" or "Unit 1" or specific unit number)
+    let targetUnitsList = subjectUnits;
+    if (unitName && unitName !== 'full' && unitName !== 'Full Syllabus' && unitName !== 'all') {
+      const unitNumMatch = String(unitName).match(/\d+/);
+      const targetNum = unitNumMatch ? parseInt(unitNumMatch[0], 10) : null;
 
-Format as a JSON array of objects:
+      const matchedUnit = subjectUnits.find((u) => 
+        (targetNum !== null && u.number === targetNum) ||
+        u.name.toLowerCase().includes(String(unitName).toLowerCase())
+      );
+      if (matchedUnit) {
+        targetUnitsList = [matchedUnit];
+      }
+    }
+
+    // Build structured syllabus roster
+    let syllabusSection = `### OFFICIAL UNIVERSITY SYLLABUS UNITS & TOPICS TO TEST (STRICT GROUNDING):\n`;
+    if (targetUnitsList.length > 0) {
+      targetUnitsList.forEach((u) => {
+        const topicsList = (u.topics && u.topics.length > 0)
+          ? u.topics.join('; ')
+          : (u.description || 'Core unit topics');
+        syllabusSection += `- Unit ${u.number} (${u.name}): ${topicsList}\n`;
+      });
+    } else {
+      syllabusSection += `- All Core Curriculum Topics for ${academicContext?.subject?.name || 'this subject'}\n`;
+    }
+
+    if (academicContext?.importantTopics && academicContext.importantTopics.length > 0) {
+      syllabusSection += `\n### HIGH-YIELD UNIVERSITY EXAM TOPICS:\n`;
+      academicContext.importantTopics.slice(0, 8).forEach((t) => {
+        syllabusSection += `- ${t.topic_name} (Priority: ${t.priority || 'high'}${t.unit ? `, Unit ${t.unit}` : ''})\n`;
+      });
+    }
+
+    if (academicContext?.sampleQuestions && academicContext.sampleQuestions.length > 0) {
+      syllabusSection += `\n### 5-YEAR PAST PAPER QUESTION PATTERNS:\n`;
+      academicContext.sampleQuestions.slice(0, 4).forEach((q) => {
+        syllabusSection += `- [${q.year || 'PYQ'}] ${q.text.substring(0, 90)}\n`;
+      });
+    }
+
+    const prompt = `You are an expert University Examination Paper Setter and Academic Professor for ${academicContext?.subject?.name || 'University Curriculum'}.
+Your task is to generate ${count} authentic, university-standard examination questions strictly grounded in the official syllabus provided below.
+
+CRITICAL SYLLABUS GROUNDING RULES (ZERO OUT-OF-SYLLABUS CONTENT):
+1. MANDATORY SYLLABUS COMPLIANCE: Every single question MUST be formulated directly and exclusively from the syllabus units and topics listed below.
+   - DO NOT introduce topics from other courses, foreign curricula, or unrelated domains.
+   - Every question must test a topic explicitly present in the syllabus.
+2. TOPIC ATTRIBUTION: For every question, you MUST explicitly identify:
+   - "syllabus_unit": The exact unit number & name (e.g., "Unit 1: Process Management").
+   - "syllabus_topic": The exact syllabus topic being tested (e.g., "Banker's Algorithm & Deadlock Avoidance").
+3. QUESTION FORMAT:
+   - Difficulty: ${difficulty}
+   - Marks Format: ${marks} Marks per question
+   - Question Type: ${questionType} (MCQ, Short Answer, or Descriptive)
+   ${questionType === 'mcq' ? '- For MCQ questions, provide exactly 4 clear options ("A) ...", "B) ...", "C) ...", "D) ...") and set "correct_answer" to the matching option letter and text.' : '- For descriptive questions, provide an authoritative, textbook-grade model answer summary and scoring key points.'}
+
+${syllabusSection}
+
+Format your response strictly as a JSON array of objects:
 [
   {
-    "question": "The question text",
+    "question": "Clear examination question text",
+    "syllabus_unit": "Unit X: [Unit Name]",
+    "syllabus_topic": "[Specific Syllabus Topic]",
     "marks": ${marks},
-    "type": "${questionType}",
-    "options": ["A) ...", "B) ...", "C) ...", "D) ..."] // ONLY if MCQ, otherwise omit
+    "type": "${questionType === 'mcq' ? 'mcq' : 'descriptive'}",
+    ${questionType === 'mcq' ? '"options": ["A) ...", "B) ...", "C) ...", "D) ..."],' : ''}
     "correct_answer": "Model answer / solution",
     "explanation": "Step by step grading explanation",
-    "key_points": ["Point 1", "Point 2"],
+    "key_points": ["Scoring keyword 1", "Scoring keyword 2"],
     "is_ai_generated": true
   }
 ]
-Return ONLY valid JSON array.`;
+Return ONLY the raw valid JSON array.`;
 
     const completion = await chatCompletion({
       apiKey,
@@ -473,7 +529,22 @@ Return ONLY valid JSON array.`;
       max_tokens: 4096,
     });
 
-    const questions = safeParseJson(completion.content, []);
+    let questions = safeParseJson(completion.content, []);
+
+    // Ensure questions is an array
+    if (!Array.isArray(questions)) {
+      questions = questions.questions || [];
+    }
+
+    // Fallback topic/unit attribution if model omitted them
+    questions = questions.map((q, qIdx) => {
+      const assignedUnit = targetUnitsList[qIdx % targetUnitsList.length];
+      return {
+        ...q,
+        syllabus_unit: q.syllabus_unit || (assignedUnit ? `Unit ${assignedUnit.number}: ${assignedUnit.name}` : 'Syllabus Core'),
+        syllabus_topic: q.syllabus_topic || (assignedUnit?.topics?.[0] || 'Core University Concept'),
+      };
+    });
 
     return successResponse(res, questions, 'Practice questions generated');
   } catch (error) {

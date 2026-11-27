@@ -17,6 +17,13 @@ const { successResponse, errorResponse } = require('../utils/apiResponse');
  */
 const buildVivaSyllabusContext = async (subjectId, unitNumber = null, topic = null) => {
   if (!subjectId) {
+    const fallbackTopics = [
+      'Core Definitions & Terminology',
+      'Underlying Architecture & Working Principle',
+      'Key Differences & Distinction Matrix',
+      'Practical Implementation & Edge Cases',
+      'Performance Optimization & Constraints',
+    ];
     return {
       subjectName: 'University Academic Subject',
       subjectCode: '',
@@ -25,6 +32,7 @@ const buildVivaSyllabusContext = async (subjectId, unitNumber = null, topic = nu
         ? `Focus specifically on topic: ${topic}`
         : 'General university syllabus concepts and fundamental practicals.',
       activeUnit: null,
+      distinctTopics: fallbackTopics,
     };
   }
 
@@ -32,11 +40,13 @@ const buildVivaSyllabusContext = async (subjectId, unitNumber = null, topic = nu
   const subjectName = academicContext?.subject?.name || 'University Academic Subject';
   const subjectCode = academicContext?.subject?.code || '';
   const units = academicContext?.subject?.units || [];
+  const importantTopicsList = (academicContext?.importantTopics || []).map((t) => t.topic_name).filter(Boolean);
 
   let scopeDesc = '';
   let syllabusDetails = '';
   let activeUnit = null;
   let relevantQuestions = [];
+  let distinctTopics = [];
 
   if (unitNumber && units.length > 0) {
     activeUnit = units.find((u) => u.number === Number(unitNumber)) || null;
@@ -50,6 +60,35 @@ const buildVivaSyllabusContext = async (subjectId, unitNumber = null, topic = nu
         `OFFICIAL PRESCRIBED SYLLABUS FOR UNIT ${activeUnit.number} (${activeUnit.name}):\n` +
         `Detailed Syllabus Topics & Concepts:\n${unitDesc || unitTopicsText || activeUnit.name}`;
 
+      // Collect unit topics
+      if (activeUnit.topics && activeUnit.topics.length > 0) {
+        distinctTopics = [...activeUnit.topics];
+      } else if (unitDesc) {
+        distinctTopics = unitDesc
+          .split(/[,;\n•]+/)
+          .map((s) => s.trim())
+          .filter((s) => s.length > 3 && !s.toLowerCase().includes('unit'));
+      }
+
+      // Add matching important topics
+      const matchingImportant = importantTopicsList.filter(
+        (t) =>
+          typeof t === 'string' &&
+          (t.toLowerCase().includes(`unit ${unitNumber}`) ||
+            (activeUnit.name && t.toLowerCase().includes(activeUnit.name.toLowerCase().slice(0, 10))))
+      );
+      distinctTopics.push(...matchingImportant);
+
+      if (distinctTopics.length === 0) {
+        distinctTopics = [
+          `${activeUnit.name} - Core Definition`,
+          `${activeUnit.name} - Working Mechanism`,
+          `${activeUnit.name} - Practical Execution`,
+          `${activeUnit.name} - Key Comparison`,
+          `${activeUnit.name} - Best Practices & Limits`,
+        ];
+      }
+
       // Filter past university questions from this unit
       relevantQuestions = (academicContext.sampleQuestions || [])
         .filter(
@@ -62,10 +101,18 @@ const buildVivaSyllabusContext = async (subjectId, unitNumber = null, topic = nu
     } else {
       scopeDesc = `Unit ${unitNumber}`;
       syllabusDetails = `Prescribed syllabus for Unit ${unitNumber} of ${subjectName}.`;
+      distinctTopics = [`Unit ${unitNumber} Foundations`, `Unit ${unitNumber} Methods`, `Unit ${unitNumber} Practical Applications`];
     }
   } else if (topic) {
     scopeDesc = `Topic: ${topic}`;
     syllabusDetails = `Prescribed syllabus focus area: ${topic} in ${subjectName}.`;
+    distinctTopics = [
+      `${topic} - Fundamentals`,
+      `${topic} - Internal Architecture`,
+      `${topic} - Practical Use-Cases`,
+      `${topic} - Tradeoffs & Performance`,
+      `${topic} - Common Errors & Edge Cases`,
+    ];
   } else {
     scopeDesc = `Full Practical Syllabus of ${subjectName} (${subjectCode})`;
     syllabusDetails =
@@ -79,7 +126,29 @@ const buildVivaSyllabusContext = async (subjectId, unitNumber = null, topic = nu
         )
         .join('\n\n');
 
+    // Collect topics across all units
+    for (const u of units) {
+      if (u.topics && u.topics.length > 0) {
+        distinctTopics.push(...u.topics.slice(0, 3));
+      } else {
+        distinctTopics.push(`Unit ${u.number}: ${u.name}`);
+      }
+    }
+    distinctTopics.push(...importantTopicsList.slice(0, 10));
+
     relevantQuestions = (academicContext.sampleQuestions || []).slice(0, 12);
+  }
+
+  // Deduplicate and sanitize distinct topics
+  distinctTopics = [...new Set(distinctTopics.map((t) => t.trim()))].filter((t) => t && t.length > 2);
+  if (distinctTopics.length === 0) {
+    distinctTopics = [
+      'Foundational Concepts & Principles',
+      'Core Process & Working Mechanism',
+      'Distinction Matrix & Differences',
+      'Memory / Resource Behavior',
+      'Practical Implementation & Constraints',
+    ];
   }
 
   // If past university questions exist, append them as high-yield viva references
@@ -108,6 +177,7 @@ const buildVivaSyllabusContext = async (subjectId, unitNumber = null, topic = nu
     scopeDesc,
     syllabusDetails,
     activeUnit,
+    distinctTopics,
   };
 };
 
@@ -178,8 +248,10 @@ const startVivaSession = async (req, res, next) => {
       return errorResponse(res, 'Groq API key required to start AI Viva', 401);
     }
 
-    const { subjectName, subjectCode, scopeDesc, syllabusDetails, activeUnit } =
+    const { subjectName, subjectCode, scopeDesc, syllabusDetails, activeUnit, distinctTopics } =
       await buildVivaSyllabusContext(subjectId, unitNumber, topic);
+
+    const firstTopic = distinctTopics[0] || (activeUnit ? activeUnit.name : 'Foundational Principles');
 
     const prompt = `You are a university professor conducting an official, real-time Oral Viva-Voce examination for college students.
 
@@ -196,11 +268,16 @@ ${getLanguageGuidance(language)}
 OFFICIAL PRESCRIBED SYLLABUS & TOPICS TO TEST:
 ${syllabusDetails}
 
+TOPIC DIVERSITY REQUIREMENT:
+The syllabus contains these distinct topics:
+${distinctTopics.map((t, idx) => `  ${idx + 1}. ${t}`).join('\n')}
+
 CRITICAL EXAMINER INSTRUCTIONS:
-1. You MUST formulate Question 1 STRICTLY derived from the syllabus provided above. Do NOT ask generic, vague, or out-of-syllabus questions.
-2. Question 1 must test a high-yield foundational concept directly from this specific unit syllabus (e.g. definitions, differences between concepts, internal working principles, memory behavior, or purpose of specific keywords/routines).
+1. You MUST formulate Question 1 strictly testing Topic #1: "${firstTopic}".
+2. Question 1 must test this specific topic directly (definition, internal working, difference, or practical use).
 3. LANGUAGE CLARITY (MANDATORY): The question MUST be formulated in simple, clear, conversational words (1-2 sentences maximum). Strictly NO high-level or archaic vocabulary like "elucidate", "delineate", "concomitant", "rudimentary", "dichotomy". Keep it so clear that any undergraduate student grasps it immediately on first hearing.
-4. Provide a warm, brief verbal opening greeting (~1 sentence) introducing the viva and the unit scope in simple words.
+4. Set "syllabus_topic_tested": "${firstTopic}".
+5. Provide a warm, brief verbal opening greeting (~1 sentence) introducing the viva and the unit scope in simple words.
 
 OUTPUT FORMAT:
 Respond with a strictly valid JSON object ONLY:
@@ -209,7 +286,7 @@ Respond with a strictly valid JSON object ONLY:
   "question_number": 1,
   "total_questions": ${totalQuestions},
   "question_text": "The simple, clear oral viva question spoken to the candidate",
-  "syllabus_topic_tested": "Specific syllabus topic tested",
+  "syllabus_topic_tested": "${firstTopic}",
   "expected_keywords": ["keyword 1", "keyword 2", "keyword 3"]
 }`;
 
@@ -299,8 +376,33 @@ const respondVivaTurn = async (req, res, next) => {
       return errorResponse(res, 'Question and candidate answer are required', 400);
     }
 
-    const { subjectName, subjectCode, scopeDesc, syllabusDetails } =
+    const { subjectName, subjectCode, scopeDesc, syllabusDetails, distinctTopics } =
       await buildVivaSyllabusContext(subjectId, unitNumber, topic);
+
+    // Track all topics tested so far across previous turns
+    const testedTopics = (previousHistory || [])
+      .map((h) => h.topic)
+      .filter((t) => t && typeof t === 'string' && t.trim().length > 0);
+
+    const currentTopicFromClient = req.body.currentQuestionTopic || req.body.topic;
+    if (currentTopicFromClient && !testedTopics.includes(currentTopicFromClient)) {
+      testedTopics.push(currentTopicFromClient);
+    }
+
+    // Filter to find remaining UNTESTED topics
+    const untestedTopics = distinctTopics.filter((candidate) => {
+      const cNorm = candidate.toLowerCase().trim();
+      return !testedTopics.some((tested) => {
+        const tNorm = tested.toLowerCase().trim();
+        return tNorm === cNorm || tNorm.includes(cNorm) || cNorm.includes(tNorm);
+      });
+    });
+
+    // Select the next target topic from untested topics
+    const nextTargetTopic =
+      untestedTopics[0] ||
+      distinctTopics[(Number(questionNumber)) % distinctTopics.length] ||
+      'Applied Implementation & Concepts';
 
     const isLastQuestion =
       Number(questionNumber) >= Number(totalQuestions) && isCrossQuestion;
@@ -321,9 +423,10 @@ EXAMINATION SCOPE: ${scopeDesc}
 OFFICIAL PRESCRIBED SYLLABUS & TOPICS:
 ${syllabusDetails}
 
-CURRENT EXAM STATE:
+CURRENT EXAM STATE & TOPICS TESTED SO FAR:
 - Question Number: ${questionNumber} of ${totalQuestions}
 - Was this a follow-up/cross question: ${isCrossQuestion ? 'YES' : 'NO'}
+- Current Topic Just Tested: "${currentTopicFromClient || 'Prescribed Concept'}"
 - Examiner Asked: "${currentQuestionText}"
 - Candidate Spoke (Voice Transcript): "${candidateSpokenAnswer}"
 - Previous Questions Asked So Far:
@@ -331,13 +434,19 @@ CURRENT EXAM STATE:
     previousHistory
       .map(
         (h, i) =>
-          `Q${i + 1}: "${h.question}" (Candidate Answer: "${h.answer?.substring(
+          `Q${i + 1} [Topic: ${h.topic || 'Concept'}]: "${h.question}" (Candidate Answer: "${h.answer?.substring(
             0,
             120
           )}...", Marks: ${h.marks}/5)`
       )
       .join('\n  ') || 'None'
   }
+
+CRITICAL TOPIC DIVERSITY MANDATE (DO NOT REPEAT TOPICS):
+- Topics already tested in this exam:
+  ${testedTopics.map((t) => `  * ${t}`).join('\n') || 'None'}
+- Available Untested Topics:
+  ${untestedTopics.slice(0, 5).join(', ') || 'Alternative syllabus concepts'}
 
 YOUR TASK:
 1. Grade the candidate's answer for this question out of 5 marks (e.g. 4/5).
@@ -350,11 +459,14 @@ YOUR TASK:
    - CASE A (Cross-Question): If the answer was weak or incomplete AND this was NOT already a cross-question AND ${!shouldCheckForFinal}:
      Ask a simple, targeted follow-up question directly on the missing concept.
      Keep the question short, direct, and easy to understand (NO hard words).
-     Set "is_cross_question": true, "is_final": false.
+     Set "is_cross_question": true, "is_final": false, "syllabus_topic_tested": "${currentTopicFromClient || 'Clarification'}".
    - CASE B (Next Question): If the answer was sufficient OR was already a cross-question, AND question_number < ${totalQuestions}:
      Advance to NEXT official viva question (Question ${Number(questionNumber) + 1}).
-     CRITICAL: This next question MUST be strictly chosen from an UNTESTED topic in the prescribed syllabus provided above! Do NOT repeat topics! Keep the question short, direct, and simple!
-     Set "is_cross_question": false, "is_final": false.
+     CRITICAL: This next question MUST be strictly chosen from an UNTESTED topic in the prescribed syllabus!
+     YOU MUST ASK ABOUT THIS NEW TOPIC: "${nextTargetTopic}"!
+     DO NOT repeat any topic already tested (${testedTopics.join(', ') || 'previous concept'}).
+     Keep the question short, direct, and simple!
+     Set "is_cross_question": false, "is_final": false, "syllabus_topic_tested": "${nextTargetTopic}".
    - CASE C (Final Assessment): If question_number >= ${totalQuestions}:
      Complete the viva exam. Set "is_final": true, and generate the university Report Card in clear, simple language.
 
@@ -369,7 +481,7 @@ OUTPUT FORMAT (Respond with strictly valid JSON ONLY):
   "is_final": boolean,
   "next_question_number": ${Number(questionNumber) + (isCrossQuestion ? 0 : 1)},
   "next_question_text": "Next simple spoken question or cross-question (null if is_final is true)",
-  "syllabus_topic_tested": "Specific syllabus topic tested in next question",
+  "syllabus_topic_tested": "${nextTargetTopic}",
   "report_card": { // ONLY IF is_final is true, otherwise null
     "overall_score": number, // out of total (e.g. 23)
     "max_possible_score": ${Number(totalQuestions) * 5},
@@ -411,8 +523,12 @@ OUTPUT FORMAT (Respond with strictly valid JSON ONLY):
         next_question_number: Number(questionNumber) + 1,
         next_question_text: shouldCheckForFinal
           ? null
-          : 'Moving to the next syllabus concept. Can you explain how it works and where we use it?',
-        syllabus_topic_tested: 'Core Syllabus Topics',
+          : language === 'hindi'
+            ? `अब अगले विषय (${nextTargetTopic}) पर आते हैं: यह क्या होता है और इसका मुख्य उद्देश्य क्या है?`
+            : language === 'hinglish'
+              ? `Ab next topic (${nextTargetTopic}) par aate hain: yeh kya hota hai aur iska main use kya hai?`
+              : `Moving to our next topic: ${nextTargetTopic}. Can you explain what it is and its practical application?`,
+        syllabus_topic_tested: nextTargetTopic,
         report_card: shouldCheckForFinal
           ? {
               overall_score: Math.round(Number(totalQuestions) * 3.8),

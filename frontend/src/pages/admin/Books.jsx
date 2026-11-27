@@ -123,14 +123,45 @@ export default function Books() {
     loadBooks();
   }, [selectedSubjectId]);
 
-  // Auto-detect metadata when PDF file is selected
-  const handleFileSelect = async (selectedFile) => {
+  // Auto-detect metadata when PDF file is selected (instant client-side parsing)
+  const handleFileSelect = (selectedFile) => {
     if (!selectedFile) return;
     setFile(selectedFile);
 
-    const formData = new FormData();
-    formData.append('file', selectedFile);
+    // 1. Instant client-side metadata parsing from filename (0ms latency, no blocking network upload)
+    const rawName = selectedFile.name.replace(/\.[^/.]+$/, '').trim();
+    let cleanTitle = rawName.replace(/[_-]+/g, ' ').trim();
+    let detectedAuthor = 'Prescribed University Author';
+    let detectedEdition = 'Standard University Edition';
 
+    // Check for "by Author" pattern (e.g. "Computer Fundamentals by PK Sinha")
+    const byMatch = cleanTitle.match(/^(.+?)\s+(?:by|-)\s+([A-Za-z\s\.\&]+)$/i);
+    if (byMatch && byMatch[1] && byMatch[2]) {
+      cleanTitle = byMatch[1].trim();
+      detectedAuthor = byMatch[2].trim();
+    }
+
+    // Check for edition pattern (e.g. "6th Edition")
+    const edMatch = cleanTitle.match(/(\b(?:\d+(?:st|nd|rd|th)?|first|second|third|fourth|fifth|sixth)\s+ed(?:ition)?\b)/i);
+    if (edMatch) {
+      detectedEdition = edMatch[1].trim();
+    }
+
+    setTitle(cleanTitle);
+    setAuthor(detectedAuthor);
+    setEdition(detectedEdition);
+    setDescription(`Prescribed academic textbook for syllabus topics (${(selectedFile.size / (1024 * 1024)).toFixed(1)} MB).`);
+    toast.success(`Loaded "${cleanTitle}" — ready to upload!`);
+  };
+
+  // Optional manual deep scan for complex PDFs
+  const handleDeepInspect = async () => {
+    if (!file) {
+      toast.error('Select a PDF file first');
+      return;
+    }
+    const formData = new FormData();
+    formData.append('file', file);
     try {
       setInspecting(true);
       const res = await adminApi.inspectBook(formData);
@@ -140,12 +171,10 @@ export default function Books() {
         if (d.author && d.author !== 'Prescribed University Author') setAuthor(d.author);
         if (d.edition) setEdition(d.edition);
         if (d.description) setDescription(d.description);
-        toast.success(`Auto-detected: "${d.title}" (${d.totalPages} Pages)`);
+        toast.success(`Deep scan complete: ${d.totalPages} pages detected`);
       }
     } catch (err) {
-      // Fallback clean title from filename
-      const clean = selectedFile.name.replace(/\.[^/.]+$/, '').replace(/[_-]+/g, ' ').trim();
-      if (!title) setTitle(clean);
+      toast.error('Deep inspection could not read metadata, keep current title');
     } finally {
       setInspecting(false);
     }
@@ -326,10 +355,27 @@ export default function Books() {
               className="w-full px-3.5 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs text-slate-300 file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 cursor-pointer"
             />
 
+            {file && (
+              <div className="flex items-center justify-between pt-1">
+                <span className="text-[11px] text-emerald-400 font-medium">
+                  ✓ File ready ({(file.size / (1024 * 1024)).toFixed(1)} MB) — metadata instantly filled below
+                </span>
+                <button
+                  type="button"
+                  onClick={handleDeepInspect}
+                  disabled={inspecting}
+                  className="text-[11px] px-2.5 py-1 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300 font-medium flex items-center gap-1 transition-colors cursor-pointer"
+                >
+                  {inspecting ? <Loader2 className="w-3 h-3 animate-spin text-indigo-400" /> : <Sparkles className="w-3 h-3 text-indigo-400" />}
+                  {inspecting ? 'Deep Scanning...' : 'Deep Scan PDF'}
+                </button>
+              </div>
+            )}
+
             {inspecting && (
               <div className="flex items-center gap-2 text-xs text-indigo-300 font-semibold animate-pulse pt-1">
                 <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-400" />
-                <span>Scanning PDF... auto-extracting book title, author, edition & table of contents...</span>
+                <span>Scanning PDF pages... auto-extracting book title, author, edition & table of contents...</span>
               </div>
             )}
           </div>

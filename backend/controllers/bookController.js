@@ -86,21 +86,12 @@ const uploadBook = async (req, res, next) => {
       return errorResponse(res, 'Course or Semester could not be resolved from Subject', 400);
     }
 
-    // Auto-detect metadata from PDF
-    const autoMeta = await extractBookMetadata(req.file.path, req.file.originalname);
+    // Fast single-pass metadata & text extraction from first 25 pages (~300ms)
+    const autoMeta = await extractBookMetadata(req.file.path, req.file.originalname, { first: 25 });
+    const extractedText = autoMeta.extractedSnippet || '';
+    const totalPages = autoMeta.totalPages || 0;
 
-    // Attempt PDF Text & Page count extraction
-    let extractedText = '';
-    let totalPages = autoMeta.totalPages || 0;
-    try {
-      const parsed = await extractPdfText(req.file.path);
-      extractedText = parsed.text || '';
-      totalPages = parsed.numPages || totalPages;
-    } catch (parseErr) {
-      console.warn('[Book Upload] Text extraction warning:', parseErr.message);
-    }
-
-    // Generate concise summary index (first 8000 characters of clean text)
+    // Generate concise summary index (clean text)
     const cleanSnippet = extractedText
       .replace(/\s+/g, ' ')
       .trim()
@@ -111,26 +102,7 @@ const uploadBook = async (req, res, next) => {
     const bookEdition = edition?.trim() || autoMeta.edition;
     const bookDescription = description?.trim() || autoMeta.description;
 
-    let gridfsId = null;
-    try {
-      const gfs = await uploadToGridFS(req.file.path, req.file.originalname);
-      gridfsId = gfs.gridfs_id;
-    } catch (gfsErr) {
-      console.warn('[GridFS Book Upload Warning]:', gfsErr.message);
-    }
-
-    let cloudinaryUrl = '';
-    let cloudinaryPublicId = '';
-    if (isCloudinaryConfigured()) {
-      try {
-        const cRes = await uploadPdfToCloudinary(req.file.path, 'sankalp_ai/books', req.file.originalname);
-        cloudinaryUrl = cRes.secure_url;
-        cloudinaryPublicId = cRes.public_id;
-      } catch (cErr) {
-        console.warn('[Cloudinary Book Upload Warning]:', cErr.message);
-      }
-    }
-
+    // Create book record immediately so response is near-instant (< 1s)
     const book = await Book.create({
       title: bookTitle,
       author: bookAuthor,
@@ -140,9 +112,9 @@ const uploadBook = async (req, res, next) => {
       semester_id: resolvedSemesterId,
       subject_id: subject._id,
       storage_path: req.file.path,
-      gridfs_id: gridfsId,
-      cloudinary_url: cloudinaryUrl,
-      cloudinary_public_id: cloudinaryPublicId,
+      gridfs_id: null,
+      cloudinary_url: '',
+      cloudinary_public_id: '',
       file_name: req.file.originalname,
       file_size: req.file.size,
       mime_type: req.file.mimetype || 'application/pdf',
@@ -170,6 +142,49 @@ const uploadBook = async (req, res, next) => {
       .populate('course_id', 'name code')
       .populate('semester_id', 'name number')
       .populate('subject_id', 'name code');
+
+    // Run remote cloud & GridFS backup asynchronously in background (non-blocking)
+    const bookId = book._id;
+    const filePath = req.file.path;
+    const fileName = req.file.originalname;
+
+    setImmediate(async () => {
+      try {
+        let gridfsId = null;
+        try {
+          const gfs = await uploadToGridFS(filePath, fileName);
+          gridfsId = gfs.gridfs_id;
+        } catch (gfsErr) {
+          console.warn('[GridFS Background Book Upload Warning]:', gfsErr.message);
+        }
+
+        let cloudinaryUrl = '';
+        let cloudinaryPublicId = '';
+        if (isCloudinaryConfigured()) {
+          try {
+            const cRes = await uploadPdfToCloudinary(filePath, 'sankalp_ai/books', fileName);
+            cloudinaryUrl = cRes.secure_url;
+            cloudinaryPublicId = cRes.public_id;
+          } catch (cErr) {
+            console.warn('[Cloudinary Background Book Upload Warning]:', cErr.message);
+          }
+        }
+
+        const updates = {};
+        if (gridfsId) updates.gridfs_id = gridfsId;
+        if (cloudinaryUrl) {
+          updates.cloudinary_url = cloudinaryUrl;
+          updates.cloudinary_public_id = cloudinaryPublicId;
+        }
+
+        if (Object.keys(updates).length > 0) {
+          await Book.findByIdAndUpdate(bookId, updates);
+          console.log(`[Book Background Sync] Updated book ${bookId} with remote storage refs`);
+        }
+      } catch (bgErr) {
+        console.error('[Book Background Sync Error]:', bgErr.message);
+      }
+    });
 
     return successResponse(res, populatedBook, 'Textbook uploaded and indexed successfully!', 201);
   } catch (error) {
@@ -363,7 +378,7 @@ const inspectBookPdf = async (req, res, next) => {
       return errorResponse(res, 'Please provide a PDF file to inspect', 400);
     }
 
-    const metadata = await extractBookMetadata(req.file.path, req.file.originalname);
+    const metadata = await extractBookMetadata(req.file.path, req.file.originalname, { first: 15 });
 
     // Delete temp file after extraction
     if (fs.existsSync(req.file.path)) {

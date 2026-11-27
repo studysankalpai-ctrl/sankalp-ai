@@ -11,11 +11,13 @@ const { successResponse, errorResponse } = require('../utils/apiResponse');
 const generateCase = async (req, res, next) => {
   try {
     const domain = req.body.domain || 'startup';
+    const customTopic = req.body.customTopic || req.body.topic || '';
     const apiKey = req.body.apiKey || req.body.groqApiKey || process.env.GROQ_API_KEY;
     const model = req.body.model || req.body.groqModel;
 
     const caseData = await caseStudyAiService.generateCaseStudy({
       domain,
+      customTopic,
       apiKey,
       model,
     });

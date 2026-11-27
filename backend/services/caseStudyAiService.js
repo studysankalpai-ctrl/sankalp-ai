@@ -164,11 +164,15 @@ function extractCleanJson(text) {
 /**
  * 1. Generate Dynamic Case Study Dilemma
  */
-async function generateCaseStudy({ domain = 'startup', apiKey, model }) {
+async function generateCaseStudy({ domain = 'startup', customTopic = '', apiKey, model }) {
   // If no apiKey provided, return one of the rich curated presets instantly!
   if (!apiKey || !apiKey.trim().startsWith('gsk_')) {
     const randomIndex = Math.floor(Math.random() * PRESET_CASES.length);
-    return PRESET_CASES[randomIndex];
+    const chosen = { ...PRESET_CASES[randomIndex] };
+    if (customTopic) {
+      chosen.headline = `${customTopic}: Immediate Board Emergency`;
+    }
+    return chosen;
   }
 
   const systemPrompt = `You are a Senior Harvard Business School & McKinsey Case Method Professor.
@@ -221,7 +225,8 @@ You MUST respond strictly with a valid JSON object matching this exact structure
   ]
 }`;
 
-  const userPrompt = `Generate an intense business dilemma for theme: "${domain}". Focus on Indian or global emerging markets (Fintech, Quick-Commerce, EV, HealthTech, D2C, Manufacturing, or Enterprise SaaS). Make financial metrics realistic. Output ONLY raw JSON.`;
+  const topicFocus = customTopic ? `with specific company/situation focus: "${customTopic}"` : `theme: "${domain}"`;
+  const userPrompt = `Generate an intense business dilemma for ${topicFocus}. Focus on Indian or global emerging markets (Fintech, Quick-Commerce, EV, HealthTech, D2C, Manufacturing, or Enterprise SaaS). Make financial metrics realistic. Output ONLY raw JSON.`;
 
   try {
     const aiResp = await chatCompletion({

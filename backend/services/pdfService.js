@@ -4,9 +4,10 @@ const pdfParseModule = require('pdf-parse');
 /**
  * Extract raw text from a PDF file using pdf-parse v1 or v2 (PDFParse class)
  * @param {string} filePath - Absolute or relative path to PDF file
+ * @param {object} options - Optional bounds: { first: number, last: number, maxPages: number }
  * @returns {Promise<{text: string, numPages: number, info: object}>}
  */
-const extractPdfText = async (filePath) => {
+const extractPdfText = async (filePath, options = {}) => {
   try {
     const dataBuffer = fs.readFileSync(filePath);
 
@@ -14,7 +15,13 @@ const extractPdfText = async (filePath) => {
     if (pdfParseModule && pdfParseModule.PDFParse) {
       const parser = new pdfParseModule.PDFParse({ data: dataBuffer });
       await parser.load();
-      const res = await parser.getText();
+      const parseOpts = {};
+      if (options.first || options.maxPages) {
+        parseOpts.first = options.first || options.maxPages;
+      }
+      if (options.last) parseOpts.last = options.last;
+      if (options.partial) parseOpts.partial = options.partial;
+      const res = await parser.getText(parseOpts);
       const text = res.text || (Array.isArray(res.pages) ? res.pages.map(p => p.text).join('\n') : '');
       const numPages = res.total || (Array.isArray(res.pages) ? res.pages.length : 1);
       await parser.destroy();
@@ -116,11 +123,13 @@ const parseQuestionsFromText = (text, examYear = null) => {
  * Auto-detect and extract metadata (Title, Author, Edition, Description) from PDF
  * @param {string} filePath - Absolute path to PDF file
  * @param {string} originalFilename - Original filename of uploaded PDF
+ * @param {object} options - Optional bounds, defaults to { first: 15 }
  * @returns {Promise<{title: string, author: string, edition: string, description: string, totalPages: number}>}
  */
-const extractBookMetadata = async (filePath, originalFilename = '') => {
+const extractBookMetadata = async (filePath, originalFilename = '', options = {}) => {
   try {
-    const { text, numPages, info } = await extractPdfText(filePath);
+    // Fast metadata extraction: textbooks contain title, author & TOC within the first 15 pages
+    const { text, numPages, info } = await extractPdfText(filePath, { first: options.first || 15 });
     const cleanFilename = (originalFilename || filePath)
       .replace(/^.*[\\\/]/, '')
       .replace(/\.[^/.]+$/, '')
