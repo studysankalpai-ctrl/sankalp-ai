@@ -179,13 +179,13 @@ export default function Sidebar() {
         <div
           className="fixed inset-0 z-40 bg-black/70 backdrop-blur-xs md:hidden animate-in fade-in duration-200"
           onClick={closeMobileNav}
-          onTouchEnd={closeMobileNav}
           aria-hidden="true"
         />
       )}
 
       {/* Main Sidebar (Responsive: Full-Featured Drawer on Mobile, Collapsible on Desktop) */}
       <aside
+        onClick={(e) => e.stopPropagation()}
         className={`fixed top-0 bottom-0 left-0 z-50 flex flex-col bg-white dark:bg-black border-r border-gray-200 dark:border-neutral-800 transition-all duration-300 ease-in-out shadow-2xl md:shadow-none pt-[env(safe-area-inset-top,0px)] md:pt-0 pb-[env(safe-area-inset-bottom,0px)] md:pb-0 w-[290px] sm:w-80 max-w-[85vw] no-scrollbar scrollbar-transparent ${
           sidebarCollapsed ? 'md:w-20' : 'md:w-64'
         } ${
@@ -202,7 +202,6 @@ export default function Sidebar() {
           <Link
             to="/"
             onClick={closeMobileNav}
-            onTouchEnd={closeMobileNav}
             className="flex items-center gap-3 overflow-hidden focus:outline-none group"
           >
             <div className="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center shrink-0 bg-gray-50 dark:bg-neutral-900 border border-gray-200/60 dark:border-neutral-800">
@@ -225,7 +224,6 @@ export default function Sidebar() {
           {/* Close button for mobile drawer */}
           <button
             onClick={closeMobileNav}
-            onTouchEnd={closeMobileNav}
             className="p-1.5 rounded-xl text-gray-400 hover:text-gray-700 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors md:hidden cursor-pointer"
             title="Close Menu"
             aria-label="Close menu"
@@ -332,7 +330,6 @@ export default function Sidebar() {
                     to={item.path}
                     end={item.path === '/'}
                     onClick={closeMobileNav}
-                    onTouchEnd={closeMobileNav}
                     className={({ isActive }) =>
                       `flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-xs sm:text-sm transition-all duration-150 group relative cursor-pointer ${
                         isActive
@@ -431,7 +428,6 @@ export default function Sidebar() {
                               key={sub.path}
                               to={sub.path}
                               onClick={closeMobileNav}
-                              onTouchEnd={closeMobileNav}
                               className={({ isActive }) =>
                                 `flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer ${
                                   isActive
@@ -549,7 +545,6 @@ export default function Sidebar() {
             <Link
               to="/settings"
               onClick={closeMobileNav}
-              onTouchEnd={closeMobileNav}
               className="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-gray-200/70 hover:bg-gray-200 dark:bg-neutral-900 dark:hover:bg-neutral-800 text-gray-800 dark:text-gray-200 border border-gray-300/60 dark:border-neutral-800 transition-colors shrink-0"
             >
               {isAiConnected ? 'Settings' : 'Connect'}
@@ -565,7 +560,6 @@ export default function Sidebar() {
           <div className="pt-2 border-t border-gray-200/60 dark:border-neutral-800/80">
             <a
               href="mailto:study.sankalp.ai@gmail.com"
-              onClick={closeMobileNav}
               className="flex items-center gap-1.5 text-[11px] font-medium text-gray-500 hover:text-black dark:text-gray-400 dark:hover:text-white transition-colors truncate"
               title="Support & Queries"
             >
