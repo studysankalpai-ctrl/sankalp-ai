@@ -187,7 +187,7 @@ export default function Landing() {
 
       {/* Top Navbar (Monochrome Black & White, Lowered position for iPhone notch/dynamic island, Mobile responsive) */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-black/95 sm:bg-black/85 sm:backdrop-blur-xl border-b border-white/10 transition-all pt-[calc(env(safe-area-inset-top,0px)+10px)] sm:pt-0">
-        <div className="w-full max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-2">
+        <div className="w-full px-4 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-2 sm:gap-4">
           {/* Logo & Brand Identity */}
           <Link to="/" className="flex items-center gap-2 sm:gap-2.5 group shrink-0">
             <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-white/10 border border-white/20 p-1 flex items-center justify-center transition-all duration-200 group-hover:border-white/50 group-hover:bg-white/15 shadow-sm shrink-0">
@@ -391,7 +391,7 @@ export default function Landing() {
         {/* Ambient atmospheric backdrop glow */}
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] sm:w-[900px] h-[400px] bg-gradient-to-tr from-indigo-600/15 via-emerald-600/10 to-transparent blur-[140px] pointer-events-none rounded-full -z-10" />
 
-        <div className="w-full max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8">
+        <div className="w-full px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-center">
             {/* Left Column (Left-aligned Headline, Clean Paragraph, Minimal Padding) */}
             <div className="lg:col-span-6 space-y-3.5 sm:space-y-4 text-left flex flex-col items-start">
@@ -783,7 +783,7 @@ export default function Landing() {
 
       {/* Trust & Academic Validation Ribbon (Minimal, Sleek & Left-Aligned) */}
       <section className="border-y border-white/10 bg-zinc-950/60 py-3 sm:py-3.5 z-10 relative">
-        <div className="w-full max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 flex flex-wrap items-center justify-start lg:justify-between gap-3 sm:gap-4 text-left text-[11px] sm:text-xs font-semibold text-zinc-300">
+        <div className="w-full px-4 sm:px-6 lg:px-8 flex flex-wrap items-center justify-start lg:justify-between gap-3 sm:gap-4 text-left text-[11px] sm:text-xs font-semibold text-zinc-300">
           <div className="flex items-center justify-start gap-1.5 sm:gap-2 text-left">
             <GraduationCap className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
             <span>St. John&apos;s College, Agra</span>
@@ -805,7 +805,7 @@ export default function Landing() {
 
       {/* CORE PRODUCT TOUR SECTION: Inside the Software with Real Screenshots & Deep Descriptions */}
       <section id="tour" className="py-8 sm:py-16 z-10 relative">
-        <div className="w-full max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8">
+        <div className="w-full px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-5 sm:mb-8 gap-2.5 text-center md:text-left items-center md:items-end">
             <div>
               <span className="text-[10px] sm:text-xs font-mono uppercase tracking-wider text-zinc-400 mb-1 block">
@@ -929,7 +929,7 @@ export default function Landing() {
 
       {/* CREATOR SPOTLIGHT SECTION (Sameer Singh • St. John's College Agra, Centered on Mobile) */}
       <section id="creator" className="py-8 sm:py-16 border-t border-white/10 z-10 relative">
-        <div className="w-full max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8">
+        <div className="w-full px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-5 sm:mb-8">
             <span className="text-[10px] sm:text-xs font-mono uppercase tracking-wider text-zinc-400 mb-1 block">
               Architect &amp; Visionary
@@ -1025,7 +1025,7 @@ export default function Landing() {
 
       {/* 6 Core Architectural Capabilities Grid */}
       <section id="features" className="py-8 sm:py-16 border-t border-white/10 z-10 relative">
-        <div className="w-full max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8">
+        <div className="w-full px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-5 sm:mb-8">
             <span className="text-[10px] sm:text-xs font-mono uppercase tracking-wider text-zinc-400 mb-1 block">
               Capabilities
@@ -1170,7 +1170,7 @@ export default function Landing() {
 
       {/* 4-Step University Exam Master Workflow */}
       <section id="workflow" className="py-8 sm:py-16 bg-zinc-950/70 border-t border-white/10 z-10 relative">
-        <div className="w-full max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8">
+        <div className="w-full px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-5 sm:mb-8">
             <span className="text-[10px] sm:text-xs font-mono uppercase tracking-wider text-zinc-400 mb-1 block">
               Methodology
@@ -1234,7 +1234,7 @@ export default function Landing() {
 
       {/* High-Impact Final Call to Action */}
       <section className="py-8 sm:py-16 border-t border-white/10 z-10 relative">
-        <div className="w-full max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 text-center">
+        <div className="w-full px-4 sm:px-6 lg:px-8 text-center">
           <div className="p-5 sm:p-10 lg:p-12 rounded-2xl sm:rounded-3xl bg-gradient-to-b from-zinc-900 via-zinc-950 to-black border border-white/20 shadow-2xl relative overflow-hidden">
             <div className="relative z-10 max-w-xl mx-auto">
               <span className="text-[10px] sm:text-xs font-mono uppercase tracking-wider text-zinc-400 mb-1.5 block">
@@ -1269,7 +1269,7 @@ export default function Landing() {
 
       {/* Rich High-Impact Monochrome Footer */}
       <footer className="relative z-10 border-t border-white/20 bg-zinc-950 text-zinc-400 text-xs pt-10 sm:pt-14 pb-8 sm:pb-10 shadow-2xl">
-        <div className="w-full max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8">
+        <div className="w-full px-4 sm:px-6 lg:px-8">
           {/* Main 4-Column Footer Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-10 pb-8 sm:pb-10 border-b border-white/10">
             {/* Col 1: Brand & Academic Mission */}
