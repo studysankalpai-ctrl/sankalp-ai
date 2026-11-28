@@ -31,6 +31,16 @@
             document.documentElement.style.colorScheme = 'dark';
           }
         } catch (_) {}
+
+        // Early capture of PWA beforeinstallprompt event before React tree mounts
+        window.__deferredPrompt = null;
+        window.addEventListener('beforeinstallprompt', function(e) {
+          e.preventDefault();
+          window.__deferredPrompt = e;
+          if (typeof window.__onDeferredPrompt === 'function') {
+            window.__onDeferredPrompt(e);
+          }
+        });
       })();
     </script>
   </head>

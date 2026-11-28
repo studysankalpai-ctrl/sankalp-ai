@@ -554,7 +554,7 @@ export default function Settings() {
                 <span>Clear AI Cache</span>
               </button>
 
-              {isInstallable && !isInstalled && (
+              {!isInstalled && (
                 <button
                   type="button"
                   onClick={promptInstall}

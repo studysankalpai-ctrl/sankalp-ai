@@ -4,7 +4,6 @@ import Sidebar from './Sidebar';
 import Header from './Header';
 import SearchModal from '../common/SearchModal';
 import ErrorBoundary from '../common/ErrorBoundary';
-import PwaInstallPrompt from '../common/PwaInstallPrompt';
 import useAppStore from '../../store/appStore';
 import { usePwaStore } from '../../store/pwaStore';
 
@@ -90,9 +89,6 @@ export default function AppLayout() {
 
       {/* Global Search Dialog */}
       <SearchModal />
-
-      {/* PWA Mobile App Installation Prompt */}
-      <PwaInstallPrompt />
     </div>
   );
 }

@@ -572,7 +572,7 @@ export default function Sidebar() {
         {/* Sidebar Footer Controls */}
         <div className="p-3 border-t border-gray-100 dark:border-neutral-800 space-y-1.5 shrink-0">
           {/* Mobile PWA Install Button */}
-          {!isInstalled && (isInstallable || isIos) && (
+          {!isInstalled && (
             <button
               onClick={() => {
                 promptInstall();

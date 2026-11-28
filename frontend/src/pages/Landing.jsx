@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import useAppStore from '../store/appStore';
+import { usePwaStore } from '../store/pwaStore';
 import {
   Sparkles,
   Bot,
@@ -41,9 +42,12 @@ import {
   Mic,
   ClipboardCheck,
   Briefcase,
+  Download,
+  Smartphone,
 } from 'lucide-react';
 
 export default function Landing() {
+  const { isInstalled, promptInstall } = usePwaStore();
   const [heroPreviewTab, setHeroPreviewTab] = useState('mentor');
   const [activeTourTab, setActiveTourTab] = useState('mentor');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -249,6 +253,18 @@ export default function Landing() {
 
           {/* Right Action: Enter SANKALP CTA + Mobile Hamburger */}
           <div className="flex items-center gap-2.5 shrink-0">
+            {!isInstalled && (
+              <button
+                type="button"
+                onClick={promptInstall}
+                className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-indigo-950/80 hover:bg-indigo-900 text-indigo-300 border border-indigo-700/60 text-xs font-bold transition-all shrink-0 cursor-pointer"
+                title="Install SANKALP App on this device"
+              >
+                <Download className="w-3.5 h-3.5 text-indigo-400" />
+                <span>Install App</span>
+              </button>
+            )}
+
             <Link
               to="/dashboard"
               className="hidden sm:inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-white hover:bg-zinc-200 text-black text-xs font-extrabold tracking-tight shadow-sm transition-all shrink-0"
@@ -336,6 +352,19 @@ export default function Landing() {
             </nav>
 
             <div className="pt-2 border-t border-white/10 space-y-2">
+              {!isInstalled && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    promptInstall();
+                  }}
+                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-indigo-950 text-indigo-300 border border-indigo-700/60 text-xs font-bold shadow-md cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5 text-indigo-400" />
+                  <span>Install SANKALP Mobile App</span>
+                </button>
+              )}
               <Link
                 to="/coding-lab"
                 onClick={() => setMobileMenuOpen(false)}

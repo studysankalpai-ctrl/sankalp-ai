@@ -1,7 +1,9 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { Loader2 } from 'lucide-react';
+import PwaInstallPrompt from './components/common/PwaInstallPrompt';
+import { usePwaStore } from './store/pwaStore';
 
 // Eagerly loaded for instant 1-frame paint on mobile and desktop
 import Landing from './pages/Landing';
@@ -55,6 +57,12 @@ function PageLoader() {
 }
 
 export default function App() {
+  const { initPwa } = usePwaStore();
+
+  useEffect(() => {
+    initPwa();
+  }, [initPwa]);
+
   return (
     <BrowserRouter>
       {/* Toast Notifications */}
@@ -124,6 +132,9 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
+
+      {/* Global PWA Mobile App Installation Prompt & Guide Dialog */}
+      <PwaInstallPrompt />
     </BrowserRouter>
   );
 }

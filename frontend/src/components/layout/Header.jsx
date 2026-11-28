@@ -9,11 +9,14 @@ import {
   Sparkles,
   GraduationCap,
   BookOpen,
+  Download,
 } from 'lucide-react';
 import useAppStore from '../../store/appStore';
+import { usePwaStore } from '../../store/pwaStore';
 import toast from 'react-hot-toast';
 
 export default function Header() {
+  const { isInstalled, promptInstall } = usePwaStore();
   const {
     sidebarCollapsed,
     toggleSidebar,
@@ -197,6 +200,20 @@ export default function Header() {
             {isAiConnected ? 'AI' : 'Setup'}
           </span>
         </Link>
+
+        {/* PWA Install Button (Always visible on mobile & desktop when not installed) */}
+        {!isInstalled && (
+          <button
+            type="button"
+            onClick={promptInstall}
+            className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-xl text-xs font-bold bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800/80 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-colors shrink-0 cursor-pointer"
+            title="Install SANKALP App on this device"
+          >
+            <Download className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+            <span className="hidden md:inline">Install App</span>
+            <span className="md:hidden text-[10px]">Install</span>
+          </button>
+        )}
 
         {/* Theme Toggle Button */}
         <button
